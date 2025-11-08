@@ -114,6 +114,9 @@ dmypy.json
 .pyre/
 
 # Data Science specific
+# Raw Data (Large Files)
+data/raw/
+
 # Model files
 *.model
 *.sav
