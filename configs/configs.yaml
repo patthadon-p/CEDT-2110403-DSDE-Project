@@ -1,0 +1,3 @@
+data:
+  raw_data_path: "data/raw/bangkok_traffy.csv"
+  province_whitelist_path: "thailand_province_whitelist.json"
