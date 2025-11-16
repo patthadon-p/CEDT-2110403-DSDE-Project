@@ -1,4 +1,9 @@
 data:
   raw_data_path: "data/raw/bangkok_traffy.csv"
+
+  # Status mapping configuration
+  status_mapping_path: "status.json"
+
+  # Province and Bangkok area name configurations
   province_whitelist_path: "thailand_province_whitelist.json"
   bangkok_official_area_name_path: "bangkok_official_area_name.json"
