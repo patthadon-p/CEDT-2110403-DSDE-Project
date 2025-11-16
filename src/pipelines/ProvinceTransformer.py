@@ -12,10 +12,12 @@ from utils.ProvinceUtils import load_province_whitelist
 
 
 class ProvinceTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, path="", columns=None):
-        self.whitelist = load_province_whitelist(path)
+    def __init__(self, path="", province_column=None):
+        self.path = path
 
-        self.columns = columns or ["province"]
+        self.whitelist = load_province_whitelist(self.path)
+
+        self.province_column = province_column or "province"
         self.filtered = []
 
     def fit(self, X, y=None):
@@ -24,30 +26,25 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
     def transform(self, X):
         df = X.copy()
 
-        cols = self.columns
-        if cols is None:
-            cols = df.select_dtypes(include=["object", "string"]).columns
+        df[self.province_column] = (
+            df[self.province_column]
+            .astype(str)
+            .str.replace("จังหวัด", "", regex=False)  # แทน "จังหวัด" ด้วยช่องว่าง
+            .str.replace("จ.", "", regex=False)  # แทน "จ." ด้วยช่องว่าง
+            .str.strip()
+        )
 
-        for c in cols:
-            df[c] = (
-                df[c]
-                .astype(str)
-                .str.replace("จังหวัด", "", regex=False)  # แทน "จังหวัด" ด้วยช่องว่าง
-                .str.replace("จ.", "", regex=False)  # แทน "จ." ด้วยช่องว่าง
-                .str.strip()
-            )
+        # map values
+        mapped = df[self.province_column].map(self.whitelist)
 
-            # map values
-            mapped = df[c].map(self.whitelist)
+        # detect values not found in mapping
+        mask_not_found = mapped.isna() & df[self.province_column].notna()
 
-            # detect values not found in mapping
-            mask_not_found = mapped.isna() & df[c].notna()
+        # collect the original unmapped values
+        self.filtered.extend(df.loc[mask_not_found, self.province_column].tolist())
 
-            # collect the original unmapped values
-            self.filtered.extend(df.loc[mask_not_found, c].tolist())
-
-            # assign mapped values back (unmapped become None)
-            df[c] = mapped.where(mapped.notna(), None)
+        # assign mapped values back (unmapped become None)
+        df[self.province_column] = mapped.where(mapped.notna(), None)
 
         return df
 

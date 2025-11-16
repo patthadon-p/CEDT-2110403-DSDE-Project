@@ -29,9 +29,6 @@ def load_province_whitelist(filepath: str = "") -> dict:
             configs_dir = os.path.dirname(configs_path)
             filepath = os.path.join(configs_dir, filepath)
 
-    # Debug: print the resolved filepath (remove this line in production)
-    print(f"Loading province whitelist from: {filepath}")
-
     with open(filepath, encoding="utf-8") as file:
         provinces = json.load(file)
 

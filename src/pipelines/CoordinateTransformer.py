@@ -19,27 +19,30 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         path="",
-        coords_column="coords",
-        subdistrict_column="subdistrict",
-        geo_subdistrict_column="SUBDISTR_1",
-        district_column="district",
-        geo_district_column="DISTRICT_N",
+        coords_column=None,
+        district_column=None,
+        subdistrict_column=None,
+        geo_district_column=None,
+        geo_subdistrict_column=None,
     ):
+        self.path = path
+
+        self.coords_column = coords_column or "coords"
+
+        self.district_column = district_column or "district"
+        self.subdistrict_column = subdistrict_column or "subdistrict"
+
+        self.geo_district_column = geo_district_column or "DISTRICT_N"
+        self.geo_subdistrict_column = geo_subdistrict_column or "SUBDISTR_1"
+
         dst = DistrictSubdistrictTransformer(
-            district_column=geo_district_column,
-            subdistrict_column=geo_subdistrict_column,
+            district_column=self.geo_district_column,
+            subdistrict_column=self.geo_subdistrict_column,
         )
+
         self.bangkok_gdf = gpd.GeoDataFrame(
-            dst.fit_transform(load_geographic_data(path))
+            dst.fit_transform(load_geographic_data(self.path))
         )
-
-        self.coords_column = coords_column
-
-        self.subdistrict_column = subdistrict_column
-        self.geo_subdistrict_column = geo_subdistrict_column
-
-        self.district_column = district_column
-        self.geo_district_column = geo_district_column
 
     def fit(self, X, y=None):
         return self
@@ -47,10 +50,11 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
     def transform(self, X):
 
         def coords_check(row):
-            subdistrict_points = row[self.subdistrict_column]
-            subdistrict_region = row[self.geo_subdistrict_column]
             district_points = row[self.district_column]
+            subdistrict_points = row[self.subdistrict_column]
+
             district_region = row[self.geo_district_column]
+            subdistrict_region = row[self.geo_subdistrict_column]
 
             check_district = district_region == district_points
             check_subdistrict = subdistrict_region == subdistrict_points

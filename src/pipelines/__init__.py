@@ -17,6 +17,7 @@ Usage:
 """
 
 # Import specific classes and functions for direct access
+from .AddressTransformer import AddressTransformer
 from .CoordinateTransformer import CoordinateTransformer
 from .DateTransformer import DateTransformer
 from .DistrictSubdistrictTransformer import DistrictSubdistrictTransformer
@@ -30,5 +31,6 @@ __all__ = [
     "ProvinceTransformer",
     "DistrictSubdistrictTransformer",
     "CoordinateTransformer",
+    "AddressTransformer",
     "StateToStatusTransformer",
 ]
