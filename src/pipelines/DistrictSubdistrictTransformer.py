@@ -59,7 +59,6 @@ class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
             .apply(
                 lambda x: _fuzzy_match(x, self.official_districts, self._cache_district)
             )
-            .apply(lambda x: f"เขต {x}" if x is not None else x)
         )
 
         df[self.subdistrict_column] = (
@@ -70,7 +69,6 @@ class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
                     x, self.official_subdistricts, self._cache_subdistrict
                 )
             )
-            .apply(lambda x: f"แขวง {x}" if x is not None else x)
         )
 
         return df
