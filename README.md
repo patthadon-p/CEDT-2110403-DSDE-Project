@@ -40,7 +40,9 @@ Our project explores data-driven insights and AI/ML approaches applied to the **
 │   ├── processed/             # Cleaned and transformed data
 │   └── external/              # Additional data sources (if any)
 │
-├── notebooks/
+├── config/                    # Configuration files (e.g., parameters, settings)
+│
+├── notebooks/                 # Jupyter notebooks for exploration and analysis
 │
 ├── src/
 │
@@ -50,8 +52,7 @@ Our project explores data-driven insights and AI/ML approaches applied to the **
 │   └── presentation/          # Slides or final presentation materials
 │
 ├── requirements.txt           # Python dependencies
-├── README.md                  # Project documentation
-└── LICENSE (optional)
+└── README.md                  # Project documentation
 ```
 
 ---
