@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Import necessary modules
 import re
 
-from fuzzywuzzy import process
+from rapidfuzz import process
 from sklearn.base import BaseEstimator, TransformerMixin
 
 # Utility functions
