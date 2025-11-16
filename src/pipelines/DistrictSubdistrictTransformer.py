@@ -15,11 +15,13 @@ from utils.DistrictSubdistrictUtils import load_bangkok_official_area_names
 
 
 class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, district_column="district", subdistrict_column="subdistrict"):
+    def __init__(
+        self, path="", district_column="district", subdistrict_column="subdistrict"
+    ):
         self.district_column = district_column
         self.subdistrict_column = subdistrict_column
 
-        official_area_name = load_bangkok_official_area_names()
+        official_area_name = load_bangkok_official_area_names(path)
 
         self.official_districts = official_area_name.get("districts", [])
         self.official_subdistricts = official_area_name.get("subdistricts", [])

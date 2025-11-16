@@ -25,14 +25,12 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
         district_column="district",
         geo_district_column="DISTRICT_N",
     ):
-        self.path = path
-
         dst = DistrictSubdistrictTransformer(
             district_column=geo_district_column,
             subdistrict_column=geo_subdistrict_column,
         )
         self.bangkok_gdf = gpd.GeoDataFrame(
-            dst.fit_transform(load_geographic_data(self.path))
+            dst.fit_transform(load_geographic_data(path))
         )
 
         self.coords_column = coords_column

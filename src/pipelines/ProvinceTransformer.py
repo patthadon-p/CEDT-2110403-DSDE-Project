@@ -12,8 +12,10 @@ from utils.ProvinceUtils import load_province_whitelist
 
 
 class ProvinceTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, columns=None):
-        self.columns = columns
+    def __init__(self, path="", columns=None):
+        self.whitelist = load_province_whitelist(path)
+
+        self.columns = columns or ["province"]
         self.filtered = []
 
     def fit(self, X, y=None):
@@ -26,9 +28,6 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
         if cols is None:
             cols = df.select_dtypes(include=["object", "string"]).columns
 
-        # load whitelist mapping
-        whitelist = load_province_whitelist()
-
         for c in cols:
             df[c] = (
                 df[c]
@@ -39,7 +38,7 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
             )
 
             # map values
-            mapped = df[c].map(whitelist)
+            mapped = df[c].map(self.whitelist)
 
             # detect values not found in mapping
             mask_not_found = mapped.isna() & df[c].notna()
