@@ -18,6 +18,7 @@ Usage:
 
 # Import specific classes and functions for direct access
 from .AddressTransformer import AddressTransformer
+from .CleansingPipeline import CleansingPipeline
 from .CoordinateTransformer import CoordinateTransformer
 from .DateTransformer import DateTransformer
 from .DistrictSubdistrictTransformer import DistrictSubdistrictTransformer
@@ -27,10 +28,11 @@ from .StateToStatusTransformer import StateToStatusTransformer
 # Define what gets imported with 'from pipelines import *'
 __all__ = [
     # Classes
-    "DateTransformer",
-    "ProvinceTransformer",
-    "DistrictSubdistrictTransformer",
-    "CoordinateTransformer",
     "AddressTransformer",
+    "CleansingPipeline",
+    "CoordinateTransformer",
+    "DateTransformer",
+    "DistrictSubdistrictTransformer",
+    "ProvinceTransformer",
     "StateToStatusTransformer",
 ]

@@ -12,9 +12,9 @@ from utils.StatusUtils import load_status_mapping
 
 
 class StateToStatusTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, path="", old_column="state", new_column="status", mapping=None):
-        self.old_column = old_column
-        self.new_column = new_column
+    def __init__(self, path="", mapping=None, old_column=None, new_column=None):
+        self.old_column = old_column or "state"
+        self.new_column = new_column or "status"
 
         if mapping is None:
             self.mapping = load_status_mapping(path)
