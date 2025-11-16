@@ -1,11 +1,13 @@
-# Import necessary modules
+# Setting up the environment
 import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Import necessary modules
 from sklearn.base import BaseEstimator, TransformerMixin
 
+# Utility functions
 from utils.ProvinceUtils import load_province_whitelist
 
 

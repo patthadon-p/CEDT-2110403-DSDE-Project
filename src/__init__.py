@@ -21,15 +21,18 @@ Usage:
 from . import pipelines, utils
 
 # Import specific classes and functions for direct access
-from .pipelines import ProvinceTransformer
-from .utils import load_province_whitelist
+from .pipelines import DistrictSubdistrictTransformer, ProvinceTransformer
+from .utils import load_bangkok_official_area_names, load_province_whitelist
 
 # Define what gets imported with 'from src import *'
 __all__ = [
     # Modules
     "pipelines",
     "utils",
-    # Classes and Functions
+    # Classes
     "ProvinceTransformer",
+    "DistrictSubdistrictTransformer",
+    # Functions
     "load_province_whitelist",
+    "load_bangkok_official_area_names",
 ]

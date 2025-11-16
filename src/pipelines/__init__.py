@@ -17,10 +17,12 @@ Usage:
 """
 
 # Import specific classes and functions for direct access
+from .DistrictSubdistrictTransformer import DistrictSubdistrictTransformer
 from .ProvinceTransformer import ProvinceTransformer
 
 # Define what gets imported with 'from pipelines import *'
 __all__ = [
     # Classes
     "ProvinceTransformer",
+    "DistrictSubdistrictTransformer",
 ]
