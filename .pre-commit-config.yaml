@@ -1,0 +1,23 @@
+repos:
+  # 🧼 Code formatter
+  - repo: https://github.com/psf/black
+    rev: 25.11.0  # Check latest stable version with `pip show black`
+    hooks:
+      - id: black
+        language_version: python3
+
+  # 📚 Import sorter
+  - repo: https://github.com/pycqa/isort
+    rev: 7.0.0
+    hooks:
+      - id: isort
+        name: isort (import sorter)
+        args: ["--profile", "black"]
+
+  # 🧠 Linter & auto-fixer
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.4
+    hooks:
+      - id: ruff
+        name: ruff (linter)
+        args: ["--fix"]

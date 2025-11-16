@@ -195,7 +195,6 @@ credentials.json
 .isort.cfg
 .pylintrc
 .flake8
-.pre-commit-config.yaml
 .pre-commit-hooks.yaml
 .bandit
 .mypy_cache/
