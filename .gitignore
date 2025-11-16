@@ -189,6 +189,24 @@ credentials.json
 *.swo
 *~
 
+# Code formatting and linting
+.ruff_cache/
+.black_cache/
+.isort.cfg
+.pylintrc
+.flake8
+.pre-commit-config.yaml
+.pre-commit-hooks.yaml
+.bandit
+.mypy_cache/
+.dmypy.json
+dmypy.json
+pylint-report.txt
+flake8-report.txt
+.coverage.*
+htmlcov/
+.pytest_cache/
+
 # OS specific files
 .DS_Store
 .DS_Store?
