@@ -1,0 +1,98 @@
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+skip-string-normalization = false
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | build
+  | dist
+  | __pycache__
+  | \.ipynb_checkpoints
+  | data
+  | output
+  | results
+  | plots
+  | figures
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+known_first_party = ["pipelines", "utils"]
+known_third_party = [
+    "pandas", "numpy", "matplotlib", "seaborn", "plotly", 
+    "scikit-learn", "sklearn", "scipy", "jupyter", 
+    "notebook", "ipython", "yaml", "streamlit"
+]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+skip_gitignore = true
+src_paths = ["src"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+fix = true
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "*.ipynb_checkpoints",
+    "data/*",
+    "output/*",
+    "results/*",
+    "plots/*",
+    "figures/*"
+]
+src = ["src"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "UP",   # pyupgrade
+    "PD",   # pandas-vet
+    "SIM",  # flake8-simplify
+]
+ignore = [
+    "E501",   # line too long (handled by black)
+    "B008",   # do not perform function calls in argument defaults
+    "B905",   # zip without explicit strict parameter
+    "PD002",  # inplace=True should be avoided
+    "SIM108", # use ternary operator instead of if-else
+]
+
+[tool.ruff.lint.per-file-ignores]
+"*.ipynb" = ["E402", "F401", "F403", "F405"]  # Allow imports not at top of file in notebooks
+
+[tool.ruff.lint.isort]
+known-first-party = ["pipelines", "utils"]
+known-third-party = [
+    "pandas", "numpy", "matplotlib", "seaborn", "plotly", 
+    "scikit-learn", "sklearn", "scipy", "jupyter", 
+    "notebook", "ipython", "yaml", "streamlit"
+]
+
+[tool.jupyter]
+notebook_dir = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
