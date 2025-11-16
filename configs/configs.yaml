@@ -7,3 +7,6 @@ data:
   # Province and Bangkok area name configurations
   province_whitelist_path: "thailand_province_whitelist.json"
   bangkok_official_area_name_path: "bangkok_official_area_name.json"
+
+  # Geographic data path
+  bangkok_geographic_data_path: "../data/geographic_data/bangkok_geographic.shp"
