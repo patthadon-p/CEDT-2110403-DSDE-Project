@@ -74,8 +74,6 @@ ignore = [
     "B905",   # zip without explicit strict parameter
     "PD002",  # inplace=True should be avoided
     "SIM108", # use ternary operator instead of if-else
-    "ANN101", # missing type annotation for self in method
-    "ANN102", # missing type annotation for cls in classmethod
     "ANN401", # dynamically typed expressions (Any) are disallowed
 ]
 
