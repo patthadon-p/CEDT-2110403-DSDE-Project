@@ -1,12 +1,9 @@
-import os
-
 import geopandas as gpd
 
 from src.utils.ConfigUtils import read_config_path
 
 # Get the absolute path to the configs directory
 from utils import configs_path
-
 
 
 def load_geographic_data(filepath: str = "") -> gpd.GeoDataFrame:

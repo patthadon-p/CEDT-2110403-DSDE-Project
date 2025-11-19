@@ -1,11 +1,11 @@
+# Import necessary modules
 import json
-import os
 
+# Import utility functions
 from src.utils.ConfigUtils import read_config_path
 
 # Get the absolute path to the configs directory
 from utils import configs_path
-
 
 
 def load_province_whitelist(filepath: str = "") -> dict:
