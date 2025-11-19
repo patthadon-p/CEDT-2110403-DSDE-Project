@@ -2,6 +2,8 @@
 import os
 import sys
 
+import pandas as pd
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import necessary modules
@@ -11,31 +13,39 @@ from sklearn.pipeline import Pipeline
 # Other Transformer
 from .AddressTransformer import AddressTransformer
 from .DateTransformer import DateTransformer
+from .IngestionPreprocessor import IngestionPreprocessor
 from .StateToStatusTransformer import StateToStatusTransformer
 
 
 class CleansingPipeline(BaseEstimator, TransformerMixin):
     def __init__(
         self,
-        province_path="",
-        bangkok_area_path="",
-        geographic_data_path="",
-        state_mapping_path="",
-        coords_column=None,
-        province_column=None,
-        district_column=None,
-        subdistrict_column=None,
-        geo_district_column=None,
-        geo_subdistrict_column=None,
-        date_columns=None,
-        state_mapping=None,
-        old_state_column=None,
-        new_state_column=None,
-    ):
+        ingest_path: str = "",
+        province_path: str = "",
+        bangkok_area_path: str = "",
+        geographic_data_path: str = "",
+        state_mapping_path: str = "",
+        drop_columns: list[str] | None = None,
+        drop_na_columns: list[str] | None = None,
+        coords_column: str | None = None,
+        province_column: str | None = None,
+        district_column: str | None = None,
+        subdistrict_column: str | None = None,
+        geo_district_column: str | None = None,
+        geo_subdistrict_column: str | None = None,
+        date_columns: list[str] | None = None,
+        state_mapping: dict | None = None,
+        old_state_column: str | None = None,
+        new_state_column: str | None = None,
+    ) -> None:
+        self.ingest_path = ingest_path
         self.province_path = province_path
         self.bangkok_area_path = bangkok_area_path
         self.geographic_data_path = geographic_data_path
         self.state_mapping_path = state_mapping_path
+
+        self.drop_columns = drop_columns
+        self.drop_na_columns = drop_na_columns
 
         self.coords_column = coords_column
 
@@ -50,6 +60,12 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
         self.state_mapping = state_mapping
         self.old_state_column = old_state_column
         self.new_state_column = new_state_column
+
+        self.ingest_pre_processor = IngestionPreprocessor(
+            filepath=self.ingest_path,
+            drop_columns=self.drop_columns,
+            drop_na_columns=self.drop_na_columns,
+        )
 
         self.date_transformer = DateTransformer(
             columns=self.date_columns,
@@ -74,19 +90,22 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
             new_column=self.new_state_column,
         )
 
-    def fit(self, X, y=None):
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> "CleansingPipeline":
         return self
 
-    def transform(self, X):
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         df = X.copy()
 
         cleansing_pipeline = Pipeline(
             steps=[
+                ("ingest_pre_processor", self.ingest_pre_processor),
                 ("date_transformer", self.date_transformer),
                 ("address_transformer", self.address_transformer),
                 ("status_transformer", self.state_to_status_transformer),
             ],
         )
 
-        df_transformed = cleansing_pipeline.fit_transform(df)
+        df_transformed = pd.DataFrame(cleansing_pipeline.fit_transform(df))
+        df_transformed = df_transformed.dropna()
+
         return df_transformed

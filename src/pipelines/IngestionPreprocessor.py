@@ -48,8 +48,13 @@ class IngestionPreprocessor(BaseEstimator, TransformerMixin):
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         df = X.copy()
-        df_transformed = df.rename(columns=self.rename_dict)
-        df_transformed = df_transformed.drop(columns=self.drop_columns)
+
+        columns_set = set(df.columns)
+        self.drop_na_columns = set(self.drop_na_columns).intersection(columns_set)
+        self.drop_na_columns = list(self.drop_na_columns)
+
+        df_transformed = df.rename(columns=self.rename_dict, errors="ignore")
+        df_transformed = df_transformed.drop(columns=self.drop_columns, errors="ignore")
         df_transformed = df_transformed.dropna(subset=self.drop_na_columns)
 
         return df_transformed
