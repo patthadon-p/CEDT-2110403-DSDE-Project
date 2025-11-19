@@ -44,7 +44,7 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
             dst.fit_transform(load_geographic_data(self.path))
         )
 
-        def save_geo(bangkok_gdf): # Where should this function be
+        def save_geo(bangkok_gdf):  # Where should this function be
             rename_dict = {
                 "OBJECTID": "id",
                 "AREA_CAL": "area_calc",
@@ -59,17 +59,21 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
                 "CHANGWAT_N": "province_name",
                 "Shape_Leng": "shape_length",
                 "Shape_Area": "shape_area",
-                "geometry": "geometry"
-            } # So long
+                "geometry": "geometry",
+            }  # So long
 
             bangkok_gdf = bangkok_gdf.rename(columns=rename_dict)
 
             columns_to_drop = ["id", "admin_id"]
             bangkok_gdf = bangkok_gdf.drop(columns=columns_to_drop)
 
-            bangkok_gdf['province_name'] = "กรุงเทพมหานคร" # should this in ProvinceTransformer?
+            bangkok_gdf["province_name"] = (
+                "กรุงเทพมหานคร"  # should this in ProvinceTransformer?
+            )
 
-            bangkok_gdf.to_csv(os.path.join("..", "data", "processed", "cleansed_geo.csv"), index=False)
+            bangkok_gdf.to_csv(
+                os.path.join("..", "data", "processed", "cleansed_geo.csv"), index=False
+            )
 
         save_geo(self.bangkok_gdf)
 
