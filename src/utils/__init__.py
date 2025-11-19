@@ -18,6 +18,7 @@ Usage:
 
 # Import specific classes and functions for direct access
 from .DistrictSubdistrictUtils import load_bangkok_official_area_names
+from .FuzzyUtils import fuzzy_match, normalize
 from .GeographicUtils import load_geographic_data, save_geographic_data
 from .ProvinceUtils import load_province_whitelist
 from .StatusUtils import load_status_mapping
@@ -27,6 +28,9 @@ __all__ = [
     # Functions
     # DistrictSubdistrictUtils.py
     "load_bangkok_official_area_names",
+    # FuzzyUtils.py
+    "fuzzy_match",
+    "normalize",
     # GeographicUtils.py
     "load_geographic_data",
     "save_geographic_data",
