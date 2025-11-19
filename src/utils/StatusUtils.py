@@ -1,7 +1,7 @@
 import json
 import os
 
-import yaml
+from src.utils.ConfigUtils import read_config_path
 
 # Get the absolute path to the configs directory
 configs_path = os.path.join(
@@ -19,15 +19,10 @@ def load_status_mapping(filepath: str = "") -> dict:
     Args:
         filepath (str): Path to the JSON file. If empty, defaults to the path specified in the configuration file.
     """
-    if filepath == "":
-        with open(configs_path, encoding="utf-8") as config_file:
-            config = yaml.safe_load(config_file)
-            filepath = config["data"]["status_mapping_path"]
 
-        # If the filepath is relative, make it relative to the configs directory
-        if not os.path.isabs(filepath):
-            configs_dir = os.path.dirname(configs_path)
-            filepath = os.path.join(configs_dir, filepath)
+    filepath = read_config_path(
+        configs_path, key="status_mapping_path", filepath=filepath
+    )
 
     with open(filepath, encoding="utf-8") as file:
         status_mapping = json.load(file)

@@ -1,7 +1,7 @@
 import json
 import os
 
-import yaml
+from src.utils.ConfigUtils import read_config_path
 
 # Get the absolute path to the configs directory
 configs_path = os.path.join(
@@ -19,15 +19,9 @@ def load_bangkok_official_area_names(filepath: str = "") -> dict:
     Args:
         filepath (str): Path to the JSON file. If empty, defaults to the path specified in the configuration file.
     """
-    if filepath == "":
-        with open(configs_path, encoding="utf-8") as config_file:
-            config = yaml.safe_load(config_file)
-            filepath = config["data"]["bangkok_official_area_name_path"]
-
-        # If the filepath is relative, make it relative to the configs directory
-        if not os.path.isabs(filepath):
-            configs_dir = os.path.dirname(configs_path)
-            filepath = os.path.join(configs_dir, filepath)
+    filepath = read_config_path(
+        configs_path, key="bangkok_official_area_name_path", filepath=filepath
+    )
 
     with open(filepath, encoding="utf-8") as file:
         area_names = json.load(file)
