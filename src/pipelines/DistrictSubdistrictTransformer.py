@@ -1,6 +1,24 @@
+"""
+District and subdistrict name standardization utilities.
+
+This module provides the DistrictSubdistrictTransformer class, a Scikit-learn
+transformer designed to clean, normalize, and match district and subdistrict
+names against a list of official names using fuzzy string matching. This
+mitigates issues caused by misspellings or inconsistent text input.
+
+Classes
+-------
+DistrictSubdistrictTransformer
+    A transformer that standardizes district and subdistrict names using
+    text normalization and caching fuzzy matching against a predefined list
+    of official names.
+"""
+
 # Setting up the environment
 import os
 import sys
+
+import pandas as pd
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -14,7 +32,46 @@ from utils.FuzzyUtils import fuzzy_match, normalize
 
 
 class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, path="", district_column=None, subdistrict_column=None):
+    """
+    Standardizes and corrects district and subdistrict names using fuzzy matching.
+
+    This transformer sequentially applies two main steps to the target columns:
+    1. **Text Normalization:** Cleans up whitespace and standardizes common
+       Thai prefix repetitions (e.g., 'บางบาง' to 'บาง').
+    2. **Fuzzy Matching:** Compares the normalized name against a pre-loaded
+       list of official names and replaces it with the closest match, caching
+       the results for efficiency.
+
+    Parameters
+    ----------
+    path : str, optional
+        File path to the JSON file containing the official district and
+        subdistrict names (mapping dictionary). Default is "".
+    district_column : str or None, optional
+        Name of the column containing district names to be transformed.
+        Defaults to "district".
+    subdistrict_column : str or None, optional
+        Name of the column containing subdistrict names to be transformed.
+        Defaults to "subdistrict".
+
+    Attributes
+    ----------
+    official_districts : list of str
+        The list of standard district names used as fuzzy match targets.
+    official_subdistricts : list of str
+        The list of standard subdistrict names used as fuzzy match targets.
+    _cache_district : dict
+        Internal cache for storing matched district names ({input: official_name}).
+    _cache_subdistrict : dict
+        Internal cache for storing matched subdistrict names.
+    """
+
+    def __init__(
+        self,
+        path: str = "",
+        district_column: str | None = None,
+        subdistrict_column: str | None = None,
+    ) -> None:
         self.path = path
 
         self.district_column = district_column or "district"
@@ -28,31 +85,59 @@ class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
         self._cache_district = {}
         self._cache_subdistrict = {}
 
-    def fit(self, X, y=None):
+    def fit(
+        self, X: pd.DataFrame, y: pd.Series = None
+    ) -> "DistrictSubdistrictTransformer":
+        """
+        The fit method does nothing for this transformer, as it performs
+        stateless, column-wise transformation and uses a predefined lookup list.
+
+        Parameters
+        ----------
+        X : pandas.DataFrame
+            The input data (not used for fitting).
+        y : array-like of shape (n_samples,), default=None
+            Target values (not used).
+
+        Returns
+        -------
+        DistrictSubdistrictTransformer
+            The fitted transformer (self).
+        """
+
         return self
 
-    def transform(self, X):
-        def _normalize(text):
-            return normalize(text)
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """
+        Transforms the DataFrame by normalizing and fuzzy matching district and
+        subdistrict names.
 
-        def _fuzzy_match(text, choices, cache):
-            return fuzzy_match(text, choices, cache)
+        Parameters
+        ----------
+        X : pandas.DataFrame
+            The input DataFrame containing the district and subdistrict columns.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The transformed DataFrame with standardized district and subdistrict names.
+        """
 
         df = X.copy()
 
         df[self.district_column] = (
             df[self.district_column]
-            .apply(_normalize)
+            .apply(normalize)
             .apply(
-                lambda x: _fuzzy_match(x, self.official_districts, self._cache_district)
+                lambda x: fuzzy_match(x, self.official_districts, self._cache_district)
             )
         )
 
         df[self.subdistrict_column] = (
             df[self.subdistrict_column]
-            .apply(_normalize)
+            .apply(normalize)
             .apply(
-                lambda x: _fuzzy_match(
+                lambda x: fuzzy_match(
                     x, self.official_subdistricts, self._cache_subdistrict
                 )
             )

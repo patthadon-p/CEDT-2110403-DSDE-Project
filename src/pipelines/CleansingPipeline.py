@@ -1,6 +1,24 @@
+"""
+Main data cleansing and standardization pipeline utilities.
+
+This module defines the high-level CleansingPipeline class, which serves as
+the primary entry point for pre-processing raw data. It orchestrates a
+sequence of specialized transformers for date standardization, address
+enrichment, and status mapping to ensure data quality and readiness for
+model consumption.
+
+Classes
+-------
+CleansingPipeline
+    A meta-transformer that combines and sequentially executes all necessary
+    data cleaning and feature engineering steps.
+"""
+
 # Setting up the environment
 import os
 import sys
+
+import pandas as pd
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -15,23 +33,79 @@ from .StateToStatusTransformer import StateToStatusTransformer
 
 
 class CleansingPipeline(BaseEstimator, TransformerMixin):
+    """
+    The main meta-transformer for comprehensive data cleansing and feature standardization.
+
+    This class wraps a Scikit-learn Pipeline to apply several crucial
+    data preparation steps sequentially, ensuring consistency across
+    different data types (dates, addresses, status flags).
+
+    Parameters
+    ----------
+    province_path : str, optional
+        File path for the province name whitelist/mapping, passed to AddressTransformer. Default is "".
+    bangkok_area_path : str, optional
+        File path for the Bangkok official area name mapping, passed to AddressTransformer. Default is "".
+    geographic_data_path : str, optional
+        File path for the geographic data (GeoDataFrame) used for spatial joins, passed to AddressTransformer. Default is "".
+    state_mapping_path : str, optional
+        File path for the JSON containing the state-to-status mapping, passed to StateToStatusTransformer. Default is "".
+
+    coords_column : str or None, optional
+        Name of the column containing coordinates, passed to AddressTransformer. Default is None.
+    province_column : str or None, optional
+        Name of the column containing province names, passed to AddressTransformer. Default is None.
+    district_column : str or None, optional
+        Name of the column containing district names, passed to AddressTransformer. Default is None.
+    subdistrict_column : str or None, optional
+        Name of the column containing subdistrict names, passed to AddressTransformer. Default is None.
+    geo_district_column : str or None, optional
+        Name of the column for the enriched district name from spatial join, passed to AddressTransformer. Default is None.
+    geo_subdistrict_column : str or None, optional
+        Name of the column for the enriched subdistrict name from spatial join, passed to AddressTransformer. Default is None.
+
+    date_columns : list of str or None, optional
+        List of column names to be standardized as datetime objects, passed to DateTransformer. Default is None.
+
+    state_mapping : dict or None, optional
+        Direct mapping dictionary (alternative to state_mapping_path), passed to StateToStatusTransformer. Default is None.
+    old_state_column : str or None, optional
+        Name of the column containing the raw state values, passed to StateToStatusTransformer. Default is None.
+    new_state_column : str or None, optional
+        Name of the output column for the standardized status values, passed to StateToStatusTransformer. Default is None.
+
+    Attributes
+    ----------
+    date_transformer : DateTransformer
+        Instantiated transformer for date standardization.
+    address_transformer : AddressTransformer
+        Instantiated transformer for address cleanup and enrichment.
+    state_to_status_transformer : StateToStatusTransformer
+        Instantiated transformer for mapping state values to standard statuses.
+
+    See Also
+    --------
+    sklearn.pipeline.Pipeline : The underlying mechanism used for sequential transformation.
+    .AddressTransformer.AddressTransformer : The sub-transformer for geographic data.
+    """
+
     def __init__(
         self,
-        province_path="",
-        bangkok_area_path="",
-        geographic_data_path="",
-        state_mapping_path="",
-        coords_column=None,
-        province_column=None,
-        district_column=None,
-        subdistrict_column=None,
-        geo_district_column=None,
-        geo_subdistrict_column=None,
-        date_columns=None,
-        state_mapping=None,
-        old_state_column=None,
-        new_state_column=None,
-    ):
+        province_path: str = "",
+        bangkok_area_path: str = "",
+        geographic_data_path: str = "",
+        state_mapping_path: str = "",
+        coords_column: str | None = None,
+        province_column: str | None = None,
+        district_column: str | None = None,
+        subdistrict_column: str | None = None,
+        geo_district_column: str | None = None,
+        geo_subdistrict_column: str | None = None,
+        date_columns: str | None = None,
+        state_mapping: str | None = None,
+        old_state_column: str | None = None,
+        new_state_column: str | None = None,
+    ) -> None:
         self.province_path = province_path
         self.bangkok_area_path = bangkok_area_path
         self.geographic_data_path = geographic_data_path
@@ -74,10 +148,42 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
             new_column=self.new_state_column,
         )
 
-    def fit(self, X, y=None):
+    def fit(self, X: pd.DataFrame, y: pd.Series = None) -> "CleansingPipeline":
+        """
+        Does nothing, as this meta-transformer relies on its sub-transformers
+        which primarily handle pure transformation logic.
+
+        Parameters
+        ----------
+        X : pandas.DataFrame
+            The input data.
+        y : array-like of shape (n_samples,), default=None
+            Target values (not used).
+
+        Returns
+        -------
+        CleansingPipeline
+            The fitted transformer (self).
+        """
+
         return self
 
-    def transform(self, X):
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """
+        Applies the sequential data cleansing and enrichment pipeline to the input DataFrame.
+
+        Parameters
+        ----------
+        X : pandas.DataFrame
+            The input DataFrame containing raw data.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The transformed DataFrame with standardized dates, enriched addresses,
+            and mapped status columns.
+        """
+
         df = X.copy()
 
         cleansing_pipeline = Pipeline(

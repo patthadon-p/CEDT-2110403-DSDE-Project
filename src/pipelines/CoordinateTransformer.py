@@ -1,6 +1,24 @@
+"""
+Coordinate transformation and spatial validation utilities.
+
+This module provides the CoordinateTransformer class, a Scikit-learn-compatible
+transformer that performs spatial joining to validate if a data point's
+coordinates fall within the reported administrative region (district/subdistrict).
+This is crucial for data cleansing in geographic data science projects.
+
+Classes
+-------
+CoordinateTransformer
+    A transformer that extracts coordinates, performs a spatial join with
+    geographic boundary data, and filters data points based on geometric
+    and textual address consistency.
+"""
+
 # Setting up the environment
 import os
 import sys
+
+import pandas as pd
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -16,15 +34,53 @@ from .DistrictSubdistrictTransformer import DistrictSubdistrictTransformer
 
 
 class CoordinateTransformer(BaseEstimator, TransformerMixin):
+    """
+    Validates data points by checking if their coordinates fall within the
+    claimed administrative boundaries.
+
+    This transformer performs three main tasks:
+    1. Extracts longitude and latitude from a combined coordinate string column.
+    2. Performs a **spatial join**  between the data points and pre-loaded
+       geographic region boundaries (`bangkok_gdf`).
+    3. Filters the results to include only records where the spatially derived
+       district/subdistrict matches the original text-based district/subdistrict columns.
+
+    Parameters
+    ----------
+    path : str, optional
+        File path to the geographic boundary data (e.g., GeoJSON, Shapefile),
+        passed to `load_geographic_data`. Default is "".
+    coords_column : str or None, optional
+        Name of the column containing coordinate strings (e.g., "lat,lon").
+        Defaults to "coords".
+    district_column : str or None, optional
+        Name of the input column containing the text-based district name.
+        Defaults to "district".
+    subdistrict_column : str or None, optional
+        Name of the input column containing the text-based subdistrict name.
+        Defaults to "subdistrict".
+    geo_district_column : str or None, optional
+        Name of the district column in the geographic boundary data (`bangkok_gdf`).
+        Defaults to "DISTRICT_N".
+    geo_subdistrict_column : str or None, optional
+        Name of the subdistrict column in the geographic boundary data (`bangkok_gdf`).
+        Defaults to "SUBDISTR_1".
+
+    Attributes
+    ----------
+    bangkok_gdf : geopandas.GeoDataFrame
+        The pre-processed geographic boundary data used for spatial joining.
+    """
+
     def __init__(
         self,
-        path="",
-        coords_column=None,
-        district_column=None,
-        subdistrict_column=None,
-        geo_district_column=None,
-        geo_subdistrict_column=None,
-    ):
+        path: str = "",
+        coords_column: str | None = None,
+        district_column: str | None = None,
+        subdistrict_column: str | None = None,
+        geo_district_column: str | None = None,
+        geo_subdistrict_column: str | None = None,
+    ) -> None:
         self.path = path
 
         self.coords_column = coords_column or "coords"
@@ -46,12 +102,12 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
 
         save_geographic_data(self.bangkok_gdf)
 
-    def fit(self, X, y=None):
+    def fit(self, X: pd.DataFrame, y: pd.Series = None) -> "CoordinateTransformer":
         return self
 
-    def transform(self, X):
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
 
-        def coords_check(row):
+        def coords_check(row: dict) -> bool:
             district_points = row[self.district_column]
             subdistrict_points = row[self.subdistrict_column]
 
