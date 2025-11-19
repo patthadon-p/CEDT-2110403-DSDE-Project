@@ -16,6 +16,11 @@ Usage:
     whitelist = utils.load_province_whitelist()
 """
 
+from pathlib import Path
+
+base_dir = Path(__file__).resolve().parents[2]
+configs_path = base_dir / "configs" / "configs.yaml"
+
 # Import specific classes and functions for direct access
 from .DistrictSubdistrictUtils import load_bangkok_official_area_names
 from .GeographicUtils import load_geographic_data

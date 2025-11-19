@@ -4,11 +4,8 @@ import os
 from src.utils.ConfigUtils import read_config_path
 
 # Get the absolute path to the configs directory
-configs_path = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-    "configs",
-    "configs.yaml",
-)
+from utils import configs_path
+
 
 
 def load_province_whitelist(filepath: str = "") -> dict:
