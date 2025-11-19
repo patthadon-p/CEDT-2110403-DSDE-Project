@@ -52,7 +52,7 @@ def load_geographic_data(filepath: str = "") -> gpd.GeoDataFrame:
     ------
     FileNotFoundError
         If the resolved file path does not exist.
-    
+
     See Also
     --------
     .ConfigUtils.read_config_path : The utility function used to resolve the path.
@@ -69,7 +69,7 @@ def save_geographic_data(
     df: gpd.GeoDataFrame | pd.DataFrame,
     filepath: str = "",
     save_name: str = "",
-    drop_columns=None,
+    drop_columns: list[str] = None,
 ) -> None:
     """
     Standardizes, cleans, and saves the provided GeoDataFrame or DataFrame as a CSV file.
@@ -98,7 +98,7 @@ def save_geographic_data(
     Returns
     -------
     None
-    
+
     See Also
     --------
     .ConfigUtils.read_config_path : The utility function used to resolve the path.

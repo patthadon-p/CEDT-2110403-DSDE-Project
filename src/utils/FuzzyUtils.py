@@ -76,9 +76,9 @@ def fuzzy_match(
     """
     Performs fuzzy (approximate) matching using a score cutoff and caches the result.
 
-    The function first checks the cache for an existing match for the input 
-    `text`. If not found, it uses the 'rapidfuzz' library's `extractOne` 
-    method to find the best match in the `choices` list. The resulting 
+    The function first checks the cache for an existing match for the input
+    `text`. If not found, it uses the 'rapidfuzz' library's `extractOne`
+    method to find the best match in the `choices` list. The resulting
     match is stored in the cache before being returned.
 
     Parameters
@@ -90,20 +90,20 @@ def fuzzy_match(
     cache : dict of {str: str}
         A mutable dictionary used to store and retrieve previously computed matches.
     cutoff : float, optional
-        The minimum score (out of 100) required for a match to be accepted. 
-        If the best match score is below this value, the original `text` is returned. 
+        The minimum score (out of 100) required for a match to be accepted.
+        If the best match score is below this value, the original `text` is returned.
         Default is 60.
 
     Returns
     -------
     str or None
-        The matched string from `choices` if a match above the `cutoff` 
-        is found. Otherwise, the original input `text` is returned. Returns 
+        The matched string from `choices` if a match above the `cutoff`
+        is found. Otherwise, the original input `text` is returned. Returns
         None if the input `text` is None or empty.
 
     Notes
     -----
-    The matching uses the default process.extractOne ratio (simple ratio) 
+    The matching uses the default process.extractOne ratio (simple ratio)
     from `rapidfuzz`.
     """
 

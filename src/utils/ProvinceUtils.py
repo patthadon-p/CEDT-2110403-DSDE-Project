@@ -49,7 +49,7 @@ def load_province_whitelist(filepath: str = "") -> dict:
         If the resolved file path does not exist.
     JSONDecodeError
         If the file content is not valid JSON.
-        
+
     See Also
     --------
     .ConfigUtils.read_config_path : The utility function used to resolve the path.
