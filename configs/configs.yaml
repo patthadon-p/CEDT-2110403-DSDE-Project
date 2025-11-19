@@ -1,5 +1,7 @@
 data:
+  # Raw data path configuration
   raw_data_path: "data/raw/bangkok_traffy.csv"
+  raw_data_columns_path: "raw_data_columns.json"
 
   # Status mapping configuration
   status_mapping_path: "status.json"
@@ -10,3 +12,4 @@ data:
 
   # Geographic data path
   bangkok_geographic_data_path: "../data/geographic_data/bangkok_geographic.shp"
+  geographic_columns_path: "geographic_columns.json"

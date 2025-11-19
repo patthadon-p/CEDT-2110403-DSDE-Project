@@ -1,9 +1,9 @@
 {
-     "OBJECTID": "id",
+     "OBJECTID": "DROP",
     "AREA_CAL": "area_calc",
     "AREA_BMA": "area_bma",
     "PERIMETER": "perimeter",
-    "ADMIN_ID": "admin_id",
+    "ADMIN_ID": "DROP",
     "SUBDISTRIC": "subdistrict_id",
     "SUBDISTR_1": "subdistrict_name",
     "DISTRICT_I": "district_id",
@@ -13,4 +13,4 @@
     "Shape_Leng": "shape_length",
     "Shape_Area": "shape_area",
     "geometry": "geometry"
-    }
+}
