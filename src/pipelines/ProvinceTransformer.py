@@ -68,7 +68,7 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
         self.province_column = province_column or "province"
         self.filtered = []
 
-    def fit(self, X: pd.DataFrame, y: pd.Series = None) -> "ProvinceTransformer":
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> "ProvinceTransformer":
         """
         The fit method does nothing for this transformer, as it performs
         stateless, column-wise transformation using a predefined lookup table.
