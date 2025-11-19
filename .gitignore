@@ -117,6 +117,9 @@ dmypy.json
 # Raw Data (Large Files)
 data/raw/
 
+# Cleansed Data (Large Files)
+data/processed/Cleansed_data.csv
+
 # Model files
 *.model
 *.sav
