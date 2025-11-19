@@ -22,6 +22,7 @@ from .FuzzyUtils import fuzzy_match, normalize
 from .GeographicUtils import load_geographic_data, save_geographic_data
 from .ProvinceUtils import load_province_whitelist
 from .StatusUtils import load_status_mapping
+from .DatetimeUtils import get_buddhist_year_last_two_digits
 
 # Define what gets imported with 'from utils import *'
 __all__ = [
@@ -38,4 +39,5 @@ __all__ = [
     "load_province_whitelist",
     # StatusUtils.py
     "load_status_mapping",
+    "get_buddhist_year_last_two_digits",
 ]
