@@ -102,7 +102,9 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
 
         save_geographic_data(self.bangkok_gdf)
 
-    def fit(self, X: pd.DataFrame, y: pd.Series = None) -> "CoordinateTransformer":
+    def fit(
+        self, X: pd.DataFrame, y: pd.Series | None = None
+    ) -> "CoordinateTransformer":
         return self
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:

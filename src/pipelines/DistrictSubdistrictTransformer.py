@@ -86,7 +86,7 @@ class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
         self._cache_subdistrict = {}
 
     def fit(
-        self, X: pd.DataFrame, y: pd.Series = None
+        self, X: pd.DataFrame, y: pd.Series | None = None
     ) -> "DistrictSubdistrictTransformer":
         """
         The fit method does nothing for this transformer, as it performs

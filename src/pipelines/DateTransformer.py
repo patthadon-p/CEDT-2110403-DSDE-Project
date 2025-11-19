@@ -45,10 +45,10 @@ class DateTransformer(BaseEstimator, TransformerMixin):
         The final list of columns that will be processed.
     """
 
-    def __init__(self, columns: list[str] = None) -> None:
+    def __init__(self, columns: list[str] | None = None) -> None:
         self.columns = columns or ["timestamp", "last_activity"]
 
-    def fit(self, X: pd.DataFrame, y: pd.Series = None) -> "DateTransformer":
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> "DateTransformer":
         """
         The fit method does nothing for this transformer, as it performs
         stateless, column-wise transformation logic.

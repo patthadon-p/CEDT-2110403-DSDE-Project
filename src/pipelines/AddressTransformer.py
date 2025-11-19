@@ -123,7 +123,7 @@ class AddressTransformer(BaseEstimator, TransformerMixin):
             geo_subdistrict_column=self.geo_subdistrict_column,
         )
 
-    def fit(self, X: pd.DataFrame, y: pd.Series = None) -> "AddressTransformer":
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> "AddressTransformer":
         """
         Does nothing, as this transformer relies on its sub-transformers,
         which typically do not require fitting.
@@ -168,5 +168,5 @@ class AddressTransformer(BaseEstimator, TransformerMixin):
             ],
         )
 
-        df_transformed = address_transformer.fit_transform(df)
+        df_transformed = pd.DataFrame(address_transformer.fit_transform(df))
         return df_transformed

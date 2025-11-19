@@ -62,7 +62,7 @@ class StateToStatusTransformer(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         path: str = "",
-        mapping: str | None = None,
+        mapping: dict | None = None,
         old_column: str | None = None,
         new_column: str | None = None,
     ) -> None:
@@ -74,7 +74,9 @@ class StateToStatusTransformer(BaseEstimator, TransformerMixin):
         else:
             self.mapping = mapping
 
-    def fit(self, X: pd.DataFrame, y: pd.Series = None) -> "StateToStatusTransformer":
+    def fit(
+        self, X: pd.DataFrame, y: pd.Series | None = None
+    ) -> "StateToStatusTransformer":
         """
         The fit method does nothing for this transformer, as it performs
         stateless mapping based on a predefined dictionary.
