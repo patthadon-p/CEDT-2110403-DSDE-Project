@@ -1,0 +1,18 @@
+{
+  "ticket_id": "ticket_id",
+  "type": "type",
+  "organization": "organization",
+  "comment": "comment",
+  "photo": "photo",
+  "photo_after": "photo_after",
+  "coords": "coords",
+  "address": "address",
+  "subdistrict": "subdistrict",
+  "district": "district",
+  "province": "province",
+  "timestamp": "timestamp",
+  "state": "state",
+  "star": "star",
+  "count_reopen": "count_reopen",
+  "last_activity": "last_activity"
+}
