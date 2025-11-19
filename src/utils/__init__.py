@@ -18,7 +18,7 @@ Usage:
 
 # Import specific classes and functions for direct access
 from .DistrictSubdistrictUtils import load_bangkok_official_area_names
-from .GeographicUtils import load_geographic_data
+from .GeographicUtils import load_geographic_data, save_geographic_data
 from .ProvinceUtils import load_province_whitelist
 from .StatusUtils import load_status_mapping
 
@@ -29,6 +29,7 @@ __all__ = [
     "load_bangkok_official_area_names",
     # GeographicUtils.py
     "load_geographic_data",
+    "save_geographic_data",
     # ProvinceUtils.py
     "load_province_whitelist",
     # StatusUtils.py

@@ -9,7 +9,7 @@ import geopandas as gpd
 from sklearn.base import BaseEstimator, TransformerMixin
 
 # Utility functions
-from utils.GeographicUtils import load_geographic_data
+from utils.GeographicUtils import load_geographic_data, save_geographic_data
 
 # Other Transformer
 from .DistrictSubdistrictTransformer import DistrictSubdistrictTransformer
@@ -44,38 +44,7 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
             dst.fit_transform(load_geographic_data(self.path))
         )
 
-        def save_geo(bangkok_gdf):  # Where should this function be
-            rename_dict = {
-                "OBJECTID": "id",
-                "AREA_CAL": "area_calc",
-                "AREA_BMA": "area_bma",
-                "PERIMETER": "perimeter",
-                "ADMIN_ID": "admin_id",
-                "SUBDISTRIC": "subdistrict_id",
-                "SUBDISTR_1": "subdistrict_name",
-                "DISTRICT_I": "district_id",
-                "DISTRICT_N": "district_name",
-                "CHANGWAT_I": "province_id",
-                "CHANGWAT_N": "province_name",
-                "Shape_Leng": "shape_length",
-                "Shape_Area": "shape_area",
-                "geometry": "geometry",
-            }  # So long
-
-            bangkok_gdf = bangkok_gdf.rename(columns=rename_dict)
-
-            columns_to_drop = ["id", "admin_id"]
-            bangkok_gdf = bangkok_gdf.drop(columns=columns_to_drop)
-
-            bangkok_gdf["province_name"] = (
-                "กรุงเทพมหานคร"  # should this in ProvinceTransformer?
-            )
-
-            bangkok_gdf.to_csv(
-                os.path.join("..", "data", "processed", "cleansed_geo.csv"), index=False
-            )
-
-        save_geo(self.bangkok_gdf)
+        save_geographic_data(self.bangkok_gdf)
 
     def fit(self, X, y=None):
         return self
