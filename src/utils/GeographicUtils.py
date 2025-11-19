@@ -69,7 +69,7 @@ def save_geographic_data(
     df: gpd.GeoDataFrame | pd.DataFrame,
     filepath: str = "",
     save_name: str = "",
-    drop_columns: list[str] = None,
+    drop_columns: list[str] | None = None,
 ) -> None:
     """
     Standardizes, cleans, and saves the provided GeoDataFrame or DataFrame as a CSV file.
