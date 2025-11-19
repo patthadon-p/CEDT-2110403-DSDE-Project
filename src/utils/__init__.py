@@ -16,25 +16,21 @@ Usage:
     whitelist = utils.load_province_whitelist()
 """
 
-# Import necessary modules
-from pathlib import Path
-
 # Import specific classes and functions for direct access
 from .DistrictSubdistrictUtils import load_bangkok_official_area_names
 from .GeographicUtils import load_geographic_data
 from .ProvinceUtils import load_province_whitelist
 from .StatusUtils import load_status_mapping
 
-# Define the path to the configs directory
-base_dir = Path(__file__).resolve().parents[2]
-configs_path = base_dir / "configs" / "configs.yaml"
-configs_path = str(configs_path)
-
 # Define what gets imported with 'from utils import *'
 __all__ = [
     # Functions
+    # DistrictSubdistrictUtils.py
     "load_bangkok_official_area_names",
+    # GeographicUtils.py
     "load_geographic_data",
+    # ProvinceUtils.py
     "load_province_whitelist",
+    # StatusUtils.py
     "load_status_mapping",
 ]

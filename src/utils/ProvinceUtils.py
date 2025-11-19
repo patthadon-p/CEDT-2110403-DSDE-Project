@@ -2,10 +2,7 @@
 import json
 
 # Import utility functions
-from src.utils.ConfigUtils import read_config_path
-
-# Get the absolute path to the configs directory
-from utils import configs_path
+from .ConfigUtils import read_config_path
 
 
 def load_province_whitelist(filepath: str = "") -> dict:
@@ -17,9 +14,7 @@ def load_province_whitelist(filepath: str = "") -> dict:
         filepath (str): Path to the JSON file. If empty, defaults to the path specified in the configuration file.
     """
 
-    filepath = read_config_path(
-        configs_path, key="province_whitelist_path", filepath=filepath
-    )
+    filepath = read_config_path(key="province_whitelist_path", filepath=filepath)
 
     with open(filepath, encoding="utf-8") as file:
         provinces = json.load(file)

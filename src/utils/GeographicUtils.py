@@ -1,9 +1,8 @@
+# Import necessary modules
 import geopandas as gpd
 
-from src.utils.ConfigUtils import read_config_path
-
-# Get the absolute path to the configs directory
-from utils import configs_path
+# Import utility functions
+from .ConfigUtils import read_config_path
 
 
 def load_geographic_data(filepath: str = "") -> gpd.GeoDataFrame:
@@ -15,9 +14,7 @@ def load_geographic_data(filepath: str = "") -> gpd.GeoDataFrame:
         filepath (str): Path to the SHP file. If empty, defaults to the path specified in the configuration file.
     """
 
-    filepath = read_config_path(
-        configs_path, key="bangkok_geographic_data_path", filepath=filepath
-    )
+    filepath = read_config_path(key="bangkok_geographic_data_path", filepath=filepath)
 
     bangkok_geodata = gpd.read_file(filepath, encoding="utf-8").to_crs(epsg=4326)
 
