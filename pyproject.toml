@@ -2,6 +2,8 @@
 line-length = 88
 target-version = ["py311"]
 skip-string-normalization = false
+# Force function parameters to be on separate lines when they exceed line length
+skip-magic-trailing-comma = false
 exclude = '''
 /(
     \.git
@@ -21,11 +23,11 @@ exclude = '''
 [tool.isort]
 profile = "black"
 line_length = 88
-known_first_party = ["pipelines", "utils"]
+known_first_party = ["src", "pipelines", "utils"]
 known_third_party = [
     "pandas", "numpy", "matplotlib", "seaborn", "plotly", 
     "scikit-learn", "sklearn", "scipy", "jupyter", 
-    "notebook", "ipython", "yaml", "streamlit"
+    "notebook", "ipython", "yaml", "streamlit", "geopandas"
 ]
 multi_line_output = 3
 include_trailing_comma = true
@@ -48,7 +50,8 @@ exclude = [
     "output/*",
     "results/*",
     "plots/*",
-    "figures/*"
+    "figures/*",
+    "notebooks/*"
 ]
 src = ["src"]
 
@@ -63,6 +66,7 @@ select = [
     "UP",   # pyupgrade
     "PD",   # pandas-vet
     "SIM",  # flake8-simplify
+    "ANN",  # flake8-annotations (enforce type hints)
 ]
 ignore = [
     "E501",   # line too long (handled by black)
@@ -70,21 +74,25 @@ ignore = [
     "B905",   # zip without explicit strict parameter
     "PD002",  # inplace=True should be avoided
     "SIM108", # use ternary operator instead of if-else
+    "ANN101", # missing type annotation for self in method
+    "ANN102", # missing type annotation for cls in classmethod
+    "ANN401", # dynamically typed expressions (Any) are disallowed
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"*.ipynb" = ["E402", "F401", "F403", "F405"]  # Allow imports not at top of file in notebooks
+"*.ipynb" = ["E402", "F401", "F403", "F405", "ANN"]  # Allow imports not at top of file in notebooks, skip annotations
+"tests/*" = ["ANN"]  # Skip type annotations in test files
 
 [tool.ruff.lint.isort]
-known-first-party = ["pipelines", "utils"]
+known-first-party = ["src", "pipelines", "utils"]
 known-third-party = [
     "pandas", "numpy", "matplotlib", "seaborn", "plotly", 
     "scikit-learn", "sklearn", "scipy", "jupyter", 
-    "notebook", "ipython", "yaml", "streamlit"
+    "notebook", "ipython", "yaml", "streamlit", "geopandas"
 ]
 
 [tool.jupyter]
-notebook_dir = "src"
+notebook_dir = "notebooks"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
