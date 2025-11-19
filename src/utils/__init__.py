@@ -17,6 +17,7 @@ Usage:
 """
 
 # Import specific classes and functions for direct access
+from .ConfigUtils import get_configs_path, read_config_path
 from .DistrictSubdistrictUtils import load_bangkok_official_area_names
 from .FuzzyUtils import fuzzy_match, normalize
 from .GeographicUtils import load_geographic_data, save_geographic_data
@@ -26,6 +27,9 @@ from .StatusUtils import load_status_mapping
 # Define what gets imported with 'from utils import *'
 __all__ = [
     # Functions
+    # ConfigUtils.py
+    "get_configs_path",
+    "read_config_path",
     # DistrictSubdistrictUtils.py
     "load_bangkok_official_area_names",
     # FuzzyUtils.py

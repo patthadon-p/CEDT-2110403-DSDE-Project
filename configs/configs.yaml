@@ -1,6 +1,6 @@
 data:
   # Raw data path configuration
-  raw_data_path: "data/raw/bangkok_traffy.csv"
+  raw_data_path: "../data/raw/bangkok_traffy.csv"
   raw_data_columns_path: "raw_data_columns.json"
 
   # Status mapping configuration

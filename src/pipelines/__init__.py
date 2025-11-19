@@ -22,6 +22,7 @@ from .CleansingPipeline import CleansingPipeline
 from .CoordinateTransformer import CoordinateTransformer
 from .DateTransformer import DateTransformer
 from .DistrictSubdistrictTransformer import DistrictSubdistrictTransformer
+from .IngestionPreprocessor import IngestionPreprocessor
 from .ProvinceTransformer import ProvinceTransformer
 from .StateToStatusTransformer import StateToStatusTransformer
 
@@ -33,6 +34,7 @@ __all__ = [
     "CoordinateTransformer",
     "DateTransformer",
     "DistrictSubdistrictTransformer",
+    "IngestionPreprocessor",
     "ProvinceTransformer",
     "StateToStatusTransformer",
 ]
