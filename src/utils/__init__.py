@@ -18,6 +18,7 @@ Usage:
 
 # Import specific classes and functions for direct access
 from .ConfigUtils import get_configs_path, read_config_path
+from .DatetimeUtils import get_buddhist_year
 from .DistrictSubdistrictUtils import load_bangkok_official_area_names
 from .FuzzyUtils import fuzzy_match, normalize
 from .GeographicUtils import load_geographic_data, save_geographic_data
@@ -30,6 +31,8 @@ __all__ = [
     # ConfigUtils.py
     "get_configs_path",
     "read_config_path",
+    # DatetimeUtils.py
+    "get_buddhist_year",
     # DistrictSubdistrictUtils.py
     "load_bangkok_official_area_names",
     # FuzzyUtils.py

@@ -42,7 +42,7 @@ def get_configs_path() -> str:
     return str(configs_path)
 
 
-def read_config_path(key: str, filepath: str = "") -> str:
+def read_config_path(key: str, domain: str = "data", filepath: str = "") -> str:
     """
     Reads a file path from the config file and resolves it to an absolute path.
 
@@ -54,8 +54,10 @@ def read_config_path(key: str, filepath: str = "") -> str:
     Parameters
     ----------
     key : str
-        The dictionary key to look up the path in the 'data' section of
+        The dictionary key to look up the path in the `domain` section of
         the config file (e.g., 'raw_data').
+    domain : str, optional
+        The top-level section in the config file where the key is located. Default is "data".
     filepath : str, optional
         A path string. If provided (not empty), this value is returned
         directly without reading the config file. Default is "".
@@ -70,7 +72,7 @@ def read_config_path(key: str, filepath: str = "") -> str:
     if filepath == "":
         with open(configs_path, encoding="utf-8") as config_file:
             config = yaml.safe_load(config_file)
-            filepath = config["data"][key]
+            filepath = config[domain][key]
 
             if not os.path.isabs(filepath):
                 configs_dir = os.path.dirname(configs_path)

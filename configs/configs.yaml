@@ -13,3 +13,7 @@ data:
   # Geographic data path
   bangkok_geographic_data_path: "../data/geographic_data/bangkok_geographic.shp"
   geographic_columns_path: "geographic_columns.json"
+
+scrapping:
+  # Population scrapping configuration
+  population_scrapping_path: "population_scrapping.json"
