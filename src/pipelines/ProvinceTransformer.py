@@ -24,6 +24,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Import necessary modules
 from sklearn.base import BaseEstimator, TransformerMixin
 
+from utils.FuzzyUtils import fuzzy_match, normalize
+
 # Utility functions
 from utils.ProvinceUtils import load_province_whitelist
 
@@ -67,6 +69,8 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
 
         self.province_column = province_column or "province"
         self.filtered = []
+
+        self._cache_province = {}
 
     def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> "ProvinceTransformer":
         """
@@ -113,6 +117,16 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
             .str.replace("จังหวัด", "", regex=False)  # แทน "จังหวัด" ด้วยช่องว่าง
             .str.replace("จ.", "", regex=False)  # แทน "จ." ด้วยช่องว่าง
             .str.strip()
+        )
+
+        df[self.province_column] = (
+            df[self.province_column]
+            .apply(normalize)
+            .apply(
+                lambda x: fuzzy_match(
+                    x, list(self.whitelist.keys()), self._cache_province
+                )
+            )
         )
 
         # map values

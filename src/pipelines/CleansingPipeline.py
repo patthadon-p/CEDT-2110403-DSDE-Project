@@ -225,5 +225,6 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
 
         df_transformed = pd.DataFrame(cleansing_pipeline.fit_transform(df))
         df_transformed = df_transformed.dropna()
+        df_transformed = df_transformed.reset_index(drop=True)
 
         return df_transformed
