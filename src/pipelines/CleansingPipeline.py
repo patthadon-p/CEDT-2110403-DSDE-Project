@@ -43,6 +43,15 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
+    # --- Ingestion Preprocessor Parameters ---
+    ingest_path : str, optional
+        File path for the JSON containing ingestion settings (rename/drop columns) for IngestionPreprocessor. Default is "".
+    drop_columns : list of str or None, optional
+        List of columns to be dropped, passed to IngestionPreprocessor. Default is None.
+    drop_na_columns : list of str or None, optional
+        List of columns whose rows must not contain NaN/null values, passed to IngestionPreprocessor. Default is None.
+
+    # --- Utility File Paths (Passed to Sub-Transformers) ---
     province_path : str, optional
         File path for the province name whitelist/mapping, passed to AddressTransformer. Default is "".
     bangkok_area_path : str, optional
@@ -52,31 +61,36 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
     state_mapping_path : str, optional
         File path for the JSON containing the state-to-status mapping, passed to StateToStatusTransformer. Default is "".
 
+    # --- Column Names (Passed to AddressTransformer) ---
     coords_column : str or None, optional
-        Name of the column containing coordinates, passed to AddressTransformer. Default is None.
+        Name of the column containing coordinates. Default is None.
     province_column : str or None, optional
-        Name of the column containing province names, passed to AddressTransformer. Default is None.
+        Name of the column containing province names. Default is None.
     district_column : str or None, optional
-        Name of the column containing district names, passed to AddressTransformer. Default is None.
+        Name of the column containing district names. Default is None.
     subdistrict_column : str or None, optional
-        Name of the column containing subdistrict names, passed to AddressTransformer. Default is None.
+        Name of the column containing subdistrict names. Default is None.
     geo_district_column : str or None, optional
-        Name of the column for the enriched district name from spatial join, passed to AddressTransformer. Default is None.
+        Name of the column for the enriched district name from spatial join. Default is None.
     geo_subdistrict_column : str or None, optional
-        Name of the column for the enriched subdistrict name from spatial join, passed to AddressTransformer. Default is None.
+        Name of the column for the enriched subdistrict name from spatial join. Default is None.
 
+    # --- Column Names (Passed to DateTransformer) ---
     date_columns : list of str or None, optional
-        List of column names to be standardized as datetime objects, passed to DateTransformer. Default is None.
+        List of column names to be standardized as datetime objects. Default is None.
 
+    # --- Status Mapping Parameters (Passed to StateToStatusTransformer) ---
     state_mapping : dict or None, optional
-        Direct mapping dictionary (alternative to state_mapping_path), passed to StateToStatusTransformer. Default is None.
+        Direct mapping dictionary (alternative to state_mapping_path). Default is None.
     old_state_column : str or None, optional
-        Name of the column containing the raw state values, passed to StateToStatusTransformer. Default is None.
+        Name of the column containing the raw state values. Default is None.
     new_state_column : str or None, optional
-        Name of the output column for the standardized status values, passed to StateToStatusTransformer. Default is None.
+        Name of the output column for the standardized status values. Default is None.
 
     Attributes
     ----------
+    ingest_pre_processor : IngestionPreprocessor
+        Instantiated transformer for initial column cleanup and row filtering.
     date_transformer : DateTransformer
         Instantiated transformer for date standardization.
     address_transformer : AddressTransformer

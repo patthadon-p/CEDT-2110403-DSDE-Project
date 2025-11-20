@@ -91,9 +91,10 @@ def save_geographic_data(
         Default is "".
     save_name : str, optional
         The file name for the output CSV. Defaults to 'cleansed_geo.csv'.
-    drop_columns : list of str or str or None, optional
-        A list of columns to be dropped from the DataFrame. Defaults to
-        the single string "DROP" if not specified.
+    drop_columns : list of str or None, optional
+        A list of columns to be dropped from the DataFrame. The underlying
+        code defaults to dropping the column named **"DROP"** if this parameter
+        is passed as None or empty.
 
     Returns
     -------

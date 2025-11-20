@@ -29,12 +29,20 @@ from .StateToStatusTransformer import StateToStatusTransformer
 # Define what gets imported with 'from pipelines import *'
 __all__ = [
     # Classes
+    # AddressTransformer.py
     "AddressTransformer",
+    # CleansingPipeline.py
     "CleansingPipeline",
+    # CoordinateTransformer.py
     "CoordinateTransformer",
+    # DateTransformer.py
     "DateTransformer",
+    # DistrictSubdistrictTransformer.py
     "DistrictSubdistrictTransformer",
+    # IngestionPreprocessor.py
     "IngestionPreprocessor",
+    # ProvinceTransformer.py
     "ProvinceTransformer",
+    # StateToStatusTransformer.py
     "StateToStatusTransformer",
 ]

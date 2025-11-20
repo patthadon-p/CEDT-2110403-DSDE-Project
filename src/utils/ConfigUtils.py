@@ -27,8 +27,9 @@ def get_configs_path() -> str:
     """
     Determines the absolute path to the main configuration file.
 
-    It assumes the structure is: /configs/configs.yaml,
-    and the utility function is located in /src/utils/config_utils.py.
+    It assumes the structure is: `project_root/configs/configs.yaml`,
+    where the utility file is located two directory levels deep
+    from the project root (e.g., in `project_root/src/utils/`).
 
     Returns
     -------
