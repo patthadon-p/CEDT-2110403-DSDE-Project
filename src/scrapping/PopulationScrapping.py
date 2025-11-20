@@ -103,11 +103,20 @@ class PopulationScrapping:
                 "",
             ]
         )
-        df = df.dropna()
+
+        df = df[
+            (df["CC-DESC"].str.strip() != "")
+            & (df["RCODE-DESC"].str.strip() != "")
+            & (df["CCAATT-DESC"].str.strip() != "")
+            # & (df["CCAATTMM-DESC"].str.strip() != "")
+        ]
+
+        df["RCODE-DESC"] = df["RCODE-DESC"].str.replace("ท้องถิ่นเขต", "")
 
         df = df[df["CC-DESC"] == "กรุงเทพมหานคร"]
         df = df.drop(columns=["CC-DESC", "CCAATTMM-DESC"])
         df = df.dropna()
+        df = df.reset_index(drop=True)
 
         self.data_frame = df
 
