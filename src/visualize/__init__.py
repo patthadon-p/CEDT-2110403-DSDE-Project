@@ -21,5 +21,7 @@ from .MapVisualizer import MapVisualizer
 
 # Define what gets imported with "from visualize import *"
 __all__ = [
+    # Classes
+    # MapVisualizer.py
     "MapVisualizer",
 ]

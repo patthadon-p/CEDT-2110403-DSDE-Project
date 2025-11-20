@@ -18,15 +18,17 @@ Usage:
 """
 
 # Import all submodules and their contents
-from . import pipelines, utils
+from . import pipelines, utils, visualize
 
 # Import specific items to make them available at package level
 # from .pipelines import *
 # from .utils import *
+# from .visualize import *
 
 # Define what gets imported with 'from src import *'
 __all__ = [
     # Modules
     "pipelines",
     "utils",
+    "visualize",
 ]
