@@ -1,0 +1,42 @@
+{
+    "base_url": "https://stat.bora.dopa.go.th/new_stat/file/{year}/stat_{level_code}{year}.txt",
+    "levels": {
+        "province": {
+            "code": "c",
+            "priority": 1,
+            "remove_prefix": ["จังหวัด"]
+        },
+        "district": {
+            "code": "a",
+            "priority": 2,
+            "remove_prefix": ["อำเภอ", "ท้องถิ่นเขต"]
+        },
+        "subdistrict": {
+            "code": "t",
+            "priority": 3,
+            "remove_prefix": ["ตำบล"]
+        },
+        "village": {
+            "code": "m",
+            "priority": 4,
+            "remove_prefix": [""]
+        }
+    },
+    "default_level": "subdistrict",
+    "columns_name": {
+        "year-month": "False",
+        "province-code": "False",
+        "province-name": "True",
+        "district-code": "False",
+        "district-name": "True",
+        "subdistrict-code": "False",
+        "subdistrict-name": "True",
+        "village-code": "False",
+        "village-name": "True",
+        "male": "False",
+        "female": "False",
+        "total": "True",
+        "household": "True",
+        "buffer": "False"
+    }
+}

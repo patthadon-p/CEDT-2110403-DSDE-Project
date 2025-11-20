@@ -13,14 +13,14 @@ def get_configs_path() -> str:
     return str(configs_path)
 
 
-def read_config_path(key: str, filepath: str = "") -> str:
+def read_config_path(key: str, domain: str = "data", filepath: str = "") -> str:
     """Read a file path from the config file and resolve it to an absolute path."""
     configs_path = get_configs_path()
 
     if filepath == "":
         with open(configs_path, encoding="utf-8") as config_file:
             config = yaml.safe_load(config_file)
-            filepath = config["data"][key]
+            filepath = config[domain][key]
 
             if not os.path.isabs(filepath):
                 configs_dir = os.path.dirname(configs_path)
