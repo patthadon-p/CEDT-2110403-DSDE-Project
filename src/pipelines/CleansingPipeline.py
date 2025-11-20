@@ -7,11 +7,17 @@ sequence of specialized transformers for date standardization, address
 enrichment, and status mapping to ensure data quality and readiness for
 model consumption.
 
+The pipeline sequentially executes the following steps:
+1. Initial ingestion and column cleanup (IngestionPreprocessor).
+2. Date feature extraction (DateTransformer).
+3. Address standardization and geographic enrichment (AddressTransformer).
+4. State/Status mapping (StateToStatusTransformer).
+
 Classes
 -------
 CleansingPipeline
     A meta-transformer that combines and sequentially executes all necessary
-    data cleaning and feature engineering steps.
+    data cleaning and feature engineering steps using a Scikit-learn Pipeline.
 """
 
 # Setting up the environment
@@ -40,6 +46,12 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
     This class wraps a Scikit-learn Pipeline to apply several crucial
     data preparation steps sequentially, ensuring consistency across
     different data types (dates, addresses, status flags).
+
+    The transformation steps executed in order are:
+    1. **Ingestion Preprocessor:** Renames/drops columns and filters rows based on NaN values.
+    2. **Date Transformer:** Converts date columns to datetime objects and extracts day/month/year features.
+    3. **Address Transformer:** Cleans province names, validates/standardizes addresses, and performs spatial enrichment.
+    4. **State to Status Transformer:** Maps raw state values to standardized status codes.
 
     Parameters
     ----------
@@ -92,9 +104,9 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
     ingest_pre_processor : IngestionPreprocessor
         Instantiated transformer for initial column cleanup and row filtering.
     date_transformer : DateTransformer
-        Instantiated transformer for date standardization.
+        Instantiated transformer for date standardization and feature extraction.
     address_transformer : AddressTransformer
-        Instantiated transformer for address cleanup and enrichment.
+        Instantiated transformer for address cleanup and geographic enrichment.
     state_to_status_transformer : StateToStatusTransformer
         Instantiated transformer for mapping state values to standard statuses.
 
@@ -200,6 +212,10 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
         """
         Applies the sequential data cleansing and enrichment pipeline to the input DataFrame.
 
+        The method constructs a Scikit-learn Pipeline from its sub-transformers
+        and executes the `fit_transform` method, applying all steps in order:
+        Ingestion -> Date -> Address -> Status.
+
         Parameters
         ----------
         X : pandas.DataFrame
@@ -209,7 +225,7 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
         -------
         pandas.DataFrame
             The transformed DataFrame with standardized dates, enriched addresses,
-            and mapped status columns.
+            and mapped status columns, with final rows containing NaT/NaN dropped.
         """
 
         df = X.copy()

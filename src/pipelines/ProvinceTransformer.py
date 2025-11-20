@@ -6,6 +6,9 @@ designed to clean and standardize province names in a DataFrame. It uses a
 pre-loaded whitelist to map variations (including misspellings and abbreviations)
 to their single official name, while tracking any unrecognized values.
 
+It relies on external utility functions for loading the whitelist,
+text normalization, and fuzzy string matching.
+
 Classes
 -------
 ProvinceTransformer
@@ -37,8 +40,11 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
 
     This transformer performs the following steps on the target column:
     1. **Cleaning:** Removes common prefixes like "จังหวัด" (Province) and "จ." (Abbreviated Province).
-    2. **Mapping:** Maps cleaned names using the loaded whitelist dictionary.
-    3. **Filtering:** Collects and stores any original values that could not
+    2. **Normalization & Fuzzy Match:** Applies text normalization and attempts to find a match
+       in the whitelist keys using fuzzy matching.
+    3. **Mapping:** Maps the resulting cleaned name using the loaded whitelist dictionary
+       to get the official standard name.
+    4. **Filtering:** Collects and stores any original values that could not
        be mapped (i.e., not found in the whitelist) for manual inspection.
 
     Parameters
@@ -52,14 +58,19 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
 
     Attributes
     ----------
+    path : str
+        The file path to the province whitelist used during initialization.
     whitelist : dict of {str: str}
-        The loaded reverse lookup dictionary where keys are name variants
-        and values are the standard names.
+        The loaded reverse lookup dictionary where keys are cleaned/variant names
+        and values are the standard official names.
     province_column : str
         The name of the column being processed.
-    filtered : list
-        A running list of all unique original province names encountered
-        that failed to map to a standard name.
+    filtered : list of str
+        A running list of all non-standardized (unmapped) province names encountered
+        during the transformation process.
+    _cache_province : dict
+        Internal cache used by the `fuzzy_match` function to store previous
+        fuzzy matching results, improving performance.
     """
 
     def __init__(self, path: str = "", province_column: str | None = None) -> None:
@@ -148,9 +159,12 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
         Retrieves the unique set of province name variants that were not found
         in the whitelist during transformation.
 
+        This method is useful for identifying potential misspellings or
+        missing entries that need to be added to the whitelist.
+
         Returns
         -------
         list of str
-            A list containing unique, unmapped province names.
+            A list containing unique, unmapped province names (variants).
         """
         return list(set(self.filtered))

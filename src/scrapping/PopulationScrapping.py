@@ -1,3 +1,19 @@
+"""
+Data scraping and cleaning utilities for DOPA population statistics.
+
+This module provides the PopulationScrapping class, which is responsible
+for configuring the scraping process, constructing the target URL for
+specific administrative levels and years (Buddhist calendar), downloading
+the raw data file, and performing comprehensive data cleaning and
+normalization before outputting the final pandas DataFrame.
+
+Classes
+-------
+PopulationScrapping
+    A class designed to fetch, load, clean, and standardize population
+    data from the Department of Provincial Administration (DOPA) website.
+"""
+
 # Import necessary modules
 import json
 from io import BytesIO
@@ -18,6 +34,60 @@ class PopulationScrapping:
         year: int | str | None = None,
         level: str = "",
     ) -> None:
+        """
+    Handles scraping, loading, and cleaning of population data from the
+    Department of Provincial Administration (DOPA) website.
+
+    This class initializes configuration based on a JSON file, constructs the
+    target URL for a specific administrative level and year (Buddhist calendar),
+    fetches the data file, and performs data cleaning and transformation
+    before returning the final DataFrame.
+
+    Parameters
+    ----------
+    url : str, optional
+        Base URL for the DOPA population data. Defaults to the value in the config file.
+    year : int or str or None, optional
+        The year of the data to fetch (in Buddhist calendar). Defaults to the
+        current Buddhist year.
+    level : str, optional
+        The administrative level of the data (e.g., 'province', 'district').
+        Defaults to the value in the config file.
+
+    Attributes
+    ----------
+    population_scrapping_path : str
+        Path to the configuration JSON file.
+    url : str
+        The base URL used for scraping.
+    level : str
+        The administrative level currently being processed.
+    level_code : str
+        The DOPA code corresponding to the administrative level.
+    level_priority : int
+        The priority level of the administrative level (used for cleaning).
+    year : str
+        The target year (Buddhist calendar) for the data.
+    year_last_two_digits : str
+        The last two digits of the target year.
+    target_url : str
+        The final full URL constructed to fetch the data file.
+    data_frame : pandas.DataFrame
+        The DataFrame storing the scraped and cleaned data.
+    LEVELS : list of str
+        Class attribute: List of available administrative levels.
+    LEVEL_PRIORITY : dict of str: int
+        Class attribute: Mapping of administrative level to its priority.
+    LEVEL_CODE_MAPPING : dict of str: str
+        Class attribute: Mapping of administrative level to its DOPA code.
+    LEVEL_REMOVE_PREFIX : dict of str: list of str
+        Class attribute: Mapping of administrative level to list of prefixes to remove from names.
+    COLUMNS : list of str
+        Class attribute: List of column names to apply to the scraped data.
+    TO_DROP_COLUMNS : list of str
+        Class attribute: List of column names to drop during cleaning.
+    """
+    
 
         self.population_scrapping_path = read_config_path(
             domain="scrapping", key="population_scrapping_path"
@@ -79,6 +149,18 @@ class PopulationScrapping:
         self.data_frame: pd.DataFrame = pd.DataFrame()
 
     def _fetch_file(self) -> bytes | None:
+        """
+        Fetches the population data file from the constructed target URL.
+
+        It attempts to download the file using an HTTP GET request.
+
+        Returns
+        -------
+        bytes or None
+            The content of the file as raw bytes if successful, otherwise None
+            if a request error occurs.
+        """
+        
         try:
             response = requests.get(self.target_url, timeout=60)
             response.raise_for_status()
@@ -88,6 +170,24 @@ class PopulationScrapping:
             return None
 
     def _load_data(self, file_bytes: bytes) -> pd.DataFrame | None:
+        """
+        Loads the raw file bytes into a pandas DataFrame.
+
+        The data is assumed to be a pipe-separated (|) file without a header,
+        and all columns are loaded as string type.
+
+        Parameters
+        ----------
+        file_bytes : bytes
+            The raw content of the data file.
+
+        Returns
+        -------
+        pandas.DataFrame or None
+            A DataFrame containing the loaded data, or None if an error occurs
+            during the loading process.
+        """
+        
         try:
             file_like_object = BytesIO(file_bytes)
             df = pd.read_csv(
@@ -99,6 +199,19 @@ class PopulationScrapping:
             return None
 
     def _run_scraper(self) -> pd.DataFrame:
+        """
+        Coordinates the fetching and initial loading of the data.
+
+        It attempts to fetch the file and, if successful, loads it into
+        `self.data_frame` and assigns column names.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The raw DataFrame with assigned column names, or an empty DataFrame
+            if the file could not be fetched or loaded.
+        """
+        
         file_bytes = self._fetch_file()
 
         if file_bytes:
@@ -117,6 +230,26 @@ class PopulationScrapping:
     def _save_to_csv(
         self, df: pd.DataFrame, save_path: str = "", file_name: str = ""
     ) -> None:
+        """
+        Saves the processed DataFrame to a CSV file.
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            The DataFrame to be saved.
+        save_path : str, optional
+            The full path (including directory and file name) where the file
+            should be saved. If not provided, a default path relative to the
+            script location is used.
+        file_name : str, optional
+            The name of the CSV file. If not provided, it defaults to
+            "population_{level}_{year}.csv".
+
+        Returns
+        -------
+        None
+        """
+        
         file_name = file_name or f"population_{self.level}_{self.year}.csv"
 
         save_path = save_path or str(
@@ -129,6 +262,30 @@ class PopulationScrapping:
     def fetch_and_clean(
         self, save_to_csv: bool = False, save_path: str = "", file_name: str = ""
     ) -> pd.DataFrame:
+        """
+        Fetches the data, performs cleaning, normalization, and optional saving.
+
+        The cleaning steps include:
+        1. Dropping specified columns.
+        2. Filtering out rows where administrative names (up to the current level) are blank.
+        3. Removing specified prefixes (e.g., 'จังหวัด', 'อำเภอ') from administrative names.
+        4. Dropping administrative name columns that are at a lower priority than the target level.
+
+        Parameters
+        ----------
+        save_to_csv : bool, optional
+            If True, the cleaned DataFrame is saved to a CSV file. Defaults to False.
+        save_path : str, optional
+            The path to save the CSV file (used only if `save_to_csv` is True).
+        file_name : str, optional
+            The name of the CSV file (used only if `save_to_csv` is True).
+
+        Returns
+        -------
+        pandas.DataFrame
+            The final, cleaned, and processed DataFrame.
+        """
+        
         df = self._run_scraper().copy()
         df = df.drop(columns=PopulationScrapping.TO_DROP_COLUMNS)
 
