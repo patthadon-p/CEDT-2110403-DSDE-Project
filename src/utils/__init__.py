@@ -17,7 +17,7 @@ Usage:
 """
 
 # Import specific classes and functions for direct access
-from .DatetimeUtils import get_buddhist_year_last_two_digits
+from .DatetimeUtils import get_buddhist_year
 from .DistrictSubdistrictUtils import load_bangkok_official_area_names
 from .FuzzyUtils import fuzzy_match, normalize
 from .GeographicUtils import load_geographic_data, save_geographic_data
@@ -28,7 +28,7 @@ from .StatusUtils import load_status_mapping
 __all__ = [
     # Functions
     # DatetimeUtils.py
-    "get_buddhist_year_last_two_digits",
+    "get_buddhist_year",
     # DistrictSubdistrictUtils.py
     "load_bangkok_official_area_names",
     # FuzzyUtils.py
