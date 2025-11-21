@@ -17,7 +17,8 @@ from .PopulationScrapping import PopulationScrapping
 # Define what gets imported with 'from scrapping import *'
 __all__ = [
     # Classes
+    # BangkokIndexScrapping.py"
+    "BangkokIndexScrapping",
     # PopulationScrapping.py
     "PopulationScrapping",
-    "BangkokIndexScrapping",
 ]

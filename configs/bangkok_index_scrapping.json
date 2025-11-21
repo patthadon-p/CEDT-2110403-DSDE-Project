@@ -5,6 +5,15 @@
     "TO_DROP_COLUMNS": [0 , 11], 
     "DISTRICT_NAME_COLUMN_INDEX": 1, 
     "DISTRICT_REMOVE_PREFIX": ["เขต", "อำเภอ"],
+
+    "COLUMNS_RENAME_MAPPING": {
+        "เขต": "district",
+        "คะแนนรวม": "total_score",
+        "บริการสาธารณะ": "public_service",
+        "เศรษฐกิจ": "economy",
+        "สวัสดิภาพ": "welfare",
+        "สิ่งแวดล้อม": "environment"
+    },
     
     "COLUMN_NAMES": [
         "Overall_Rank", 

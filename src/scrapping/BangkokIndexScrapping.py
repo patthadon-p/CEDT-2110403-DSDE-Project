@@ -31,6 +31,8 @@ class BangkokIndexScrapping:
         drop_indices = self.config.get("TO_DROP_COLUMNS_INDEX", [])
         self.COLUMNS_TO_DROP_BY_NAME = [cols[i] for i in drop_indices if i < len(cols)]
 
+        self.COLUMNS_RENAME_MAPPING = self.config.get("COLUMNS_RENAME_MAPPING", {})
+
         self.DISTRICT_NAME_COLUMN_INDEX = self.config.get(
             "DISTRICT_NAME_COLUMN_INDEX", 1
         )
@@ -130,13 +132,15 @@ class BangkokIndexScrapping:
 
         df = df.dropna().reset_index(drop=True)
 
-        df.insert(0, "จังหวัด", "กรุงเทพมหานคร")
-
-        district_col_final = "เขต"
-        cols = ["จังหวัด", district_col_final] + [
-            col for col in df.columns if col not in ("จังหวัด", district_col_final)
+        to_drop_columns = ["Overall_Rank"] + [
+            col for col in df.columns if "/อันดับ" in col
         ]
-        df = df[cols]
+        df = df.drop(columns=to_drop_columns, errors="ignore")
+
+        rename_mapping = {col: col.replace("/คะแนน", "") for col in df.columns}
+
+        df = df.rename(columns=rename_mapping)
+        df = df.rename(columns=self.COLUMNS_RENAME_MAPPING)
 
         self.data_frame = df.copy()
 
