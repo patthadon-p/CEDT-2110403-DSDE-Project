@@ -39,4 +39,5 @@ def load_data():
 df_cleansed = load_data()
 
 viz = LineChartVisualizer(df_cleansed)
-viz.plot()
+fig = viz.plot()
+st.pyplot(fig)
