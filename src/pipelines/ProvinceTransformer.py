@@ -16,12 +16,6 @@ ProvinceTransformer
     and mapping variants to official names using a whitelist lookup.
 """
 
-# Setting up the environment
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 # Import necessary modules
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin

@@ -13,14 +13,9 @@ IngestionPreprocessor
     out rows with missing values based on predefined configuration lists.
 """
 
-# Setting up the environment
-import json
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 # Import necessary modules
+import json
+
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 

@@ -20,12 +20,6 @@ CleansingPipeline
     data cleaning and feature engineering steps using a Scikit-learn Pipeline.
 """
 
-# Setting up the environment
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 # Import necessary modules
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
