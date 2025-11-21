@@ -1,86 +1,142 @@
-from pyspark.sql.functions import pandas_udf
-from pyspark.sql.types import StringType
-from rapidfuzz import fuzz, process
-import re
-import pandas as pd
+"""
+Province name standardization utilities.
 
+This module defines the ProvinceTransformer class, a Scikit-learn transformer
+designed to clean and standardize province names in a DataFrame. It uses a
+pre-loaded whitelist to map variations (including misspellings and abbreviations)
+to their single official name, while tracking any unrecognized values.
+
+It relies on external utility functions for loading the whitelist,
+text normalization, and fuzzy string matching.
+
+Classes
+-------
+ProvinceTransformer
+    A transformer that standardizes province names, removing common prefixes
+    and mapping variants to official names using a whitelist lookup.
+"""
+
+# Setting up the environment
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from pyspark.ml import Transformer
+from pyspark.ml.util import DefaultParamsReadable, DefaultParamsWritable
+from pyspark.sql import DataFrame
+from pyspark.sql import functions as F
+from pyspark.sql.types import StringType
+
+from utils.FuzzyUtils import fuzzy_match, normalize
 from utils.ProvinceUtils import load_province_whitelist
 
 
-class ProvinceTransformerSpark:
+class ProvinceTransformerSpark(
+    Transformer, DefaultParamsReadable, DefaultParamsWritable
+):
     """
-    Fuzzy matcher using RapidFuzz + Spark PandasUDF.
+    Standardizes province names by cleaning prefixes and mapping variants
+    to their official standard name using a lookup table (whitelist).
+
+    This transformer performs the following steps on the target column:
+    1. **Cleaning:** Removes common prefixes like "จังหวัด" (Province) and "จ." (Abbreviated Province).
+    2. **Normalization & Fuzzy Match:** Applies text normalization and attempts to find a match
+       in the whitelist keys using fuzzy matching.
+    3. **Mapping:** Maps the resulting cleaned name using the loaded whitelist dictionary
+       to get the official standard name.
+    4. **Filtering:** Collects and stores any original values that could not
+       be mapped (i.e., not found in the whitelist) for manual inspection.
+
+    Parameters
+    ----------
+    path : str, optional
+        File path to the JSON file containing the province whitelist mapping.
+        Default is "".
+    province_column : str or None, optional
+        Name of the column containing province names to be transformed.
+        Defaults to "province".
+
+    Attributes
+    ----------
+    path : str
+        The file path to the province whitelist used during initialization.
+    whitelist : dict of {str: str}
+        The loaded reverse lookup dictionary where keys are cleaned/variant names
+        and values are the standard official names.
+    province_column : str
+        The name of the column being processed.
+    filtered : list of str
+        A running list of all non-standardized (unmapped) province names encountered
+        during the transformation process.
+    _cache_province : dict
+        Internal cache used by the `fuzzy_match` function to store previous
+        fuzzy matching results, improving performance.
     """
 
-    def __init__(self, spark, path: str = "",):
-        self.spark = spark
+    def __init__(self, path: str = "", province_column: str | None = None):
+        super().__init__()
         self.path = path
-        self.cutoff = 60
-
         self.whitelist = load_province_whitelist(self.path)
-        self.choices = list(self.whitelist.keys())
 
-        # --- broadcast to executors ---
-        self.bc_choices = spark.sparkContext.broadcast(self.choices)
-        self.bc_whitelist = spark.sparkContext.broadcast(self.whitelist)
+        self.province_column = province_column or "province"
+        self._cache_province = {}
 
-        # Build the UDF once (important!)
-        self.fuzzy_udf = self._build_udf()
+    def _transform(self, df: DataFrame) -> DataFrame:
+        """
+        Transforms the DataFrame by cleaning province names, mapping them
+        to standard names, and collecting unmapped variants.
 
-    # ----------------------------------------------------------
-    # INTERNAL: build Pandas UDF
-    # ----------------------------------------------------------
-    def _build_udf(self):
+        Parameters
+        ----------
+        X : pandas.DataFrame
+            The input DataFrame containing the province column.
 
-        bc_choices = self.bc_choices
-        bc_whitelist = self.bc_whitelist
-        cutoff = self.cutoff
+        Returns
+        -------
+        pandas.DataFrame
+            The transformed DataFrame with the province column containing
+            standardized names (or None if unmapped).
+        """
 
-        @pandas_udf(StringType())
-        def udf(col: pd.Series) -> pd.Series:
+        cleaned_df = (
+            df.withColumn(
+                self.province_column,
+                F.regexp_replace(
+                    F.col(self.province_column).cast("string"), "จังหวัด", ""
+                ),
+            )
+            .withColumn(
+                self.province_column,
+                F.regexp_replace(F.col(self.province_column).cast("string"), "จ.", ""),
+            )
+            .withColumn(self.province_column, F.trim(F.col(self.province_column)))
+        )
 
-            choices = bc_choices.value
-            whitelist = bc_whitelist.value
-            cache = {}  # re-used within each batch
+        def province_udf(x):
+            if x is None:
+                return None
+            normalized = normalize(x)
+            return fuzzy_match(
+                normalized, self.whitelist, self._cache_province, cutoff=90
+            )
 
-            def fuzzy_single(text): 
+        spark_province_udf = F.udf(province_udf, StringType())
 
-                if text in cache: 
-                    return cache[text] 
-                if not text: 
-                    cache[text] = None 
-                    return None 
-                
-                t = str(text)
-                t = re.sub(r"^(จังหวัด|จ\.)\s*", "", t)
-                t = re.sub(r"\s+", " ", t).strip()
+        df_transformed = cleaned_df.withColumn(
+            self.province_column,
+            spark_province_udf(F.col(self.province_column)),
+        )
 
-                for prefix in ["บาง", "คลอง"]:
-                    t = re.sub(rf"({prefix})\1+", r"\1", t)
+        def map_to_whitelist(x):
+            return self.whitelist.get(x)
 
-                text_norm = t.lower()
+        map_udf = F.udf(map_to_whitelist, StringType())
 
-                match = process.extractOne( 
-                    text_norm, 
-                    choices, 
-                    score_cutoff=cutoff, 
-                    scorer=fuzz.WRatio 
-                )
+        df_transformed = df_transformed.withColumn(
+            self.province_column, map_udf(F.col(self.province_column))
+        )
 
-                if not match: 
-                    cache[text] = None 
-                    return None 
-                best_alias = match[0] 
-                province = whitelist[best_alias] 
-                cache[text] = province 
-                return province 
-            
-            return col.apply(fuzzy_single)
+        df_transformed = df_transformed.filter(F.col(self.province_column).isNotNull())
 
-        return udf
-
-    # ----------------------------------------------------------
-    # PUBLIC API: apply to a Spark column
-    # ----------------------------------------------------------
-    def transform(self, df, input_col: str, output_col: str = "province"):
-        return df.withColumn(output_col, self.fuzzy_udf(input_col))
+        return df_transformed
