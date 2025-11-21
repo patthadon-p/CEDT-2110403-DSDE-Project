@@ -24,19 +24,61 @@
     },
     "default_level": "subdistrict",
     "columns_name": {
-        "year-month": "False",
-        "province-code": "False",
-        "province-name": "True",
-        "district-code": "False",
-        "district-name": "True",
-        "subdistrict-code": "False",
-        "subdistrict-name": "True",
-        "village-code": "False",
-        "village-name": "True",
-        "male": "False",
-        "female": "False",
-        "total": "True",
-        "household": "True",
-        "buffer": "False"
+        "year-month": {
+            "drop": "True",
+            "dtype": "None"
+        },
+        "province-code": {
+            "drop": "True",
+            "dtype": "None"
+        },
+        "province-name": {
+            "drop": "False",
+            "dtype": "str"
+        },
+        "district-code": {
+            "drop": "True",
+            "dtype": "None"
+        },
+        "district-name": {
+            "drop": "False",
+            "dtype": "str"
+        },
+        "subdistrict-code": {
+            "drop": "True",
+            "dtype": "None"
+        },
+        "subdistrict-name": {
+            "drop": "False",
+            "dtype": "str"
+        },
+        "village-code": {
+            "drop": "True",
+            "dtype": "None"
+        },
+        "village-name": {
+            "drop": "False",
+            "dtype": "str"
+        },
+        "male": {
+            "drop": "True",
+            "dtype": "None"
+        },
+        "female": {
+            "drop": "True",
+            "dtype": "None"
+        },
+        "total": {
+            "drop": "False",
+            "dtype": "int"
+        },
+        "household": {
+            "drop": "False",
+            "dtype": "str"
+        },
+        "buffer": {
+            "drop": "True",
+            "dtype": "None"
+        }
     }
 }

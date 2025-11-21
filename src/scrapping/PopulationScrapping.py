@@ -123,9 +123,15 @@ class PopulationScrapping:
         # Columns to drop from the population data file
         PopulationScrapping.TO_DROP_COLUMNS: list[str] = [
             column
-            for column, to_keep in population_scrapping["columns_name"].items()
-            if to_keep.lower() == "false"
+            for column, obj in population_scrapping["columns_name"].items()
+            if obj["drop"].lower() == "true"
         ]
+
+        PopulationScrapping.DTYPE_MAPPING: dict[str, str] = {
+            column: obj["dtype"]
+            for column, obj in population_scrapping["columns_name"].items()
+            if obj["drop"].lower() == "false"
+        }
 
         self.url = url or population_scrapping["base_url"]
 
@@ -309,6 +315,8 @@ class PopulationScrapping:
 
         df = df.dropna()
         df = df.reset_index(drop=True)
+
+        df = df.astype(PopulationScrapping.DTYPE_MAPPING)
 
         self.data_frame = df.copy()
 
