@@ -90,7 +90,7 @@ if type_filter == "ทั้งหมด":
     m = viz.plot(type_filter=None)
     type_filter = ""
 else:
-    gdf_filtered = viz.gdf_points[viz.gdf_points["type_clean"] == type_filter]
+    gdf_filtered = viz.gdf_points[viz.gdf_points["type_cleaned"] == type_filter]
     m = viz.plot(type_filter=type_filter)
 
 joined = gpd.sjoin(
