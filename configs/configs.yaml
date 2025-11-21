@@ -17,3 +17,4 @@ data:
 scrapping:
   # Population scrapping configuration
   population_scrapping_path: "population_scrapping.json"
+  bangkok_index_scrapping_path: "bangkok_index_scrapping.json"
