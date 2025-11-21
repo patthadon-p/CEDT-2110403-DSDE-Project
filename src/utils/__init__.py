@@ -4,6 +4,35 @@ Utils Module
 This module contains utility functions for data processing and analysis
 for the CEDT-2110403-DSDE-Project.
 
+It provides direct access to various helper functions for configuration handling,
+datetime conversion, text normalization, geographic data management, and
+predefined mapping lookups.
+
+Functions
+---------
+get_configs_path
+    Retrieves the absolute path to the configuration directory.
+get_data_dir
+    Retrieves the absolute path to the main data directory.
+read_config_path
+    Reads a specific file path from a general configuration file.
+get_buddhist_year
+    Calculates and returns the current year in the Buddhist calendar.
+load_bangkok_official_area_names
+    Loads the official list of Bangkok district and subdistrict names.
+fuzzy_match
+    Performs fuzzy string matching against a list of targets using caching.
+normalize
+    Applies standard text normalization rules (e.g., lowercase, remove extra spaces).
+load_geographic_data
+    Loads geographic boundary data (GeoDataFrame) from a specified path.
+save_geographic_data
+    Saves a geographic boundary data (GeoDataFrame) to the data directory.
+load_province_whitelist
+    Loads the mapping dictionary for province name standardization.
+load_status_mapping
+    Loads the mapping dictionary for state-to-status standardization.
+
 Usage:
     # Import everything
     from utils import *

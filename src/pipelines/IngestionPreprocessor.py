@@ -25,36 +25,31 @@ from utils.ConfigUtils import read_config_path
 
 class IngestionPreprocessor(BaseEstimator, TransformerMixin):
     """
-        Performs initial data ingestion cleanup (renaming and filtering).
+    Performs initial data ingestion cleanup (renaming and filtering).
 
-        This transformer reads configuration details (column renames, columns to
-        drop, and columns to check for NaT/null values) from a specified JSON file
-        and applies these cleansing steps to the input DataFrame.
+    This transformer reads configuration details (column renames, columns to
+    drop, and columns to check for NaT/null values) from a specified JSON file
+    and applies these cleansing steps to the input DataFrame.
 
-    [Image of ETL extract transform load process]
+    
+
+[Image of ETL extract transform load process]
 
 
-        Parameters
-        ----------
-        filepath : str, optional
-            File path to the JSON file containing the raw data column configurations.
-            If empty, the path is loaded from the main config file under
-            'raw_data_columns_path'. Default is "".
-        drop_columns : list of str or None, optional
-            List of columns to be dropped. If provided, overrides the list from
-            the config file. Default is None.
-        drop_na_columns : list of str or None, optional
-            List of columns whose rows must not contain NaN/null values. If provided,
-            overrides the list from the config file. Default is None.
 
-        Attributes
-        ----------
-        rename_dict : dict of {str: str}
-            Dictionary mapping old column names to new column names.
-        drop_columns : list of str
-            The final list of columns to be dropped.
-        drop_na_columns : list of str
-            The final list of columns used for filtering (dropping rows with NaNs).
+    Parameters
+    ----------
+    # ... (ส่วน Parameters ถูกต้องแล้ว)
+
+    Attributes
+    ----------
+    rename_dict : dict of {str: str}
+        Dictionary mapping old column names to new column names.
+    drop_columns : list of str or str
+        The final list of columns to be dropped, or the string "DROP" if columns
+        were passed as None but config data resulted in "DROP" (based on implementation logic).
+    drop_na_columns : list of str
+        The final list of columns used for filtering (dropping rows with NaNs).
     """
 
     def __init__(

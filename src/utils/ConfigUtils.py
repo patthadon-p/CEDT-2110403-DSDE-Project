@@ -10,6 +10,8 @@ Functions
 ---------
 get_configs_path
     Returns the absolute path to the main 'configs.yaml' file.
+get_data_dir
+    Returns the absolute path to the main 'data' directory.
 read_config_path
     Reads a file path from the config file using a key, and resolves it
     to an absolute path relative to the config file's location.

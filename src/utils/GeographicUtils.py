@@ -76,7 +76,7 @@ def save_geographic_data(
     The function performs the following steps:
     1. Loads a column renaming map from a configured JSON file.
     2. Renames columns in the input DataFrame.
-    3. Drops specified columns (defaults to 'DROP' if no list is provided).
+    3. Drops specified columns (defaults to dropping "DROP" if no list is provided).
     4. Adds a 'province_name' column with the value 'กรุงเทพมหานคร'.
     5. Saves the final DataFrame to the project's 'data/processed' directory.
 
@@ -89,15 +89,18 @@ def save_geographic_data(
         If provided, overrides the config path 'geographic_columns_path'.
         Default is "".
     save_name : str, optional
-        The file name for the output CSV. Defaults to 'cleansed_geo.csv'.
+        **The filename/path for the output CSV.** If provided, this value overrides
+        the path specified in the config file under 'geographic_cleansed_data_path'.
+        Defaults to the value in the config file.
     drop_columns : list of str or None, optional
         A list of columns to be dropped from the DataFrame. The underlying
-        code defaults to dropping the column named **"DROP"** if this parameter
+        code defaults to dropping the column named "DROP" if this parameter
         is passed as None or empty.
 
     Returns
     -------
     None
+        The function does not return a value.
 
     See Also
     --------

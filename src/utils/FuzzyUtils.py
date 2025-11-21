@@ -31,7 +31,7 @@ def normalize(
     This function performs two main steps:
     1. Removes all excessive whitespace and strips leading/trailing spaces.
     2. Replaces repeated occurrences of common prefixes (e.g., 'บางบาง'
-       or 'คลองคลอง') with a single instance of the prefix.
+        or 'คลองคลอง') with a single instance of the prefix.
 
     Parameters
     ----------
@@ -39,7 +39,7 @@ def normalize(
         The input string to be normalized. Returns None if input is None.
     prefix_sub : list of str or None, optional
         A list of prefixes to be checked and reduced if they appear
-        consecutively more than once. Defaults to ["บาง", "คลอง"].
+        consecutively more than once. **If None, defaults to ["บาง", "คลอง"].**
 
     Returns
     -------
@@ -48,11 +48,11 @@ def normalize(
 
     Examples
     --------
-    >>> normalize("  บางบางนา ")
+    >>> normalize("  บางบางนา ")
     'บางนา'
     >>> normalize("คลอง คลองตัน")
     'คลองตัน'
-    >>> normalize("   Hello World  ", prefix_sub=['World'])
+    >>> normalize("   Hello World  ", prefix_sub=['World'])
     'Hello World'
     """
 
@@ -98,8 +98,7 @@ def fuzzy_match(
     -------
     str or None
         The matched string from `choices` if a match above the `cutoff`
-        is found. Otherwise, the original input `text` is returned. Returns
-        None if the input `text` is None or empty.
+        is found. **Otherwise, the original input `text` is returned** (including if `text` is None or empty).
 
     Notes
     -----

@@ -33,36 +33,32 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
 
     This transformer performs three main tasks:
     1. Extracts longitude and latitude from a combined coordinate string column.
-    2. Performs a **spatial join**  between the data points and pre-loaded
-       geographic region boundaries (`bangkok_gdf`).
+    2. Performs a **spatial join**  between the data points and pre-loaded
+        geographic region boundaries (`bangkok_gdf`).
     3. Filters the results to include only records where the spatially derived
-       district/subdistrict matches the original text-based district/subdistrict columns.
+        district/subdistrict matches the original text-based district/subdistrict columns.
 
     Parameters
     ----------
-    path : str, optional
-        File path to the geographic boundary data (e.g., GeoJSON, Shapefile),
-        passed to `load_geographic_data`. Default is "".
-    coords_column : str or None, optional
-        Name of the column containing coordinate strings (e.g., "lat,lon").
-        Defaults to "coords".
-    district_column : str or None, optional
-        Name of the input column containing the text-based district name.
-        Defaults to "district".
-    subdistrict_column : str or None, optional
-        Name of the input column containing the text-based subdistrict name.
-        Defaults to "subdistrict".
-    geo_district_column : str or None, optional
-        Name of the district column in the geographic boundary data (`bangkok_gdf`).
-        Defaults to "DISTRICT_N".
-    geo_subdistrict_column : str or None, optional
-        Name of the subdistrict column in the geographic boundary data (`bangkok_gdf`).
-        Defaults to "SUBDISTR_1".
+    # ... (ส่วน Parameters ถูกต้องแล้ว)
 
     Attributes
     ----------
     bangkok_gdf : geopandas.GeoDataFrame
         The pre-processed geographic boundary data used for spatial joining.
+        **This GeoDataFrame is cleaned by `DistrictSubdistrictTransformer` upon initialization.**
+    path : str
+        The file path used to load the geographic boundary data.
+    coords_column : str
+        The final column name used for coordinate string input (e.g., "coords").
+    district_column : str
+        The final column name used for the input text-based district name.
+    subdistrict_column : str
+        The final column name used for the input text-based subdistrict name.
+    geo_district_column : str
+        The final column name for the district column in the geographic boundary data.
+    geo_subdistrict_column : str
+        The final column name for the subdistrict column in the geographic boundary data.
     """
 
     def __init__(
@@ -98,6 +94,23 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
     def fit(
         self, X: pd.DataFrame, y: pd.Series | None = None
     ) -> "CoordinateTransformer":
+        """
+        The fit method does nothing for this transformer, as it performs
+        stateless, pure transformation logic using a pre-loaded GeoDataFrame.
+
+        Parameters
+        ----------
+        X : pandas.DataFrame
+            The input data (not used for fitting).
+        y : array-like of shape (n_samples,), default=None
+            Target values (not used).
+
+        Returns
+        -------
+        CoordinateTransformer
+            The fitted transformer (self).
+        """
+        
         return self
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:

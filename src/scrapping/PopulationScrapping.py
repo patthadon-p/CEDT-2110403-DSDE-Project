@@ -27,65 +27,66 @@ from src.utils.DatetimeUtils import get_buddhist_year
 
 
 class PopulationScrapping:
+    """
+    Handles scraping, loading, and cleaning of population data from the
+    Department of Provincial Administration (DOPA) website.
+
+    This class initializes configuration based on a JSON file, constructs the
+    target URL for a specific administrative level and year (Buddhist calendar),
+    fetches the data file, and performs data cleaning and transformation
+    before returning the final DataFrame.
+
+    Parameters
+    ----------
+    url : str, optional
+        Base URL for the DOPA population data. Defaults to the value in the config file.
+    year : int or str or None, optional
+        The year of the data to fetch (in Buddhist calendar). Defaults to the
+        current Buddhist year.
+    level : str, optional
+        The administrative level of the data (e.g., 'province', 'district').
+        Defaults to the value in the config file.
+
+    Attributes
+    ----------
+    population_scrapping_path : str
+        Path to the configuration JSON file.
+    url : str
+        The base URL used for scraping.
+    level : str
+        The administrative level currently being processed.
+    level_code : str
+        The DOPA code corresponding to the administrative level.
+    level_priority : int
+        The priority level of the administrative level (used for cleaning).
+    year : str
+        The target year (Buddhist calendar) for the data.
+    year_last_two_digits : str
+        The last two digits of the target year.
+    target_url : str
+        The final full URL constructed to fetch the data file.
+    data_frame : pandas.DataFrame
+        The DataFrame storing the scraped and cleaned data.
+    LEVELS : list of str
+        Class attribute: List of available administrative levels.
+    LEVEL_PRIORITY : dict of str: int
+        Class attribute: Mapping of administrative level to its priority.
+    LEVEL_CODE_MAPPING : dict of str: str
+        Class attribute: Mapping of administrative level to its DOPA code.
+    LEVEL_REMOVE_PREFIX : dict of str: list of str
+        Class attribute: Mapping of administrative level to list of prefixes to remove from names.
+    COLUMNS : list of str
+        Class attribute: List of column names to apply to the scraped data.
+    TO_DROP_COLUMNS : list of str
+        Class attribute: List of column names to drop during cleaning.
+    """
+    
     def __init__(
         self,
         url: str = "",
         year: int | str | None = None,
         level: str = "",
     ) -> None:
-        """
-        Handles scraping, loading, and cleaning of population data from the
-        Department of Provincial Administration (DOPA) website.
-
-        This class initializes configuration based on a JSON file, constructs the
-        target URL for a specific administrative level and year (Buddhist calendar),
-        fetches the data file, and performs data cleaning and transformation
-        before returning the final DataFrame.
-
-        Parameters
-        ----------
-        url : str, optional
-            Base URL for the DOPA population data. Defaults to the value in the config file.
-        year : int or str or None, optional
-            The year of the data to fetch (in Buddhist calendar). Defaults to the
-            current Buddhist year.
-        level : str, optional
-            The administrative level of the data (e.g., 'province', 'district').
-            Defaults to the value in the config file.
-
-        Attributes
-        ----------
-        population_scrapping_path : str
-            Path to the configuration JSON file.
-        url : str
-            The base URL used for scraping.
-        level : str
-            The administrative level currently being processed.
-        level_code : str
-            The DOPA code corresponding to the administrative level.
-        level_priority : int
-            The priority level of the administrative level (used for cleaning).
-        year : str
-            The target year (Buddhist calendar) for the data.
-        year_last_two_digits : str
-            The last two digits of the target year.
-        target_url : str
-            The final full URL constructed to fetch the data file.
-        data_frame : pandas.DataFrame
-            The DataFrame storing the scraped and cleaned data.
-        LEVELS : list of str
-            Class attribute: List of available administrative levels.
-        LEVEL_PRIORITY : dict of str: int
-            Class attribute: Mapping of administrative level to its priority.
-        LEVEL_CODE_MAPPING : dict of str: str
-            Class attribute: Mapping of administrative level to its DOPA code.
-        LEVEL_REMOVE_PREFIX : dict of str: list of str
-            Class attribute: Mapping of administrative level to list of prefixes to remove from names.
-        COLUMNS : list of str
-            Class attribute: List of column names to apply to the scraped data.
-        TO_DROP_COLUMNS : list of str
-            Class attribute: List of column names to drop during cleaning.
-        """
 
         self.population_scrapping_path = read_config_path(
             domain="scrapping", key="population_scrapping_path"

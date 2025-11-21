@@ -4,6 +4,28 @@ Pipelines Module
 This module contains data transformation and processing pipelines
 for the CEDT-2110403-DSDE-Project.
 
+It provides direct access to all major transformer classes designed
+for data cleansing, standardization, and feature engineering.
+
+Classes
+-------
+AddressTransformer
+    Transformer for address standardization and geographic enrichment.
+CleansingPipeline
+    The main meta-transformer orchestrating all cleansing steps.
+CoordinateTransformer
+    Transformer for processing and validating geographic coordinates.
+DateTransformer
+    Transformer for converting and extracting features from date columns.
+DistrictSubdistrictTransformer
+    Transformer for cleaning and standardizing district and subdistrict names.
+IngestionPreprocessor
+    Transformer for initial data ingestion, column renaming, and filtering.
+ProvinceTransformer
+    Transformer for cleaning and standardizing province names.
+StateToStatusTransformer
+    Transformer for mapping raw state values to standardized status codes.
+
 Usage:
     # Import everything
     from pipelines import *
