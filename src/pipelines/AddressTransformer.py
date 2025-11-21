@@ -18,11 +18,10 @@ AddressTransformer
 import os
 import sys
 
-import pandas as pd
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import necessary modules
+import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 
