@@ -17,13 +17,12 @@ PopulationScrapping
 # Import necessary modules
 import json
 from io import BytesIO
-from pathlib import Path
 
 import pandas as pd
 import requests
 
 # Utility functions
-from src.utils.ConfigUtils import read_config_path
+from src.utils.ConfigUtils import get_data_dir, read_config_path
 from src.utils.DatetimeUtils import get_buddhist_year
 
 
@@ -251,9 +250,7 @@ class PopulationScrapping:
 
         file_name = file_name or f"population_{self.level}_{self.year}.csv"
 
-        save_path = save_path or str(
-            Path(__file__).resolve().parents[2] / "data" / "scrapped" / file_name
-        )
+        save_path = save_path or str(get_data_dir() / "scrapped" / file_name)
 
         df.to_csv(save_path, index=False)
         return None

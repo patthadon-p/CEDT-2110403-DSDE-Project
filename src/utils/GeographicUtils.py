@@ -18,13 +18,12 @@ save_geographic_data
 
 # Import necessary modules
 import json
-from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
 
 # Import utility functions
-from .ConfigUtils import read_config_path
+from .ConfigUtils import get_data_dir, read_config_path
 
 
 def load_geographic_data(filepath: str = "") -> gpd.GeoDataFrame:
@@ -122,7 +121,7 @@ def save_geographic_data(
 
     df["province_name"] = "กรุงเทพมหานคร"
 
-    save_path = Path(__file__).resolve().parents[2] / "data" / "processed" / save_name
+    save_path = get_data_dir() / "processed" / save_name
     df.to_csv(save_path, index=False)
 
     return None

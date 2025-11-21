@@ -42,6 +42,25 @@ def get_configs_path() -> str:
     return str(configs_path)
 
 
+def get_data_dir() -> Path:
+    """
+    Determines the absolute path to the main data directory.
+
+    It assumes the structure is: `project_root/data/`,
+    where the utility file is located two directory levels deep
+    from the project root (e.g., in `project_root/src/utils/`).
+
+    Returns
+    -------
+    Path
+        The absolute path to the 'data' directory.
+    """
+
+    base_dir = Path(__file__).resolve().parents[2]
+    data_path = base_dir / "data"
+    return data_path
+
+
 def read_config_path(key: str, domain: str = "data", filepath: str = "") -> str:
     """
     Reads a file path from the config file and resolves it to an absolute path.

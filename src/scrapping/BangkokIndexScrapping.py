@@ -8,7 +8,7 @@ import pandas as pd
 import requests
 
 # Utility functions
-from src.utils.ConfigUtils import read_config_path
+from src.utils.ConfigUtils import get_data_dir, read_config_path
 
 
 class BangkokIndexScrapping:
@@ -145,9 +145,7 @@ class BangkokIndexScrapping:
         self.data_frame = df.copy()
 
         if save_to_csv:
-            save_path = save_path or str(
-                Path(__file__).resolve().parents[2] / "data" / "scrapped" / file_name
-            )
+            save_path = save_path or str(get_data_dir() / "scrapped" / file_name)
 
             file_name = file_name or "bangkok_index_district_final.csv"
 
