@@ -25,7 +25,7 @@ def get_buddhist_year() -> str:
     str
         The current Buddhist year as a 4-digit string (e.g., "2567").
     """
-    
+
     current_datetime = datetime.datetime.now()
     buddhist_year = current_datetime.year + 542
     last_two_digits = str(buddhist_year)

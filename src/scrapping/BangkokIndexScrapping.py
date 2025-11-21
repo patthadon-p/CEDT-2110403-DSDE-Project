@@ -67,7 +67,7 @@ class BangkokIndexScrapping:
     data_frame : pandas.DataFrame
         The DataFrame storing the scraped and cleaned data.
     """
-    
+
     def __init__(self, url: str = "") -> None:
 
         self.config_path = read_config_path(
@@ -106,7 +106,7 @@ class BangkokIndexScrapping:
         bytes or None
             The content of the CSV file as raw bytes if successful, otherwise None.
         """
-        
+
         try:
             headers = {"User-Agent": "Mozilla/5.0"}
             response = requests.get(self.target_url, timeout=60, headers=headers)
@@ -135,7 +135,7 @@ class BangkokIndexScrapping:
             A DataFrame containing the loaded data with attempted encoding correction,
             or None if a critical Unicode encoding error occurs.
         """
-        
+
         try:
             file_like_object = BytesIO(file_bytes)
             df = pd.read_csv(
@@ -168,7 +168,7 @@ class BangkokIndexScrapping:
             The raw DataFrame if fetching and loading were successful, otherwise
             an empty DataFrame.
         """
-        
+
         file_bytes = self._fetch_file()
 
         if file_bytes is None:

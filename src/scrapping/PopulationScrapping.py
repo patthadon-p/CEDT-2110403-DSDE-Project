@@ -80,7 +80,7 @@ class PopulationScrapping:
     TO_DROP_COLUMNS : list of str
         Class attribute: List of column names to drop during cleaning.
     """
-    
+
     def __init__(
         self,
         url: str = "",

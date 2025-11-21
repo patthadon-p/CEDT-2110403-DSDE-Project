@@ -110,7 +110,7 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
         CoordinateTransformer
             The fitted transformer (self).
         """
-        
+
         return self
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
