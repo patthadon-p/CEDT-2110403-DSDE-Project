@@ -27,9 +27,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Import necessary modules
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from utils.FuzzyUtils import fuzzy_match, normalize
-
 # Utility functions
+from utils.FuzzyUtils import fuzzy_match, normalize
 from utils.ProvinceUtils import load_province_whitelist
 
 

@@ -110,6 +110,9 @@ def save_geographic_data(
     """
 
     filepath = read_config_path(key="geographic_columns_path", filepath=filepath)
+    save_name = read_config_path(
+        key="geographic_cleansed_data_path", filepath=save_name
+    )
 
     with open(filepath, encoding="utf-8") as file:
         rename_dict = json.load(file)
@@ -119,12 +122,7 @@ def save_geographic_data(
 
     df["province_name"] = "กรุงเทพมหานคร"
 
-    save_path = (
-        Path(__file__).resolve().parents[2]
-        / "data"
-        / "processed"
-        / (save_name or "cleansed_geo.csv")
-    )
+    save_path = Path(__file__).resolve().parents[2] / "data" / "processed" / save_name
     df.to_csv(save_path, index=False)
 
     return None

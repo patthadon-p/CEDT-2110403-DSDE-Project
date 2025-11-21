@@ -1,7 +1,11 @@
 # Import necessary modules
 import geopandas as gpd
 import pandas as pd
+from folium import Map
 from shapely import wkt
+
+# Utility Functions
+from utils.ConfigUtils import read_config_path
 
 
 class MapVisualizer:
@@ -11,16 +15,17 @@ class MapVisualizer:
         region_path: str = "",
         lattitude_column: str = "",
         longitude_column: str = "",
-    ):
+    ) -> None:
         self.df = df
-        self.region_path = region_path or "../data/processed/cleansed_geo.csv"
-
+        self.region_path = read_config_path(
+            key="geographic_cleansed_data_path", filepath=region_path
+        )
         self.latitude_column = lattitude_column or "latitude"
         self.longitude_column = longitude_column or "longitude"
 
         self._load_geometries()
 
-    def _load_geometries(self):
+    def _load_geometries(self) -> None:
         df_type = self.df.copy()
 
         df_type["type_clean"] = (
@@ -48,7 +53,10 @@ class MapVisualizer:
             df_region, geometry="geometry", crs="EPSG:4326"
         )
 
-    def plot(self, type_filter=None, value_column="count"):
+        return None
+
+    def plot(self, type_filter: str | None = None, value_column: str = "count") -> Map:
+
         if type_filter:
             gdf_filtered = self.gdf_points[self.gdf_points["type_clean"] == type_filter]
         else:
@@ -84,8 +92,6 @@ class MapVisualizer:
             column="count",
             cmap="Oranges",
             legend=True,
-            # tooltip=["subdistrict_name", "count"],
-            # popup=True,
             location=[center_latlon.coords[0][1], center_latlon.coords[0][0]],
             zoom_start=11,
             min_zoom=11,
