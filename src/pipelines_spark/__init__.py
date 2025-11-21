@@ -21,13 +21,10 @@ Usage:
 # from .CleansingPipeline import CleansingPipeline
 # from .CoordinateTransformer import CoordinateTransformer
 from .DateTransformerSpark import DateTransformerSpark
-
 # from .DistrictSubdistrictTransformer import DistrictSubdistrictTransformer
 from .IngestionPreprocessorSpark import IngestionPreprocessorSpark
 from .ProvinceTransformerSpark import ProvinceTransformerSpark
-
-# from .StateToStatusTransformer import StateToStatusTransformer
-
+from .StateToStatusTransformerSpark import StateToStatusTransformerSpark
 
 # Define what gets imported with 'from pipelines import *'
 __all__ = [
@@ -46,6 +43,6 @@ __all__ = [
     "IngestionPreprocessorSpark",
     # ProvinceTransformerSpark.py
     "ProvinceTransformerSpark",
-    # # StateToStatusTransformer.py
-    # "StateToStatusTransformer",
+    # StateToStatusTransformerSpark.py
+    "StateToStatusTransformerSpark",
 ]
