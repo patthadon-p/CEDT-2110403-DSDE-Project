@@ -135,7 +135,7 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
             .apply(normalize)
             .apply(
                 lambda x: fuzzy_match(
-                    x, list(self.whitelist.keys()), self._cache_province
+                    x, list(self.whitelist.keys()), self._cache_province, 90
                 )
             )
         )
