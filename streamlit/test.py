@@ -27,7 +27,7 @@ st.markdown(
 # Load Cleansed Data
 @st.cache_data
 def load_data():
-    df = pd.read_csv("./data/processed/cleansed_data.csv")
+    df = pd.read_csv("../data/processed/cleansed_data.csv")
     df["type_cleaned"] = (
         df["type"]
         .astype(str)
@@ -83,7 +83,7 @@ filtered_time = df_cleansed[
         .apply(tuple, axis=1) <= (end_date.year, end_date.month, end_date.day))
 ]
 
-viz = MapVisualizer(filtered_time, region_path="./data/processed/cleansed_geo.csv")
+viz = MapVisualizer(filtered_time, region_path="../data/processed/cleansed_geo.csv")
 
 if type_filter == "ทั้งหมด":
     gdf_filtered = viz.gdf_points
