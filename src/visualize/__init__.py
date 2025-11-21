@@ -17,6 +17,7 @@ Usage:
 """
 
 # Import specific visualizer functions
+from .LineChartVisualizer import LineChartVisualizer
 from .MapVisualizer import MapVisualizer
 
 # Define what gets imported with "from visualize import *"
@@ -24,4 +25,6 @@ __all__ = [
     # Classes
     # MapVisualizer.py
     "MapVisualizer",
+    # LineChartVisualizer.py
+    "LineChartVisualizer",
 ]
