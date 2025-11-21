@@ -19,8 +19,8 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
 # Utility functions
-from utils.DistrictSubdistrictUtils import load_bangkok_official_area_names
-from utils.FuzzyUtils import fuzzy_match, normalize
+from src.utils.DistrictSubdistrictUtils import load_bangkok_official_area_names
+from src.utils.FuzzyUtils import fuzzy_match, normalize
 
 
 class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):

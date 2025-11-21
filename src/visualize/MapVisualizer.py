@@ -5,7 +5,7 @@ from folium import Map
 from shapely import wkt
 
 # Utility Functions
-from utils.ConfigUtils import read_config_path
+from src.utils.ConfigUtils import read_config_path
 
 
 class MapVisualizer:

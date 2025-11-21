@@ -74,7 +74,7 @@
         },
         "household": {
             "drop": "False",
-            "dtype": "str"
+            "dtype": "int"
         },
         "buffer": {
             "drop": "True",

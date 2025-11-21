@@ -21,8 +21,8 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
 # Utility functions
-from utils.FuzzyUtils import fuzzy_match, normalize
-from utils.ProvinceUtils import load_province_whitelist
+from src.utils.FuzzyUtils import fuzzy_match, normalize
+from src.utils.ProvinceUtils import load_province_whitelist
 
 
 class ProvinceTransformer(BaseEstimator, TransformerMixin):

@@ -20,7 +20,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
 # Utility functions
-from utils.GeographicUtils import load_geographic_data, save_geographic_data
+from src.utils.GeographicUtils import load_geographic_data, save_geographic_data
 
 # Other Transformer
 from .DistrictSubdistrictTransformer import DistrictSubdistrictTransformer

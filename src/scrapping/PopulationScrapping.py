@@ -310,13 +310,16 @@ class PopulationScrapping:
                     )
             else:
                 df = df.drop(columns=[f"{level}-name"])
+                PopulationScrapping.DTYPE_MAPPING.pop(f"{level}-name", None)
 
         df = df[~query_condition]
 
         df = df.dropna()
         df = df.reset_index(drop=True)
 
-        df = df.astype(PopulationScrapping.DTYPE_MAPPING)
+        for col, dtype in PopulationScrapping.DTYPE_MAPPING.items():
+            if dtype == "int":
+                df[col] = df[col].apply(lambda x: int(str(x).replace(",", "")))
 
         self.data_frame = df.copy()
 
