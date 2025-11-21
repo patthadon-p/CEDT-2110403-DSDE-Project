@@ -23,7 +23,7 @@ import yaml
 
 
 # Define the path to the configs directory
-def get_configs_path() -> str:
+def get_configs_path() -> Path:
     """
     Determines the absolute path to the main configuration file.
 
@@ -33,13 +33,13 @@ def get_configs_path() -> str:
 
     Returns
     -------
-    str
+    Path
         The absolute path to the 'configs.yaml' file.
     """
 
     base_dir = Path(__file__).resolve().parents[2]
     configs_path = base_dir / "configs" / "configs.yaml"
-    return str(configs_path)
+    return configs_path
 
 
 def get_data_dir() -> Path:
@@ -86,7 +86,7 @@ def read_config_path(key: str, domain: str = "data", filepath: str = "") -> str:
     str
         The resolved absolute file path.
     """
-    configs_path = get_configs_path()
+    configs_path = str(get_configs_path())
 
     if filepath == "":
         with open(configs_path, encoding="utf-8") as config_file:
