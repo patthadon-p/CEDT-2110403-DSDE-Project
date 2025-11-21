@@ -74,7 +74,7 @@ class ProvinceTransformerSpark(
         fuzzy matching results, improving performance.
     """
 
-    def __init__(self, path: str = "", province_column: str | None = None):
+    def __init__(self, path: str = "", province_column: str | None = None) -> None:
         super().__init__()
         self.path = path
         self.whitelist = load_province_whitelist(self.path)
@@ -113,12 +113,12 @@ class ProvinceTransformerSpark(
             .withColumn(self.province_column, F.trim(F.col(self.province_column)))
         )
 
-        def province_udf(x):
+        def province_udf(x: str | None) -> str | None:
             if x is None:
                 return None
             normalized = normalize(x)
             return fuzzy_match(
-                normalized, self.whitelist, self._cache_province, cutoff=90
+                normalized, list(self.whitelist.keys()), self._cache_province, cutoff=90
             )
 
         spark_province_udf = F.udf(province_udf, StringType())
@@ -128,7 +128,7 @@ class ProvinceTransformerSpark(
             spark_province_udf(F.col(self.province_column)),
         )
 
-        def map_to_whitelist(x):
+        def map_to_whitelist(x: str | None) -> str | None:
             return self.whitelist.get(x)
 
         map_udf = F.udf(map_to_whitelist, StringType())

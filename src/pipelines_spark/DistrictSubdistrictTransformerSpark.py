@@ -40,13 +40,13 @@ class DistrictSubdistrictTransformerSpark(
     def __init__(
         self,
         path: str = "",
-        district_column: str = "district",
-        subdistrict_column: str = "subdistrict",
-    ):
+        district_column: str | None = None,
+        subdistrict_column: str | None = None,
+    ) -> None:
         super().__init__()
         self.path = path
-        self.district_column = district_column
-        self.subdistrict_column = subdistrict_column
+        self.district_column = district_column or "district"
+        self.subdistrict_column = subdistrict_column or "subdistrict"
 
         official_area_name = load_bangkok_official_area_names(self.path)
         self.official_districts = official_area_name.get("districts", [])
@@ -60,7 +60,7 @@ class DistrictSubdistrictTransformerSpark(
         Applies normalization and fuzzy matching to district and subdistrict columns.
         """
 
-        def district_udf(x):
+        def district_udf(x: str | None) -> str | None:
             if x is None:
                 return None
             normalized = normalize(x)
@@ -68,7 +68,7 @@ class DistrictSubdistrictTransformerSpark(
                 normalized, self.official_districts, self._cache_district
             )
 
-        def subdistrict_udf(x):
+        def subdistrict_udf(x: str | None) -> str | None:
             if x is None:
                 return None
             normalized = normalize(x)
@@ -80,7 +80,7 @@ class DistrictSubdistrictTransformerSpark(
         spark_subdistrict_udf = F.udf(subdistrict_udf, StringType())
 
         df_transformed = df.withColumn(
-            self.district_column, 
+            self.district_column,
             spark_district_udf(F.col(self.district_column)),
         ).withColumn(
             self.subdistrict_column,

@@ -46,12 +46,12 @@ class StateToStatusTransformerSpark(Transformer):
         self,
         path: str = "",
         mapping: dict | None = None,
-        old_column: str = "state",
-        new_column: str = "status",
-    ):
+        old_column: str | None = None,
+        new_column: str | None = None,
+    ) -> None:
         super().__init__()
-        self.old_column = old_column
-        self.new_column = new_column
+        self.old_column = old_column or "state"
+        self.new_column = new_column or "status"
         self.mapping = mapping or load_status_mapping(path)
 
     def _transform(self, df: DataFrame) -> DataFrame:

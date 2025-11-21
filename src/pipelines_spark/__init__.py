@@ -17,9 +17,10 @@ Usage:
 """
 
 # Import specific classes and functions for direct access
-# from .AddressTransformer import AddressTransformer
-# from .CleansingPipeline import CleansingPipeline
-# from .CoordinateTransformer import CoordinateTransformer
+from .AddressTransformerSpark import AddressTransformerSpark
+from .CleansingPipelineSpark import CleansingPipelineSpark
+
+# from .CoordinateTransformerSpark import CoordinateTransformerSpark
 from .DateTransformerSpark import DateTransformerSpark
 from .DistrictSubdistrictTransformerSpark import DistrictSubdistrictTransformerSpark
 from .IngestionPreprocessorSpark import IngestionPreprocessorSpark
@@ -29,10 +30,10 @@ from .StateToStatusTransformerSpark import StateToStatusTransformerSpark
 # Define what gets imported with 'from pipelines import *'
 __all__ = [
     # Classes
-    # # AddressTransformer.py
-    # "AddressTransformer",
-    # # CleansingPipeline.py
-    # "CleansingPipeline",
+    # AddressTransformer.py
+    "AddressTransformerSpark",
+    # CleansingPipelineSpark.py
+    "CleansingPipelineSpark",
     # # CoordinateTransformer.py
     # "CoordinateTransformer",
     # DateTransformerSpark.py
