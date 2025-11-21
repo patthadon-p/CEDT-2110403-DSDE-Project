@@ -21,7 +21,7 @@ Usage:
 # from .CleansingPipeline import CleansingPipeline
 # from .CoordinateTransformer import CoordinateTransformer
 from .DateTransformerSpark import DateTransformerSpark
-# from .DistrictSubdistrictTransformer import DistrictSubdistrictTransformer
+from .DistrictSubdistrictTransformerSpark import DistrictSubdistrictTransformerSpark
 from .IngestionPreprocessorSpark import IngestionPreprocessorSpark
 from .ProvinceTransformerSpark import ProvinceTransformerSpark
 from .StateToStatusTransformerSpark import StateToStatusTransformerSpark
@@ -37,8 +37,8 @@ __all__ = [
     # "CoordinateTransformer",
     # DateTransformerSpark.py
     "DateTransformerSpark",
-    # # DistrictSubdistrictTransformer.py
-    # "DistrictSubdistrictTransformer",
+    # DistrictSubdistrictTransformerSpark.py
+    "DistrictSubdistrictTransformerSpark",
     # IngestionPreprocessorSpark.py
     "IngestionPreprocessorSpark",
     # ProvinceTransformerSpark.py
