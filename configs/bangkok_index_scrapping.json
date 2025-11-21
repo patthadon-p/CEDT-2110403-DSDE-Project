@@ -1,5 +1,7 @@
 {
     "base_url": "https://rocketmedialab.co/database-bangkok-index-2024/",
+    "sheet_url": "https://docs.google.com/spreadsheets/d/1S0Tu-US8xSbAysp75ProEOZBneUcyDS6uhw9KNNfelE/export?format=csv&gid=0",
+
     "TO_DROP_COLUMNS": [0 , 11], 
     "DISTRICT_NAME_COLUMN_INDEX": 1, 
     "DISTRICT_REMOVE_PREFIX": ["เขต", "อำเภอ"],
