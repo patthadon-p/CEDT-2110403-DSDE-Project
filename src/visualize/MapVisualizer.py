@@ -5,7 +5,7 @@ from folium import Map
 from shapely import wkt
 
 # Utility Functions
-from utils.ConfigUtils import read_config_path
+from ..utils.ConfigUtils import read_config_path
 
 
 class MapVisualizer:
@@ -28,15 +28,8 @@ class MapVisualizer:
     def _load_geometries(self) -> None:
         df_type = self.df.copy()
 
-        df_type["type_clean"] = (
-            df_type["type"]
-            .astype(str)
-            .str.replace("{", "")
-            .str.replace("}", "")
-            .str.split(",")
-        )
-        df_exploded = df_type.explode("type_clean")
-        df_exploded["type_clean"] = df_exploded["type_clean"].str.strip()
+        df_exploded = df_type.explode("type_cleaned")
+        df_exploded["type_cleaned"] = df_exploded["type_cleaned"].str.strip()
 
         self.gdf_points = gpd.GeoDataFrame(
             df_exploded,
@@ -58,7 +51,7 @@ class MapVisualizer:
     def plot(self, type_filter: str | None = None, value_column: str = "count") -> Map:
 
         if type_filter:
-            gdf_filtered = self.gdf_points[self.gdf_points["type_clean"] == type_filter]
+            gdf_filtered = self.gdf_points[self.gdf_points["type_cleaned"] == type_filter]
         else:
             gdf_filtered = self.gdf_points
 

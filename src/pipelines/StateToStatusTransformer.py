@@ -18,7 +18,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
 # Utility functions
-from utils.StatusUtils import load_status_mapping
+from ..utils.StatusUtils import load_status_mapping
 
 
 class StateToStatusTransformer(BaseEstimator, TransformerMixin):

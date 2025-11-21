@@ -1,12 +1,13 @@
-import datetime
-import streamlit as st
+import os
+import sys
+
 import pandas as pd
-import sys, os
+import streamlit as st
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(project_root)
 
-from src.visualize.LineChartVisualizer import LineChartVisualizer   
+from src.visualize.LineChartVisualizer import LineChartVisualizer
 
 st.set_page_config(layout="wide")
 
@@ -39,4 +40,5 @@ def load_data():
 df_cleansed = load_data()
 
 viz = LineChartVisualizer(df_cleansed)
-viz.plot()
+fig = viz.plot()
+st.pyplot(fig)

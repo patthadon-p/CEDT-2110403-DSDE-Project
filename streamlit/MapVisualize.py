@@ -1,8 +1,10 @@
 import datetime
-import streamlit as st
-import pandas as pd
-import sys, os
+import os
+import sys
+
 import geopandas as gpd
+import pandas as pd
+import streamlit as st
 from streamlit_folium import st_folium
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -90,7 +92,7 @@ if type_filter == "ทั้งหมด":
     m = viz.plot(type_filter=None)
     type_filter = ""
 else:
-    gdf_filtered = viz.gdf_points[viz.gdf_points["type_clean"] == type_filter]
+    gdf_filtered = viz.gdf_points[viz.gdf_points["type_cleaned"] == type_filter]
     m = viz.plot(type_filter=type_filter)
 
 joined = gpd.sjoin(

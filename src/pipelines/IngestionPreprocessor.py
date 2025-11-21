@@ -20,7 +20,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
 # Utility functions
-from utils.ConfigUtils import read_config_path
+from ..utils.ConfigUtils import read_config_path
 
 
 class IngestionPreprocessor(BaseEstimator, TransformerMixin):
