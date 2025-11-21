@@ -35,59 +35,58 @@ class PopulationScrapping:
         level: str = "",
     ) -> None:
         """
-    Handles scraping, loading, and cleaning of population data from the
-    Department of Provincial Administration (DOPA) website.
+        Handles scraping, loading, and cleaning of population data from the
+        Department of Provincial Administration (DOPA) website.
 
-    This class initializes configuration based on a JSON file, constructs the
-    target URL for a specific administrative level and year (Buddhist calendar),
-    fetches the data file, and performs data cleaning and transformation
-    before returning the final DataFrame.
+        This class initializes configuration based on a JSON file, constructs the
+        target URL for a specific administrative level and year (Buddhist calendar),
+        fetches the data file, and performs data cleaning and transformation
+        before returning the final DataFrame.
 
-    Parameters
-    ----------
-    url : str, optional
-        Base URL for the DOPA population data. Defaults to the value in the config file.
-    year : int or str or None, optional
-        The year of the data to fetch (in Buddhist calendar). Defaults to the
-        current Buddhist year.
-    level : str, optional
-        The administrative level of the data (e.g., 'province', 'district').
-        Defaults to the value in the config file.
+        Parameters
+        ----------
+        url : str, optional
+            Base URL for the DOPA population data. Defaults to the value in the config file.
+        year : int or str or None, optional
+            The year of the data to fetch (in Buddhist calendar). Defaults to the
+            current Buddhist year.
+        level : str, optional
+            The administrative level of the data (e.g., 'province', 'district').
+            Defaults to the value in the config file.
 
-    Attributes
-    ----------
-    population_scrapping_path : str
-        Path to the configuration JSON file.
-    url : str
-        The base URL used for scraping.
-    level : str
-        The administrative level currently being processed.
-    level_code : str
-        The DOPA code corresponding to the administrative level.
-    level_priority : int
-        The priority level of the administrative level (used for cleaning).
-    year : str
-        The target year (Buddhist calendar) for the data.
-    year_last_two_digits : str
-        The last two digits of the target year.
-    target_url : str
-        The final full URL constructed to fetch the data file.
-    data_frame : pandas.DataFrame
-        The DataFrame storing the scraped and cleaned data.
-    LEVELS : list of str
-        Class attribute: List of available administrative levels.
-    LEVEL_PRIORITY : dict of str: int
-        Class attribute: Mapping of administrative level to its priority.
-    LEVEL_CODE_MAPPING : dict of str: str
-        Class attribute: Mapping of administrative level to its DOPA code.
-    LEVEL_REMOVE_PREFIX : dict of str: list of str
-        Class attribute: Mapping of administrative level to list of prefixes to remove from names.
-    COLUMNS : list of str
-        Class attribute: List of column names to apply to the scraped data.
-    TO_DROP_COLUMNS : list of str
-        Class attribute: List of column names to drop during cleaning.
-    """
-    
+        Attributes
+        ----------
+        population_scrapping_path : str
+            Path to the configuration JSON file.
+        url : str
+            The base URL used for scraping.
+        level : str
+            The administrative level currently being processed.
+        level_code : str
+            The DOPA code corresponding to the administrative level.
+        level_priority : int
+            The priority level of the administrative level (used for cleaning).
+        year : str
+            The target year (Buddhist calendar) for the data.
+        year_last_two_digits : str
+            The last two digits of the target year.
+        target_url : str
+            The final full URL constructed to fetch the data file.
+        data_frame : pandas.DataFrame
+            The DataFrame storing the scraped and cleaned data.
+        LEVELS : list of str
+            Class attribute: List of available administrative levels.
+        LEVEL_PRIORITY : dict of str: int
+            Class attribute: Mapping of administrative level to its priority.
+        LEVEL_CODE_MAPPING : dict of str: str
+            Class attribute: Mapping of administrative level to its DOPA code.
+        LEVEL_REMOVE_PREFIX : dict of str: list of str
+            Class attribute: Mapping of administrative level to list of prefixes to remove from names.
+        COLUMNS : list of str
+            Class attribute: List of column names to apply to the scraped data.
+        TO_DROP_COLUMNS : list of str
+            Class attribute: List of column names to drop during cleaning.
+        """
 
         self.population_scrapping_path = read_config_path(
             domain="scrapping", key="population_scrapping_path"
@@ -160,7 +159,7 @@ class PopulationScrapping:
             The content of the file as raw bytes if successful, otherwise None
             if a request error occurs.
         """
-        
+
         try:
             response = requests.get(self.target_url, timeout=60)
             response.raise_for_status()
@@ -187,7 +186,7 @@ class PopulationScrapping:
             A DataFrame containing the loaded data, or None if an error occurs
             during the loading process.
         """
-        
+
         try:
             file_like_object = BytesIO(file_bytes)
             df = pd.read_csv(
@@ -211,7 +210,7 @@ class PopulationScrapping:
             The raw DataFrame with assigned column names, or an empty DataFrame
             if the file could not be fetched or loaded.
         """
-        
+
         file_bytes = self._fetch_file()
 
         if file_bytes:
@@ -249,7 +248,7 @@ class PopulationScrapping:
         -------
         None
         """
-        
+
         file_name = file_name or f"population_{self.level}_{self.year}.csv"
 
         save_path = save_path or str(
@@ -285,7 +284,7 @@ class PopulationScrapping:
         pandas.DataFrame
             The final, cleaned, and processed DataFrame.
         """
-        
+
         df = self._run_scraper().copy()
         df = df.drop(columns=PopulationScrapping.TO_DROP_COLUMNS)
 
