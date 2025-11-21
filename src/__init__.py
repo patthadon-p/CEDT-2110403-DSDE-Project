@@ -19,12 +19,13 @@ Usage:
 """
 
 # Import all submodules and their contents
-from . import pipelines, scrapping, utils
+from . import pipelines, scrapping, utils, visualize
 
 # Import specific items to make them available at package level
 # from .pipelines import *
 # from .scrapping import *
 # from .utils import *
+# from .visualize import *
 
 # Define what gets imported with 'from src import *'
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     "pipelines",
     "scrapping",
     "utils",
+    "visualize",
 ]
