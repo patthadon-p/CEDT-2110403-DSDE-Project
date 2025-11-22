@@ -5,7 +5,7 @@ from folium import Map
 from shapely import wkt
 
 # Utility Functions
-from ..utils.ConfigUtils import read_config_path
+from src.utils.ConfigUtils import read_config_path
 
 
 class MapVisualizer:
@@ -13,14 +13,14 @@ class MapVisualizer:
         self,
         df: pd.DataFrame,
         region_path: str = "",
-        lattitude_column: str = "",
+        latitude_column: str = "",
         longitude_column: str = "",
     ) -> None:
         self.df = df
         self.region_path = read_config_path(
             key="geographic_cleansed_data_path", filepath=region_path
         )
-        self.latitude_column = lattitude_column or "latitude"
+        self.latitude_column = latitude_column or "latitude"
         self.longitude_column = longitude_column or "longitude"
 
         self._load_geometries()
@@ -51,7 +51,9 @@ class MapVisualizer:
     def plot(self, type_filter: str | None = None, value_column: str = "count") -> Map:
 
         if type_filter:
-            gdf_filtered = self.gdf_points[self.gdf_points["type_cleaned"] == type_filter]
+            gdf_filtered = self.gdf_points[
+                self.gdf_points["type_cleaned"] == type_filter
+            ]
         else:
             gdf_filtered = self.gdf_points
 
