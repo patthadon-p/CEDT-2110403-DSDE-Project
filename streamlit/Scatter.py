@@ -29,7 +29,7 @@ st.sidebar.header("Filters")
 
 @st.cache_data
 def load_cleansed() -> pd.DataFrame:
-    df = pd.read_csv(read_config_path("processed", "cleansed_data_path"))
+    df = pd.read_csv(read_config_path(domain="processed", key="cleansed_data_path"))
 
     # list of categories
     df["type_cleaned"] = (
@@ -38,11 +38,12 @@ def load_cleansed() -> pd.DataFrame:
         .str.replace("{", "", regex=False)
         .str.replace("}", "", regex=False)
         .str.split(",")
+        .apply(tuple)
     )
 
     # single main category
     df["type_clean"] = df["type_cleaned"].apply(
-        lambda x: x[0].strip() if isinstance(x, list) and len(x) > 0 else None
+        lambda x: x[0].strip() if isinstance(x, tuple) and len(x) > 0 else None
     )
 
     return df
@@ -51,7 +52,9 @@ def load_cleansed() -> pd.DataFrame:
 @st.cache_data
 def load_scores() -> pd.DataFrame:
     # web-scraped score data (50 districts)
-    return pd.read_csv(read_config_path("scrapping", "bangkok_index_scrapped_path"))
+    return pd.read_csv(
+        read_config_path(domain="scrapping", key="bangkok_index_scrapped_path")
+    )
 
 
 # Load cleansed data and scores
@@ -170,7 +173,7 @@ else:
     )
 
     chart_time = (line + points).interactive()
-    st.altair_chart(chart_time, use_container_width=True)
+    st.altair_chart(chart_time, width="stretch")
 
     st.dataframe(daily_counts[["date", "count", "year_month"]].sort_values("date"))
 
@@ -267,7 +270,7 @@ else:
 
         chart_typeb = (all_points + zone_points + vline + hline).interactive()
 
-        st.altair_chart(chart_typeb, use_container_width=True)
+        st.altair_chart(chart_typeb, width="stretch")
 
         st.markdown("#### 📋 ตารางสรุป Total Score + Complaints + Zone")
         st.dataframe(
@@ -323,7 +326,7 @@ else:
 
     # วาด 4 Scatter แยก panel
     charts = [make_scatter(m, df_scatter) for m in metrics]
-    st.altair_chart(alt.hconcat(*charts), use_container_width=True)
+    st.altair_chart(alt.hconcat(*charts), width="stretch")
 
     # แสดงตาราง
     st.markdown(
@@ -416,7 +419,7 @@ else:
                 .interactive()
             )
 
-            st.altair_chart(chart_multi, use_container_width=True)
+            st.altair_chart(chart_multi, width="stretch")
 
 
 # -----------------------------

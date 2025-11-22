@@ -33,9 +33,14 @@ st.markdown(
 
 @st.cache_data
 def load_data() -> pd.DataFrame:
-    df = pd.read_csv(read_config_path("processed", "cleansed_data_path"))
+    df = pd.read_csv(read_config_path(domain="processed", key="cleansed_data_path"))
     df["type_cleaned"] = (
-        df["type"].astype(str).str.replace("{", "").str.replace("}", "").str.split(",")
+        df["type"]
+        .astype(str)
+        .str.replace("{", "")
+        .str.replace("}", "")
+        .str.split(",")
+        .apply(tuple)
     )
     return df
 
@@ -100,8 +105,12 @@ filtered_df = df_cleansed[
 ]
 
 
-filtered_df["latitude"] = pd.to_numeric(filtered_df["latitude"], errors="coerce")
-filtered_df["longitude"] = pd.to_numeric(filtered_df["longitude"], errors="coerce")
+filtered_df.loc[:, "latitude"] = pd.to_numeric(
+    filtered_df.loc[:, "latitude"], errors="coerce"
+)
+filtered_df.loc[:, "longitude"] = pd.to_numeric(
+    filtered_df.loc[:, "longitude"], errors="coerce"
+)
 filtered_df = filtered_df.dropna(subset=["latitude", "longitude"])
 
 
@@ -138,7 +147,7 @@ with col1:
         initial_view_state=view_state,
         tooltip={
             "text": "{subdistrict} {district}\n{timestamp_date}/{timestamp_month}/{timestamp_year}\n{comment}"
-        },
+        },  # type: ignore
     )
 
     st.pydeck_chart(deck)

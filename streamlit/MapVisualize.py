@@ -39,9 +39,14 @@ st.markdown(
 # Load Cleansed Data
 @st.cache_data
 def load_data() -> pd.DataFrame:
-    df = pd.read_csv(read_config_path("processed", "cleansed_data_path"))
+    df = pd.read_csv(read_config_path(domain="processed", key="cleansed_data_path"))
     df["type_cleaned"] = (
-        df["type"].astype(str).str.replace("{", "").str.replace("}", "").str.split(",")
+        df["type"]
+        .astype(str)
+        .str.replace("{", "")
+        .str.replace("}", "")
+        .str.split(",")
+        .apply(tuple)
     )
     return df
 
@@ -107,7 +112,9 @@ filtered_time = df_cleansed[
 
 viz = MapVisualizer(
     filtered_time,
-    region_path=read_config_path("processed", "cleansed_geographic_data_path"),
+    region_path=read_config_path(
+        domain="processed", key="cleansed_geographic_data_path"
+    ),
 )
 
 
