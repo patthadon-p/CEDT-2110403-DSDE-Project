@@ -1,14 +1,14 @@
-import os
-import sys
-
+# Import necessary libraries
 import pandas as pd
 import streamlit as st
 
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(project_root)
+# Utility Functions
+from src.utils import read_config_path
 
+# Visualization Class
 from src.visualize.LineChartVisualizer import LineChartVisualizer
 
+# Set up Streamlit page configuration
 st.set_page_config(layout="wide")
 
 st.title("Bangkok Traffy Line Chart Viewer")
@@ -21,21 +21,19 @@ st.markdown(
     }
     </style>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
+
 
 # Load Cleansed Data
 @st.cache_data
-def load_data():
-    df = pd.read_csv("./data/processed/cleansed_data.csv")
+def load_data() -> pd.DataFrame:
+    df = pd.read_csv(read_config_path("processed", "cleansed_data_path"))
     df["type_cleaned"] = (
-        df["type"]
-        .astype(str)
-        .str.replace("{", "")
-        .str.replace("}", "")
-        .str.split(",")
+        df["type"].astype(str).str.replace("{", "").str.replace("}", "").str.split(",")
     )
     return df
+
 
 df_cleansed = load_data()
 
