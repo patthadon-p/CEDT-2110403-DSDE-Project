@@ -178,9 +178,6 @@ else:
     chart_time = (line + points).interactive()
     st.altair_chart(chart_time, width="stretch")
 
-    # st.dataframe(daily_counts[["date", "count", "year_month"]].sort_values("date"))
-
-
 # -----------------------------
 # 5) SCATTER 2: TOTAL_SCORE vs COMPLAINTS
 # -----------------------------
@@ -204,7 +201,7 @@ else:
     df_typeb["complaints"] = df_typeb["complaints"].fillna(0)
 
     if df_typeb["complaints"].sum() == 0:
-        st.info("ไม่มีเรื่องร้องเรียนใด ๆ ในช่วงเวลา / ประเภทที่เลือก จึงยังวิเคราะห์ Type B ไม่ได้")
+        st.info("ไม่มีเรื่องร้องเรียนใด ๆ ในช่วงเวลา / ประเภทที่เลือก จึงยังวิเคราะห์ไม่ได้")
     else:
         # เกณฑ์แบ่งกลุ่ม (ปรับ quantile ได้ตามใจ)
         low_score_threshold = df_typeb["total_score"].quantile(0.3)
@@ -234,7 +231,7 @@ else:
         # base chart
         
         base_tb = alt.Chart(df_typeb).encode(
-            x=alt.X("total_score:Q", title="Total Score" , scale=alt.Scale(domain=[0, 40])),
+            x=alt.X("total_score:Q", title="Total Score" , scale=alt.Scale(domain=[10, 40])),
             y=alt.Y("complaints:Q", title="Number of Complaints" , scale=alt.Scale(domain=[0, 20000])),
             tooltip=["district:N", "total_score:Q", "complaints:Q", "zone:N"],
         )
@@ -273,15 +270,8 @@ else:
         )
 
         chart_typeb = (all_points + zone_points + vline + hline).properties(width=700, height=500).interactive(bind_x=False, bind_y=False)
-
         st.altair_chart(chart_typeb, width="stretch")
 
-        # st.markdown("#### 📋 ตารางสรุป Total Score + Complaints + Zone")
-        # st.dataframe(
-        #     df_typeb[["district", "total_score", "complaints", "zone"]]
-        #     .sort_values(["zone", "complaints"], ascending=[True, False])
-        #     .reset_index(drop=True)
-        # )
 
 
 # -----------------------------
@@ -331,17 +321,6 @@ else:
     # วาด 4 Scatter แยก panel
     charts = [make_scatter(m, df_scatter) for m in metrics]
     st.altair_chart(alt.hconcat(*charts), width="stretch" ,theme="streamlit")
-
-    # แสดงตาราง
-    # st.markdown(
-    #     f"### 📈 ตารางคะแนนเขตและจำนวนเรื่องร้องเรียน — {type_filter if type_filter else 'ทุกประเภท'}"
-    # )
-
-    # st.dataframe(
-    #     df_scatter[["district"] + metrics + ["complaints"]].sort_values(
-    #         "complaints", ascending=False
-    #     )
-    # )
 
 
 # -----------------------------
@@ -429,3 +408,203 @@ else:
 # -----------------------------
 # ลิ้งค์ปัญหาดูกับรายได้ต่อครัวเรือน
 # -----------------------------
+
+# -----------------------------
+# 8) Pearson Heatmap: District Quality Metrics vs All Problem Types
+# -----------------------------
+st.markdown("---")
+st.subheader("🔥 Pearson Heatmap – ความสัมพันธ์ระหว่างมิติคุณภาพเขตกับประเภทปัญหา")
+
+# ใช้ข้อมูลตามช่วงเวลา (แต่ไม่ fix type_filter เพราะอยากดูทุกประเภทปัญหา)
+corr_base = filtered_time.copy()
+
+# ตัด NaN / ค่าว่างใน type_clean ออก (ไม่เอา NaN เลย)
+corr_base = corr_base.dropna(subset=["type_clean"])
+corr_base = corr_base[corr_base["type_clean"].astype(str).str.strip() != ""]
+
+if corr_base.empty:
+    st.info("ไม่มีข้อมูลประเภทปัญหาหลังตัด NaN / ค่าว่าง ออก จึงยังทำ Pearson heatmap ไม่ได้")
+elif "district" not in corr_base.columns:
+    st.error("ไม่พบคอลัมน์ 'district' ใน cleansed_data.csv (ต้องมี district เพื่อทำ heatmap)")
+else:
+    # 1) นับจำนวนร้องเรียนต่อ (เขต, ประเภทปัญหา)
+    type_district_counts = (
+        corr_base
+        .groupby(["district", "type_clean"])
+        .size()
+        .reset_index(name="complaints")
+    )
+
+    # 2) Pivot ให้แต่ละประเภทปัญหาเป็นคอลัมน์ (wide format)
+    pivot_types = (
+        type_district_counts
+        .pivot(index="district", columns="type_clean", values="complaints")
+        .fillna(0)
+        .reset_index()
+    )
+
+    # 3) รวมกับคะแนนเขตจาก df_score
+    corr_df = df_score.merge(pivot_types, on="district", how="left").fillna(0)
+
+    # ชื่อตัวชี้วัดคุณภาพเขต
+    metric_cols = ["total_score", "public_service", "economy", "welfare", "environment"]
+
+    # คอลัมน์ประเภทปัญหา = ทั้งหมดที่ไม่ใช่ metric และไม่ใช่ district
+    type_cols = [
+        c for c in corr_df.columns
+        if c not in metric_cols + ["district"]
+    ]
+
+    if not type_cols:
+        st.info("ไม่มีคอลัมน์ประเภทปัญหาที่จะแปลงเป็นตัวเลขสำหรับทำ Pearson heatmap")
+    else:
+        # (ถ้าอยากจำกัดจำนวนประเภทปัญหา ให้เลือกเฉพาะ Top N)
+        # top_n = 20
+        # รวมจำนวนต่อประเภท แล้วเลือก top_n
+        # sums = corr_df[type_cols].sum().sort_values(ascending=False)
+        # keep_types = sums.head(top_n).index.tolist()
+        # type_cols = keep_types
+
+        # 4) สร้าง correlation matrix (Pearson)
+        corr_matrix = corr_df[metric_cols + type_cols].corr(method="pearson")
+
+        # เอาเฉพาะส่วน metric (แถว) vs problem types (คอลัมน์)
+        corr_sub = corr_matrix.loc[metric_cols, type_cols]
+
+        # 5) แปลงเป็น long format สำหรับ Altair
+        corr_long = (
+            corr_sub
+            .reset_index()
+            .melt(id_vars="index", var_name="problem_type", value_name="corr")
+            .rename(columns={"index": "metric"})
+        )
+
+        # 6) วาด heatmap
+        heatmap = (
+            alt.Chart(corr_long)
+            .mark_rect()
+            .encode(
+                x=alt.X(
+                    "problem_type:N",
+                    title="ประเภทปัญหา",
+                    sort=type_cols
+                ),
+                y=alt.Y(
+                    "metric:N",
+                    title="มิติคุณภาพเขต",
+                    sort=metric_cols
+                ),
+                color=alt.Color(
+                    "corr:Q",
+                    title="Pearson r",
+                    scale=alt.Scale(scheme="redblue", domain=[-1, 0, 1])
+                ),
+                tooltip=[
+                    "metric:N",
+                    "problem_type:N",
+                    alt.Tooltip("corr:Q", title="Pearson r", format=".2f")
+                ],
+            )
+            .properties(
+                width=40 * max(6, len(type_cols)),  # ขยายตามจำนวนประเภท
+                height=40 * len(metric_cols),
+                title="Pearson Correlation: District Quality Metrics × Problem Types"
+            )
+        )
+
+        st.altair_chart(heatmap, use_container_width=True)
+
+        st.markdown("#### 📋 ตารางค่า Pearson r (เฉพาะมิติคุณภาพ × ประเภทปัญหา)")
+        st.dataframe(corr_sub.round(2))
+# -----------------------------
+# 9) Pearson Heatmap: Problem Type vs Problem Type
+# -----------------------------
+st.markdown("---")
+st.subheader("Pearson Heatmap – ความสัมพันธ์ระหว่าง 'ประเภทปัญหา' ด้วยกันเอง")
+
+# ใช้ข้อมูลตามช่วงเวลา (filtered_time ยังไม่ filter ตาม type_filter)
+corr_problem = filtered_time.copy()
+
+# ไม่เอา NaN / ช่องว่างใน type_clean
+corr_problem = corr_problem.dropna(subset=["type_clean"])
+corr_problem = corr_problem[
+    corr_problem["type_clean"].astype(str).str.strip() != ""
+]
+
+if corr_problem.empty:
+    st.info("ไม่มีข้อมูลประเภทปัญหาหลังตัด NaN / ค่าว่างออก จึงยังทำ Pearson heatmap (ปัญหากับปัญหา) ไม่ได้")
+elif "district" not in corr_problem.columns:
+    st.error("ไม่พบคอลัมน์ 'district' ใน cleansed_data.csv (ต้องมี district เพื่อทำ heatmap ปัญหากับปัญหา)")
+else:
+    # 1) นับจำนวนร้องเรียนต่อ (เขต, ประเภทปัญหา)
+    #    ถ้านัทอยากเปลี่ยนเป็นต่อ 'วัน' หรือ 'เดือน' ก็เปลี่ยน groupby ตรงนี้ได้
+    type_district_counts = (
+        corr_problem
+        .groupby(["district", "type_clean"])
+        .size()
+        .reset_index(name="complaints")
+    )
+
+    # 2) Pivot ให้แต่ละประเภทปัญหาเป็นคอลัมน์
+    #    แถว = district, คอลัมน์ = type_clean, ค่า = จำนวนเรื่องร้องเรียนในเขตนั้น
+    pivot_problems = (
+        type_district_counts
+        .pivot(index="district", columns="type_clean", values="complaints")
+        .fillna(0)
+    )
+
+    if pivot_problems.shape[1] < 2:
+        st.info("จำนวนประเภทปัญหาน้อยเกินไป (< 2) สำหรับทำ correlation ปัญหากับปัญหา")
+    else:
+        # 3) คำนวณ Pearson correlation ระหว่างประเภทปัญหาทั้งหมด
+        corr_matrix_prob = pivot_problems.corr(method="pearson")
+
+        # 4) แปลงเป็น long format ให้ Altair วาด heatmap ได้
+        corr_prob_long = (
+            corr_matrix_prob
+            .reset_index()
+            .melt(id_vars="type_clean", var_name="problem_type_2", value_name="corr")
+            .rename(columns={"type_clean": "problem_type_1"})
+        )
+        # 5) สร้าง index mapping
+        problem_list = list(corr_matrix_prob.index)
+        index_map = {p: i for i, p in enumerate(problem_list)}
+
+        # 6) เพิ่มตำแหน่ง index ของคู่ปัญหา (เพื่อใช้คัดกรองครึ่งบน)
+        corr_prob_long["i_idx"] = corr_prob_long["problem_type_1"].map(index_map)
+        corr_prob_long["j_idx"] = corr_prob_long["problem_type_2"].map(index_map)
+
+        # 7) เลือกเฉพาะ Upper Triangle (i < j)
+        corr_prob_upper = corr_prob_long[corr_prob_long["i_idx"] > corr_prob_long["j_idx"]]
+
+        # 8) วาดเฉพาะครึ่งบน
+        heatmap_prob = (
+            alt.Chart(corr_prob_upper)
+            .mark_rect()
+            .encode(
+                x=alt.X("problem_type_2:N", title="ประเภทปัญหา (ตัวแปรที่ 2)",
+                        sort=problem_list),
+                y=alt.Y("problem_type_1:N", title="ประเภทปัญหา (ตัวแปรที่ 1)",
+                        sort=problem_list),
+                color=alt.Color(
+                    "corr:Q",
+                    title="Pearson r",
+                    scale=alt.Scale(scheme="redblue", domain=[-1, 0, 1])
+                ),
+                tooltip=[
+                    "problem_type_1:N",
+                    "problem_type_2:N",
+                    alt.Tooltip("corr:Q", title="Pearson r", format=".2f")
+                ]
+            )
+            .properties(
+                width=40 * max(6, len(problem_list)),
+                height=40 * max(6, len(problem_list)),
+                title="Upper-Triangle Pearson Correlation: Problem Type × Problem Type"
+            )
+        )
+
+        st.altair_chart(heatmap_prob, use_container_width=True)
+
+
+       
