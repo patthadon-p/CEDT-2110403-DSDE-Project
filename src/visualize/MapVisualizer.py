@@ -13,14 +13,14 @@ class MapVisualizer:
         self,
         df: pd.DataFrame,
         region_path: str = "",
-        lattitude_column: str = "",
+        latitude_column: str = "",
         longitude_column: str = "",
     ) -> None:
         self.df = df
         self.region_path = read_config_path(
             key="geographic_cleansed_data_path", filepath=region_path
         )
-        self.latitude_column = lattitude_column or "latitude"
+        self.latitude_column = latitude_column or "latitude"
         self.longitude_column = longitude_column or "longitude"
 
         self._load_geometries()
@@ -28,15 +28,8 @@ class MapVisualizer:
     def _load_geometries(self) -> None:
         df_type = self.df.copy()
 
-        df_type["type_clean"] = (
-            df_type["type"]
-            .astype(str)
-            .str.replace("{", "")
-            .str.replace("}", "")
-            .str.split(",")
-        )
-        df_exploded = df_type.explode("type_clean")
-        df_exploded["type_clean"] = df_exploded["type_clean"].str.strip()
+        df_exploded = df_type.explode("type_cleaned")
+        df_exploded["type_cleaned"] = df_exploded["type_cleaned"].str.strip()
 
         self.gdf_points = gpd.GeoDataFrame(
             df_exploded,
@@ -58,7 +51,9 @@ class MapVisualizer:
     def plot(self, type_filter: str | None = None, value_column: str = "count") -> Map:
 
         if type_filter:
-            gdf_filtered = self.gdf_points[self.gdf_points["type_clean"] == type_filter]
+            gdf_filtered = self.gdf_points[
+                self.gdf_points["type_cleaned"] == type_filter
+            ]
         else:
             gdf_filtered = self.gdf_points
 

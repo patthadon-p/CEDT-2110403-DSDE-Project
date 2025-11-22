@@ -19,3 +19,9 @@ scrapping:
   # Population scrapping configuration
   population_scrapping_path: "population_scrapping.json"
   bangkok_index_scrapping_path: "bangkok_index_scrapping.json"
+  bangkok_index_scrapped_path: "../data/scrapped/bangkok_index_district_final.csv"
+
+processed:
+  # Cleansed data path configuration
+  cleansed_data_path: "../data/processed/cleansed_data.csv"
+  cleansed_geographic_data_path: "../data/processed/cleansed_geo.csv"

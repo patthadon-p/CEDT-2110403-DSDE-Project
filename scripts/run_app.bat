@@ -15,7 +15,7 @@ cd streamlit || (
 )
 
 :: Check if main.py exists
-if not exist "test.py" (
+if not exist "MapVisualize.py" (
     echo ERROR: main.py not found in current directory!
     echo Current directory: %CD%
     echo Please run this script from the project root or check file location.
@@ -29,19 +29,19 @@ if exist ".venv\Scripts\streamlit.exe" (
     echo [INFO] Starting application on http://localhost:8501
     echo [INFO] If port 8501 is busy, Streamlit will try the next available port
     echo.
-    ".venv\Scripts\streamlit.exe" run "test.py" --server.port=8501
+    ".venv\Scripts\streamlit.exe" run "MapVisualize.py" --server.port=8501
 ) else if exist ".venv\Scripts\python.exe" (
     echo [INFO] Using virtual environment python with streamlit module...
     echo [INFO] Starting application on http://localhost:8501
     echo [INFO] If port 8501 is busy, Streamlit will try the next available port
     echo.
-    ".venv\Scripts\python.exe" -m streamlit run "test.py" --server.port=8501
+    ".venv\Scripts\python.exe" -m streamlit run "MapVisualize.py" --server.port=8501
 ) else (
     echo [WARN] Virtual environment not found, using system python...
     echo [INFO] Starting application on http://localhost:8501
     echo [INFO] If port 8501 is busy, Streamlit will try the next available port
     echo.
-    python -m streamlit run "test.py" --server.port=8501
+    python -m streamlit run "MapVisualize.py" --server.port=8501
 )
 
 echo.
