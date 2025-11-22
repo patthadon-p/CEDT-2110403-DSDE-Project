@@ -15,7 +15,7 @@ st.sidebar.header("Filters")
 # -----------------------------
 @st.cache_data
 def load_cleansed() -> pd.DataFrame:
-    df = pd.read_csv("./data/processed/cleansed_data.csv")
+    df = pd.read_csv("../data/processed/cleansed_data.csv")
 
     # list of categories
     df["type_cleaned"] = (
@@ -37,7 +37,7 @@ def load_cleansed() -> pd.DataFrame:
 @st.cache_data
 def load_scores() -> pd.DataFrame:
     # web-scraped score data (50 districts)
-    return pd.read_csv("./data/scrapped/bangkok_index_district_final.csv")
+    return pd.read_csv("../data/scrapped/bangkok_index_district_final.csv")
 
 
 df_cleansed = load_cleansed()
@@ -150,7 +150,7 @@ else:
 # 5) SCATTER 2: TOTAL_SCORE vs COMPLAINTS
 # -----------------------------
 st.markdown("---")
-st.subheader("📌 Total Score vs Complaints (Highlight Type B)")
+st.subheader("📌 Total Score vs Complaints ")
 
 # ต้องมีคอลัมน์ 'district' ใน cleansed_data
 if "district" not in gdf_filtered.columns:
@@ -303,3 +303,99 @@ else:
             "complaints", ascending=False
         )
     )
+
+# -----------------------------
+# 7) Multi-color Scatter: Metric vs Complaints per Top 5 Problem Types
+# -----------------------------
+st.markdown("---")
+st.subheader("🎨 Scatter แบบหลายสี: มิติคุณภาพเขต vs จำนวนร้องเรียน (Top 5 ประเภทปัญหา)")
+
+metrics_all = ["total_score", "public_service", "economy", "welfare", "environment"]
+metric_x_multi = st.selectbox(
+    "เลือกมิติคุณภาพเขตสำหรับแกน X",
+    metrics_all,
+    key="metric_x_multi"
+)
+
+# 1) ใช้เฉพาะ filter ตามช่วงเวลา
+filtered_time_only = filtered_time.copy()
+
+# 2) ตัด NaN / ค่าว่างออกจาก type_clean (ไม่เอา NaN เลย)
+filtered_time_only = filtered_time_only.dropna(subset=["type_clean"])
+filtered_time_only = filtered_time_only[
+    filtered_time_only["type_clean"].astype(str).str.strip() != ""
+]
+
+if filtered_time_only.empty:
+    st.info("ไม่มีข้อมูลประเภทปัญหาหลังตัด NaN / ค่าว่าง ออก")
+elif "district" not in filtered_time_only.columns:
+    st.error("ไม่พบคอลัมน์ 'district' ใน cleansed_data.csv (ต้องมี district เพื่อสร้าง Scatter)")
+else:
+    # 3) หา Top 5 ประเภทปัญหาที่พบมากที่สุดในช่วงเวลานี้
+    top5_types = (
+        filtered_time_only["type_clean"]
+        .value_counts()
+        .head(5)
+        .index
+        .tolist()
+    )
+
+    if len(top5_types) == 0:
+        st.info("ไม่มีประเภทปัญหาเพียงพอสำหรับสร้าง Top 5 ในช่วงเวลา / เงื่อนไขที่เลือก")
+    else:
+        st.write("Top 5 ประเภทปัญหาในช่วงเวลานี้:", top5_types)
+
+        # 4) ใช้เฉพาะแถวที่เป็น Top 5 ประเภทปัญหา
+        top5_df = filtered_time_only[filtered_time_only["type_clean"].isin(top5_types)]
+
+        # 5) นับจำนวนร้องเรียนต่อ (เขต, ประเภทปัญหา)
+        type_district_counts = (
+            top5_df
+            .groupby(["district", "type_clean"])
+            .size()
+            .reset_index(name="complaints")
+        )
+
+        # 6) รวมกับคะแนนเขต
+        df_multi = type_district_counts.merge(df_score, on="district", how="left")
+
+        if df_multi.empty:
+            st.info("ไม่มีข้อมูลเพียงพอสำหรับสร้างกราฟแบบหลายสี")
+        else:
+            chart_multi = (
+                alt.Chart(df_multi)
+                .mark_circle(size=90, opacity=0.7)
+                .encode(
+                    x=alt.X(
+                        f"{metric_x_multi}:Q",
+                        title=metric_x_multi.replace("_", " ").title()
+                    ),
+                    y=alt.Y(
+                        "complaints:Q",
+                        title="จำนวนร้องเรียน (ต่อเขต ต่อประเภทปัญหา)"
+                    ),
+                    color=alt.Color(
+                        "type_clean:N",
+                        title="ประเภทปัญหา",
+                        sort=top5_types
+                    ),
+                    tooltip=[
+                        "district:N",
+                        "type_clean:N",
+                        alt.Tooltip(f"{metric_x_multi}:Q", title=metric_x_multi),
+                        "complaints:Q",
+                    ],
+                )
+                .properties(
+                    width=600,
+                    height=400,
+                    title=f"{metric_x_multi} vs จำนวนร้องเรียน (Top 5 ประเภทปัญหา)"
+                )
+                .interactive()
+            )
+
+            st.altair_chart(chart_multi, use_container_width=True)
+
+# ----------------------------- 
+# ลิ้งค์ปัญหาดูกับรายได้ต่อครัวเรือน
+# -----------------------------
