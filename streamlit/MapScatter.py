@@ -1,5 +1,7 @@
 # Import necessary libraries
 import datetime
+import os
+import sys
 
 import pandas as pd
 import pydeck as pdk
@@ -7,6 +9,11 @@ import streamlit as st
 
 # Utility Functions
 from src.utils import read_config_path
+
+# Add project root to Python path
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
 # Set up Streamlit page configuration
 st.set_page_config(layout="wide")

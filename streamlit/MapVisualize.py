@@ -1,5 +1,7 @@
 # Import necessary libraries
 import datetime
+import os
+import sys
 
 import geopandas as gpd
 import pandas as pd
@@ -11,6 +13,11 @@ from src.utils import read_config_path
 
 # Visualization Class
 from src.visualize.MapVisualizer import MapVisualizer
+
+# Add project root to Python path
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
 # Set up Streamlit page configuration
 st.set_page_config(layout="wide")

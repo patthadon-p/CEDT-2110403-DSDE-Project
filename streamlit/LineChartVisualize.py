@@ -1,4 +1,7 @@
 # Import necessary libraries
+import os
+import sys
+
 import pandas as pd
 import streamlit as st
 
@@ -7,6 +10,11 @@ from src.utils import read_config_path
 
 # Visualization Class
 from src.visualize.LineChartVisualizer import LineChartVisualizer
+
+# Add project root to Python path
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
 # Set up Streamlit page configuration
 st.set_page_config(layout="wide")
