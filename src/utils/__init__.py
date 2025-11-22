@@ -17,7 +17,7 @@ Usage:
 """
 
 # Import specific classes and functions for direct access
-from .ConfigUtils import get_configs_path, read_config_path
+from .ConfigUtils import get_configs_path, get_dot_env_path, read_config_path
 from .DatetimeUtils import get_buddhist_year
 from .DistrictSubdistrictUtils import load_bangkok_official_area_names
 from .FuzzyUtils import fuzzy_match, normalize
@@ -30,6 +30,7 @@ __all__ = [
     # Functions
     # ConfigUtils.py
     "get_configs_path",
+    "get_dot_env_path",
     "read_config_path",
     # DatetimeUtils.py
     "get_buddhist_year",
