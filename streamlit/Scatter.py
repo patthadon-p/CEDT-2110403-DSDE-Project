@@ -1,21 +1,28 @@
+# Import necessary libraries
 import datetime
 
 import altair as alt
 import pandas as pd
 import streamlit as st
 
+# Utility Functions
+from src.utils import read_config_path
+
+# Streamlit page configuration
 st.set_page_config(layout="wide")
 
-st.title("Bangkok Traffy – Scatter Viewer")
+st.title("Bangkok Traffy - Scatter Viewer")
 st.sidebar.header("Filters")
 
 
 # -----------------------------
 # 1) LOAD DATA
 # -----------------------------
+
+
 @st.cache_data
 def load_cleansed() -> pd.DataFrame:
-    df = pd.read_csv("../data/processed/cleansed_data.csv")
+    df = pd.read_csv(read_config_path("processed", "cleansed_data_path"))
 
     # list of categories
     df["type_cleaned"] = (
@@ -37,9 +44,10 @@ def load_cleansed() -> pd.DataFrame:
 @st.cache_data
 def load_scores() -> pd.DataFrame:
     # web-scraped score data (50 districts)
-    return pd.read_csv("../data/scrapped/bangkok_index_district_final.csv")
+    return pd.read_csv(read_config_path("scrapping", "bangkok_index_scrapped_path"))
 
 
+# Load cleansed data and scores
 df_cleansed = load_cleansed()
 df_score = load_scores()
 
@@ -47,6 +55,8 @@ df_score = load_scores()
 # -----------------------------
 # 2) SIDEBAR FILTERS
 # -----------------------------
+
+
 @st.cache_data
 def get_type_list(df: pd.DataFrame) -> list[str]:
     return sorted({t.strip() for row in df["type_cleaned"] for t in row})
@@ -57,12 +67,19 @@ type_list = get_type_list(df_cleansed)
 with st.sidebar.form("filter_form"):
     type_filter = st.selectbox("เลือกประเภทปัญหา", options=["ทั้งหมด"] + type_list)
 
-    start_date, end_date = st.date_input(
+    date_range = st.date_input(
         "เลือกช่วงวัน",
         value=[datetime.date(2021, 9, 19), datetime.date(2025, 1, 16)],
         min_value=datetime.date(2021, 9, 19),
         max_value=datetime.date(2025, 1, 16),
     )
+
+    if isinstance(date_range, tuple) and len(date_range) == 2:
+        start_date, end_date = date_range
+    else:
+        # Default values if user hasn't selected a proper range
+        start_date = datetime.date(2021, 9, 19)
+        end_date = datetime.date(2025, 1, 16)
 
     submit = st.form_submit_button("Apply Filter")
 
@@ -75,9 +92,11 @@ type_filter = st.session_state.get("type_filter", "ทั้งหมด")
 start_date = st.session_state.get("start_date", datetime.date(2021, 9, 19))
 end_date = st.session_state.get("end_date", datetime.date(2025, 1, 16))
 
+
 # -----------------------------
 # 3) FILTER TRAFFY DATA
 # -----------------------------
+
 # filter by time
 filtered_time = df_cleansed[
     (
@@ -99,11 +118,13 @@ if type_filter != "ทั้งหมด":
     gdf_filtered = filtered_time[filtered_time["type_clean"] == type_filter]
 else:
     gdf_filtered = filtered_time
-    type_filter = ""  # เพื่อให้ text ในหัวข้อไม่ขึ้น "ทั้งหมด" ซ้ำ
+    type_filter = ""
+
 
 # -----------------------------
 # 4) SCATTER 1: DAILY COUNTS OVER TIME (ALTAIR)
 # -----------------------------
+
 daily_counts = (
     gdf_filtered.groupby(["timestamp_year", "timestamp_month", "timestamp_date"])
     .size()
@@ -146,9 +167,11 @@ else:
 
     st.dataframe(daily_counts[["date", "count", "year_month"]].sort_values("date"))
 
+
 # -----------------------------
 # 5) SCATTER 2: TOTAL_SCORE vs COMPLAINTS
 # -----------------------------
+
 st.markdown("---")
 st.subheader("📌 Total Score vs Complaints ")
 
@@ -246,11 +269,13 @@ else:
             .reset_index(drop=True)
         )
 
+
 # -----------------------------
 # 6) Scatter: District Quality vs Complaints (4 มิติ)
 # -----------------------------
+
 st.markdown("---")
-st.subheader("📌 Scatter Plot – จำนวนร้องเรียน เทียบกับมิติคุณภาพเขต")
+st.subheader("📌 Scatter Plot - จำนวนร้องเรียน เทียบกับมิติคุณภาพเขต")
 
 # ต้องมี district เพื่อรวมกับคะแนน
 if "district" not in gdf_filtered.columns:
@@ -270,7 +295,7 @@ else:
     metrics = ["public_service", "economy", "welfare", "environment"]
 
     # Scatter Plot function
-    def make_scatter(x_col, df):
+    def make_scatter(x_col: str, df: pd.DataFrame) -> alt.Chart:
         return (
             alt.Chart(df)
             .mark_circle(size=120, opacity=0.7)
@@ -295,8 +320,8 @@ else:
 
     # แสดงตาราง
     st.markdown(
-    f"### 📈 ตารางคะแนนเขตและจำนวนเรื่องร้องเรียน — {type_filter if type_filter else 'ทุกประเภท'}"
-)
+        f"### 📈 ตารางคะแนนเขตและจำนวนเรื่องร้องเรียน — {type_filter if type_filter else 'ทุกประเภท'}"
+    )
 
     st.dataframe(
         df_scatter[["district"] + metrics + ["complaints"]].sort_values(
@@ -304,17 +329,17 @@ else:
         )
     )
 
+
 # -----------------------------
 # 7) Multi-color Scatter: Metric vs Complaints per Top 5 Problem Types
 # -----------------------------
+
 st.markdown("---")
 st.subheader("🎨 Scatter แบบหลายสี: มิติคุณภาพเขต vs จำนวนร้องเรียน (Top 5 ประเภทปัญหา)")
 
 metrics_all = ["total_score", "public_service", "economy", "welfare", "environment"]
 metric_x_multi = st.selectbox(
-    "เลือกมิติคุณภาพเขตสำหรับแกน X",
-    metrics_all,
-    key="metric_x_multi"
+    "เลือกมิติคุณภาพเขตสำหรับแกน X", metrics_all, key="metric_x_multi"
 )
 
 # 1) ใช้เฉพาะ filter ตามช่วงเวลา
@@ -329,16 +354,12 @@ filtered_time_only = filtered_time_only[
 if filtered_time_only.empty:
     st.info("ไม่มีข้อมูลประเภทปัญหาหลังตัด NaN / ค่าว่าง ออก")
 elif "district" not in filtered_time_only.columns:
-    st.error("ไม่พบคอลัมน์ 'district' ใน cleansed_data.csv (ต้องมี district เพื่อสร้าง Scatter)")
+    st.error(
+        "ไม่พบคอลัมน์ 'district' ใน cleansed_data.csv (ต้องมี district เพื่อสร้าง Scatter)"
+    )
 else:
     # 3) หา Top 5 ประเภทปัญหาที่พบมากที่สุดในช่วงเวลานี้
-    top5_types = (
-        filtered_time_only["type_clean"]
-        .value_counts()
-        .head(5)
-        .index
-        .tolist()
-    )
+    top5_types = filtered_time_only["type_clean"].value_counts().head(5).index.tolist()
 
     if len(top5_types) == 0:
         st.info("ไม่มีประเภทปัญหาเพียงพอสำหรับสร้าง Top 5 ในช่วงเวลา / เงื่อนไขที่เลือก")
@@ -350,8 +371,7 @@ else:
 
         # 5) นับจำนวนร้องเรียนต่อ (เขต, ประเภทปัญหา)
         type_district_counts = (
-            top5_df
-            .groupby(["district", "type_clean"])
+            top5_df.groupby(["district", "type_clean"])
             .size()
             .reset_index(name="complaints")
         )
@@ -368,16 +388,11 @@ else:
                 .encode(
                     x=alt.X(
                         f"{metric_x_multi}:Q",
-                        title=metric_x_multi.replace("_", " ").title()
+                        title=metric_x_multi.replace("_", " ").title(),
                     ),
-                    y=alt.Y(
-                        "complaints:Q",
-                        title="จำนวนร้องเรียน (ต่อเขต ต่อประเภทปัญหา)"
-                    ),
+                    y=alt.Y("complaints:Q", title="จำนวนร้องเรียน (ต่อเขต ต่อประเภทปัญหา)"),
                     color=alt.Color(
-                        "type_clean:N",
-                        title="ประเภทปัญหา",
-                        sort=top5_types
+                        "type_clean:N", title="ประเภทปัญหา", sort=top5_types
                     ),
                     tooltip=[
                         "district:N",
@@ -389,13 +404,14 @@ else:
                 .properties(
                     width=600,
                     height=400,
-                    title=f"{metric_x_multi} vs จำนวนร้องเรียน (Top 5 ประเภทปัญหา)"
+                    title=f"{metric_x_multi} vs จำนวนร้องเรียน (Top 5 ประเภทปัญหา)",
                 )
                 .interactive()
             )
 
             st.altair_chart(chart_multi, use_container_width=True)
 
-# ----------------------------- 
+
+# -----------------------------
 # ลิ้งค์ปัญหาดูกับรายได้ต่อครัวเรือน
 # -----------------------------
