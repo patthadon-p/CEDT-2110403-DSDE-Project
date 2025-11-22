@@ -66,11 +66,14 @@ df_score = load_scores()
 # 2) SIDEBAR FILTERS
 # -----------------------------
 
-
 @st.cache_data
-def get_type_list(df: pd.DataFrame) -> list[str]:
-    return sorted({t.strip() for row in df["type_cleaned"] for t in row})
-
+def get_type_list(df):
+    clean_list = []
+    for row in df["type_cleaned"]:
+        for t in row:
+            if pd.notna(t) and str(t).strip() != "":
+                clean_list.append(t.strip())
+    return sorted(set(clean_list))
 
 type_list = get_type_list(df_cleansed)
 
@@ -175,7 +178,7 @@ else:
     chart_time = (line + points).interactive()
     st.altair_chart(chart_time, width="stretch")
 
-    st.dataframe(daily_counts[["date", "count", "year_month"]].sort_values("date"))
+    # st.dataframe(daily_counts[["date", "count", "year_month"]].sort_values("date"))
 
 
 # -----------------------------
@@ -229,9 +232,10 @@ else:
         df_typeb["zone"] = df_typeb.apply(label_type, axis=1)
 
         # base chart
+        
         base_tb = alt.Chart(df_typeb).encode(
-            x=alt.X("total_score:Q", title="Total Score"),
-            y=alt.Y("complaints:Q", title="Number of Complaints"),
+            x=alt.X("total_score:Q", title="Total Score" , scale=alt.Scale(domain=[0, 40])),
+            y=alt.Y("complaints:Q", title="Number of Complaints" , scale=alt.Scale(domain=[0, 20000])),
             tooltip=["district:N", "total_score:Q", "complaints:Q", "zone:N"],
         )
 
@@ -268,16 +272,16 @@ else:
             .encode(y="y:Q")
         )
 
-        chart_typeb = (all_points + zone_points + vline + hline).interactive()
+        chart_typeb = (all_points + zone_points + vline + hline).properties(width=700, height=500).interactive(bind_x=False, bind_y=False)
 
         st.altair_chart(chart_typeb, width="stretch")
 
-        st.markdown("#### 📋 ตารางสรุป Total Score + Complaints + Zone")
-        st.dataframe(
-            df_typeb[["district", "total_score", "complaints", "zone"]]
-            .sort_values(["zone", "complaints"], ascending=[True, False])
-            .reset_index(drop=True)
-        )
+        # st.markdown("#### 📋 ตารางสรุป Total Score + Complaints + Zone")
+        # st.dataframe(
+        #     df_typeb[["district", "total_score", "complaints", "zone"]]
+        #     .sort_values(["zone", "complaints"], ascending=[True, False])
+        #     .reset_index(drop=True)
+        # )
 
 
 # -----------------------------
@@ -326,18 +330,18 @@ else:
 
     # วาด 4 Scatter แยก panel
     charts = [make_scatter(m, df_scatter) for m in metrics]
-    st.altair_chart(alt.hconcat(*charts), width="stretch")
+    st.altair_chart(alt.hconcat(*charts), width="stretch" ,theme="streamlit")
 
     # แสดงตาราง
-    st.markdown(
-        f"### 📈 ตารางคะแนนเขตและจำนวนเรื่องร้องเรียน — {type_filter if type_filter else 'ทุกประเภท'}"
-    )
+    # st.markdown(
+    #     f"### 📈 ตารางคะแนนเขตและจำนวนเรื่องร้องเรียน — {type_filter if type_filter else 'ทุกประเภท'}"
+    # )
 
-    st.dataframe(
-        df_scatter[["district"] + metrics + ["complaints"]].sort_values(
-            "complaints", ascending=False
-        )
-    )
+    # st.dataframe(
+    #     df_scatter[["district"] + metrics + ["complaints"]].sort_values(
+    #         "complaints", ascending=False
+    #     )
+    # )
 
 
 # -----------------------------
