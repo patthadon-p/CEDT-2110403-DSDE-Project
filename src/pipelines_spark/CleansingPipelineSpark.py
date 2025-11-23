@@ -84,6 +84,7 @@ class CleansingPipelineSpark(Transformer):
         )
 
         self.state_to_status_transformer = StateToStatusTransformerSpark(
+            spark=self.spark,
             path=self.state_mapping_path,
             mapping=self.state_mapping,
             old_column=self.old_state_column,
