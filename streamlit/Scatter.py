@@ -506,21 +506,29 @@ else:
                 ],
             )
             .properties(
-                width=40 * max(6, len(type_cols)),  # ขยายตามจำนวนประเภท
-                height=40 * len(metric_cols),
+                width=400,   # ขยายตามจำนวนประเภท
+                height=400,
                 title="Pearson Correlation: District Quality Metrics × Problem Types"
             )
         )
 
         st.altair_chart(heatmap, use_container_width=True)
 
-        st.markdown("#### 📋 ตารางค่า Pearson r (เฉพาะมิติคุณภาพ × ประเภทปัญหา)")
-        st.dataframe(corr_sub.round(2))
+
 # -----------------------------
 # 9) Pearson Heatmap: Problem Type vs Problem Type
 # -----------------------------
+
 st.markdown("---")
-st.subheader("Pearson Heatmap – ความสัมพันธ์ระหว่าง 'ประเภทปัญหา' ด้วยกันเอง")
+st.subheader("🔥 Pearson Heatmap – ความสัมพันธ์ระหว่าง 'ประเภทปัญหา' ด้วยกันเอง")
+
+# เลือกรูปแบบการแสดงผล: Full / Upper / Lower
+triangle_mode = st.sidebar.selectbox(
+    "แสดง Heatmap ความสัมพันธ์ระหว่างประเภทปัญหาแบบ:",
+    ["Full Matrix", "Upper Triangle", "Lower Triangle"],
+    index=2,
+    key="problem_corr_triangle_mode"
+)
 
 # ใช้ข้อมูลตามช่วงเวลา (filtered_time ยังไม่ filter ตาม type_filter)
 corr_problem = filtered_time.copy()
@@ -537,7 +545,6 @@ elif "district" not in corr_problem.columns:
     st.error("ไม่พบคอลัมน์ 'district' ใน cleansed_data.csv (ต้องมี district เพื่อทำ heatmap ปัญหากับปัญหา)")
 else:
     # 1) นับจำนวนร้องเรียนต่อ (เขต, ประเภทปัญหา)
-    #    ถ้านัทอยากเปลี่ยนเป็นต่อ 'วัน' หรือ 'เดือน' ก็เปลี่ยน groupby ตรงนี้ได้
     type_district_counts = (
         corr_problem
         .groupby(["district", "type_clean"])
@@ -545,8 +552,7 @@ else:
         .reset_index(name="complaints")
     )
 
-    # 2) Pivot ให้แต่ละประเภทปัญหาเป็นคอลัมน์
-    #    แถว = district, คอลัมน์ = type_clean, ค่า = จำนวนเรื่องร้องเรียนในเขตนั้น
+    # 2) Pivot: แถว = district, คอลัมน์ = type_clean, ค่า = จำนวนเรื่องร้องเรียน
     pivot_problems = (
         type_district_counts
         .pivot(index="district", columns="type_clean", values="complaints")
@@ -559,33 +565,47 @@ else:
         # 3) คำนวณ Pearson correlation ระหว่างประเภทปัญหาทั้งหมด
         corr_matrix_prob = pivot_problems.corr(method="pearson")
 
-        # 4) แปลงเป็น long format ให้ Altair วาด heatmap ได้
+        # 4) แปลงเป็น long format
         corr_prob_long = (
             corr_matrix_prob
             .reset_index()
             .melt(id_vars="type_clean", var_name="problem_type_2", value_name="corr")
             .rename(columns={"type_clean": "problem_type_1"})
         )
-        # 5) สร้าง index mapping
+
+        # สร้าง index mapping สำหรับ upper/lower triangle
         problem_list = list(corr_matrix_prob.index)
         index_map = {p: i for i, p in enumerate(problem_list)}
 
-        # 6) เพิ่มตำแหน่ง index ของคู่ปัญหา (เพื่อใช้คัดกรองครึ่งบน)
         corr_prob_long["i_idx"] = corr_prob_long["problem_type_1"].map(index_map)
         corr_prob_long["j_idx"] = corr_prob_long["problem_type_2"].map(index_map)
 
-        # 7) เลือกเฉพาะ Upper Triangle (i < j)
-        corr_prob_upper = corr_prob_long[corr_prob_long["i_idx"] > corr_prob_long["j_idx"]]
+        # 5) เลือกว่าจะใช้ Full / Upper / Lower
+        if triangle_mode == "Upper Triangle":
+            corr_filtered = corr_prob_long[corr_prob_long["i_idx"] < corr_prob_long["j_idx"]]
+            title_suffix = " (Upper Triangle)"
+        elif triangle_mode == "Lower Triangle":
+            corr_filtered = corr_prob_long[corr_prob_long["i_idx"] > corr_prob_long["j_idx"]]
+            title_suffix = " (Lower Triangle)"
+        else:
+            corr_filtered = corr_prob_long
+            title_suffix = " (Full Matrix)"
 
-        # 8) วาดเฉพาะครึ่งบน
+        # 6) วาด heatmap
         heatmap_prob = (
-            alt.Chart(corr_prob_upper)
+            alt.Chart(corr_filtered)
             .mark_rect()
             .encode(
-                x=alt.X("problem_type_2:N", title="ประเภทปัญหา (ตัวแปรที่ 2)",
-                        sort=problem_list),
-                y=alt.Y("problem_type_1:N", title="ประเภทปัญหา (ตัวแปรที่ 1)",
-                        sort=problem_list),
+                x=alt.X(
+                    "problem_type_2:N",
+                    title="ประเภทปัญหา (ตัวแปรที่ 2)",
+                    sort=problem_list
+                ),
+                y=alt.Y(
+                    "problem_type_1:N",
+                    title="ประเภทปัญหา (ตัวแปรที่ 1)",
+                    sort=problem_list
+                ),
                 color=alt.Color(
                     "corr:Q",
                     title="Pearson r",
@@ -600,11 +620,14 @@ else:
             .properties(
                 width=40 * max(6, len(problem_list)),
                 height=40 * max(6, len(problem_list)),
-                title="Upper-Triangle Pearson Correlation: Problem Type × Problem Type"
+                title=f"Pearson Correlation: Problem Type × Problem Type{title_suffix}"
             )
         )
 
         st.altair_chart(heatmap_prob, use_container_width=True)
+
+        st.markdown("#### 📋 ตารางค่า Pearson r ระหว่างประเภทปัญหาด้วยกันเอง (Full Matrix)")
+        st.dataframe(corr_matrix_prob.round(2))
 
 
        
