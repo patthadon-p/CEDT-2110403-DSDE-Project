@@ -17,6 +17,7 @@ Usage:
 """
 
 # Import specific classes and functions for direct access
+from .AddressEncoderSpark import AddressEncoderSpark
 from .AddressTransformerSpark import AddressTransformerSpark
 from .CleansingPipelineSpark import CleansingPipelineSpark
 
@@ -33,7 +34,9 @@ from .TypeEncoderSpark import TypeEncoderSpark
 # Define what gets imported with 'from pipelines import *'
 __all__ = [
     # Classes
-    # AddressTransformer.py
+    # AddressEncoderSpark.py
+    "AddressEncoderSpark",
+    # AddressTransformerSpark.py
     "AddressTransformerSpark",
     # CleansingPipelineSpark.py
     "CleansingPipelineSpark",
