@@ -1,11 +1,7 @@
-import os
-import sys
-
+# Import necessary modules
 from pyspark.ml import Transformer
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, dayofmonth, month, to_timestamp, year
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class DateTransformerSpark(Transformer):

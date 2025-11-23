@@ -1,17 +1,13 @@
-# Setting up the environment
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+# Import necessary modules
 from pyspark.ml import Transformer
 from pyspark.ml.util import DefaultParamsReadable, DefaultParamsWritable
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import StringType
 
-from utils.DistrictSubdistrictUtils import load_bangkok_official_area_names
-from utils.FuzzyUtils import fuzzy_match, normalize
+# Utility Functions
+from src.utils.DistrictSubdistrictUtils import load_bangkok_official_area_names
+from src.utils.FuzzyUtils import fuzzy_match, normalize
 
 
 class DistrictSubdistrictTransformerSpark(

@@ -1,17 +1,13 @@
-# Setting up the environment
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+# Import necessary libraries
 from pyspark.ml import Transformer
 from pyspark.ml.util import DefaultParamsReadable, DefaultParamsWritable
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import StringType
 
-from utils.FuzzyUtils import fuzzy_match, normalize
-from utils.ProvinceUtils import load_province_whitelist
+# Utility Functions
+from src.utils.FuzzyUtils import fuzzy_match, normalize
+from src.utils.ProvinceUtils import load_province_whitelist
 
 
 class ProvinceTransformerSpark(

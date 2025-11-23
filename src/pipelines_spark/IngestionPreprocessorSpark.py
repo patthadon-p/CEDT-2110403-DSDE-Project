@@ -1,9 +1,11 @@
+# Import necessary modules
 import json
 
 from pyspark.ml import Transformer
 from pyspark.sql import DataFrame
 
-from utils.ConfigUtils import read_config_path
+# Utility Functions
+from src.utils.ConfigUtils import read_config_path
 
 
 class IngestionPreprocessorSpark(Transformer):

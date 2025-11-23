@@ -3,7 +3,6 @@ from pyspark.ml import Transformer
 from pyspark.sql import DataFrame, SparkSession
 
 # Other Transformer
-# from .CoordinateTransformerSpark import CoordinateTransformerSpark
 from .CoordinateTransformerSpark import CoordinateTransformerSpark
 from .DistrictSubdistrictTransformerSpark import DistrictSubdistrictTransformerSpark
 from .ProvinceTransformerSpark import ProvinceTransformerSpark
