@@ -65,7 +65,7 @@ def normalize(
     t = re.sub(r"\s+", " ", t).strip()
 
     for prefix in prefix_sub:
-        t = re.sub(rf"({prefix})\1+", r"\1", t)
+        t = re.sub(rf"({prefix})+", "", t)
 
     return t
 
