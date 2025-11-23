@@ -2,6 +2,13 @@
 import datetime
 import os
 import sys
+import matplotlib.pyplot as plt
+import plotly.express as px
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+
+
+
 
 import altair as alt
 import pandas as pd
@@ -135,7 +142,7 @@ else:
 
 
 # -----------------------------
-# 4) SCATTER 1: DAILY COUNTS OVER TIME (ALTAIR)
+# 4) SCATTER 1: DAILY COUNTS OVER TIME (PLOTLY)
 # -----------------------------
 
 daily_counts = (
@@ -147,6 +154,7 @@ daily_counts = (
 if daily_counts.empty:
     st.warning("ไม่มีข้อมูลในช่วงเวลาหรือประเภทที่เลือก")
 else:
+    # สร้าง date column
     daily_counts["date"] = pd.to_datetime(
         daily_counts[["timestamp_year", "timestamp_month", "timestamp_date"]].rename(
             columns={
@@ -157,26 +165,50 @@ else:
         )
     )
 
+    # สร้าง year_month เพื่อให้แยกสีตามเดือน
     daily_counts["year_month"] = daily_counts["date"].dt.to_period("M").astype(str)
 
     st.markdown("---")
     st.subheader(
-        f"📈 จำนวนปัญหา {type_filter if type_filter else 'ทั้งหมด'} ตามเวลา (Altair Scatter)"
+        f"📈 จำนวนปัญหา {type_filter if type_filter else 'ทั้งหมด'} ตามเวลา (Plotly Scatter)"
     )
 
-    base = alt.Chart(daily_counts).encode(
-        x=alt.X("date:T", title="วันที่"),
-        y=alt.Y("count:Q", title="จำนวนปัญหา"),
-        tooltip=["date:T", "count:Q", "year_month:N"],
+    # ------------------------
+    # PLOTLY SCATTER + LINE
+    # ------------------------
+    fig = px.scatter(
+        daily_counts,
+        x="date",
+        y="count",
+        color="year_month",      # แยกสีตามเดือน
+        title="Daily Complaints Over Time",
+        labels={"date": "วันที่", "count": "จำนวนปัญหา", "year_month": "เดือน"},
+        hover_data=["date", "count", "year_month"],
     )
 
-    line = base.mark_line(opacity=0.6)
-    points = base.mark_circle(size=60, opacity=0.8).encode(
-        color=alt.Color("year_month:N", title="เดือน", sort="ascending")
+    # เพิ่มเส้น line
+    fig.add_trace(
+        px.line(
+            daily_counts,
+            x="date",
+            y="count",
+        ).data[0]
     )
 
-    chart_time = (line + points).interactive()
-    st.altair_chart(chart_time, width="stretch")
+    # ปรับ layout
+    fig.update_traces(marker=dict(size=8, opacity=0.8))
+    fig.update_layout(
+        height=450,
+        legend_title_text="เดือน",
+        hovermode="x unified",
+    )
+
+    # ปรับแกน (optional)
+    fig.update_xaxes(title="วันที่")
+    fig.update_yaxes(title="จำนวนปัญหา")
+
+    # เปิด zoom/pan อยู่แล้วใน Plotly
+    st.plotly_chart(fig, use_container_width=True)
 
 # -----------------------------
 # 5) SCATTER 2: TOTAL_SCORE vs COMPLAINTS
@@ -230,47 +262,75 @@ else:
 
         # base chart
         
-        base_tb = alt.Chart(df_typeb).encode(
-            x=alt.X("total_score:Q", title="Total Score" , scale=alt.Scale(domain=[10, 40])),
-            y=alt.Y("complaints:Q", title="Number of Complaints" , scale=alt.Scale(domain=[0, 20000])),
-            tooltip=["district:N", "total_score:Q", "complaints:Q", "zone:N"],
+               # --------------------------------
+        # base chart (เปลี่ยนมาใช้ Plotly)
+        # --------------------------------
+        # จัดลำดับ zone ให้สีเรียงตามใจเรา
+        zone_order = [
+            "Danger Zone",
+            "Active Zone",
+            "Silent Risk Zone",
+            "Good Zone",
+        ]
+
+        color_map = {
+            "Danger Zone": "red",
+            "Active Zone": "#ff7f0e",
+            "Silent Risk Zone": "#2ca02c",
+            "Good Zone": "#1f77b4",
+        }
+
+        # สร้าง Plotly scatter
+        fig = px.scatter(
+            df_typeb,
+            x="total_score",
+            y="complaints",
+            color="zone",
+            category_orders={"zone": zone_order},
+            color_discrete_map=color_map,
+            hover_data=["district", "total_score", "complaints", "zone"],
+            labels={
+                "total_score": "Total Score",
+                "complaints": "Number of Complaints",
+                "zone": "Zone",
+            },
+            title="Total Score vs Complaints by District",
         )
 
-        # จุดทั้งหมด (สีเทาจาง)
-        all_points = base_tb.mark_circle(size=70, opacity=0.3, color="lightgray")
+        # กำหนดขนาด marker ใส่ opacity ให้คล้าย Altair
+        fig.update_traces(marker=dict(size=12, opacity=0.9), selector=dict(mode="markers"))
 
-        # จุดของแต่ละ zone (โดยเฉพาะ Type B)
-        zone_points = base_tb.mark_circle(size=130, opacity=0.9).encode(
-            color=alt.Color(
-                "zone:N",
-                title="Zone",
-                scale=alt.Scale(
-                    domain=[
-                        "Danger Zone",
-                        "Good Zone",
-                        "Active Zone",
-                        "Silent Risk Zone",
-                    ],
-                    range=["red", "#1f77b4", "#ff7f0e", "#2ca02c"],
-                ),
-            )
+        # กำหนดขอบเขตแกน (คล้าย scale(domain=[...]) ใน Altair)
+        fig.update_xaxes(range=[10, 40], title="Total Score")
+        fig.update_yaxes(range=[0, 20000], title="Number of Complaints")
+
+        # เพิ่มเส้น threshold แนวตั้ง (low_score_threshold) และแนวนอน (high_complaints_threshold)
+        fig.add_vline(
+            x=float(low_score_threshold),
+            line_dash="dash",
+            line_color="black",
+            annotation_text="Low Score Threshold",
+            annotation_position="top left",
         )
 
-        # เส้นแบ่ง threshold (แนวตั้ง–แนวนอน)
-        vline = (
-            alt.Chart(pd.DataFrame({"x": [low_score_threshold]}))
-            .mark_rule(strokeDash=[4, 4], color="black")
-            .encode(x="x:Q")
+        fig.add_hline(
+            y=float(high_complaints_threshold),
+            line_dash="dash",
+            line_color="black",
+            annotation_text="High Complaints Threshold",
+            annotation_position="top right",
         )
 
-        hline = (
-            alt.Chart(pd.DataFrame({"y": [high_complaints_threshold]}))
-            .mark_rule(strokeDash=[4, 4], color="black")
-            .encode(y="y:Q")
+        # ปรับ layout รวม ๆ
+        fig.update_layout(
+            height=500,
+            legend_title_text="Zone",
+            hovermode="closest",
         )
 
-        chart_typeb = (all_points + zone_points + vline + hline).properties(width=700, height=500).interactive(bind_x=False, bind_y=False)
-        st.altair_chart(chart_typeb, width="stretch")
+        # แสดงใน Streamlit (Plotly interactive by default)
+        st.plotly_chart(fig, use_container_width=True)
+
 
 
 
@@ -281,46 +341,80 @@ else:
 st.markdown("---")
 st.subheader("📌 Scatter Plot - จำนวนร้องเรียน เทียบกับมิติคุณภาพเขต")
 
-# ต้องมี district เพื่อรวมกับคะแนน
 if "district" not in gdf_filtered.columns:
-    st.error(
-        "ไม่พบคอลัมน์ 'district' ใน cleansed_data.csv (ต้องมี district เพื่อสร้าง Scatter)"
-    )
+    st.error("ไม่พบคอลัมน์ 'district'")
 else:
-    # นับจำนวนร้องเรียนต่อเขตหลัง filter
     complaints_by_district = (
         gdf_filtered.groupby("district").size().reset_index(name="complaints")
     )
 
-    # รวมกับคะแนนเขต
     df_scatter = df_score.merge(complaints_by_district, on="district", how="left")
     df_scatter["complaints"] = df_scatter["complaints"].fillna(0)
 
     metrics = ["public_service", "economy", "welfare", "environment"]
 
-    # Scatter Plot function
-    def make_scatter(x_col: str, df: pd.DataFrame) -> alt.Chart:
-        return (
-            alt.Chart(df)
-            .mark_circle(size=120, opacity=0.7)
-            .encode(
-                x=alt.X(f"{x_col}:Q", title=x_col.replace("_", " ").title()),
-                y=alt.Y(
-                    "complaints:Q",
-                    title=f"📈 จำนวนปัญหา {type_filter if type_filter else 'ทั้งหมด'}",
+    metric_titles = {
+        "public_service": "Public Service",
+        "economy": "Economy",
+        "welfare": "Welfare",
+        "environment": "Environment",
+    }
+
+    # -----------------------------
+    # สร้าง subplot (ไม่ใช้ shared_y)
+    # -----------------------------
+    fig = make_subplots(
+        rows=2,
+        cols=2,
+        subplot_titles=[metric_titles[m] for m in metrics],
+    )
+
+    for i, m in enumerate(metrics):
+        row = i // 2 + 1
+        col = i % 2 + 1
+
+        fig.add_trace(
+            go.Scatter(
+                x=df_scatter[m],
+                y=df_scatter["complaints"],
+                mode="markers",
+                marker=dict(
+                    size=12,
+                    opacity=0.7,
+                    color=df_scatter["complaints"],
+                    colorscale="RdYlBu",
+                    reversescale=True,
+                    showscale=True if i == 0 else False,
+                    colorbar=dict(title="Complaints") if i == 0 else None,
                 ),
-                color=alt.Color(
-                    "complaints:Q", scale=alt.Scale(scheme="redyellowblue")
+                name=metric_titles[m],
+                text=df_scatter["district"],
+                hovertemplate=(
+                    "เขต: %{text}<br>"
+                    f"{metric_titles[m]}: "+"%{x}<br>"
+                    "Complaints: %{y}<extra></extra>"
                 ),
-                tooltip=["district", x_col, "complaints"],
-            )
-            .properties(width=300, height=300, title=f"{x_col} vs complaints")
-            .interactive()
+            ),
+            row=row,
+            col=col,
         )
 
-    # วาด 4 Scatter แยก panel
-    charts = [make_scatter(m, df_scatter) for m in metrics]
-    st.altair_chart(alt.hconcat(*charts), width="stretch" ,theme="streamlit")
+        fig.update_xaxes(title_text=metric_titles[m], row=row, col=col)
+
+    # ทำให้แกน Y ของทุก subplot ตรงกัน
+    fig.update_yaxes(title_text="จำนวนร้องเรียน", matches="y")
+
+    fig.update_layout(
+        height=650,
+        showlegend=False,
+        margin=dict(l=40, r=20, t=60, b=40),
+        title=dict(
+            text="Scatter: มิติคุณภาพเขต vs จำนวนร้องเรียน",
+            x=0.5,
+        ),
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
 
 
 # -----------------------------
