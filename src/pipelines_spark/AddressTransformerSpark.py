@@ -16,10 +16,11 @@ AddressTransformer
 
 # Import necessary modules
 from pyspark.ml import Pipeline, Transformer
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, SparkSession
 
 # Other Transformer
 # from .CoordinateTransformerSpark import CoordinateTransformerSpark
+from .CoordinateTransformerSpark import CoordinateTransformerSpark
 from .DistrictSubdistrictTransformerSpark import DistrictSubdistrictTransformerSpark
 from .ProvinceTransformerSpark import ProvinceTransformerSpark
 
@@ -73,6 +74,8 @@ class AddressTransformerSpark(Transformer):
 
     def __init__(
         self,
+        spark: SparkSession,
+        sedona: SparkSession,
         province_path: str = "",
         bangkok_area_path: str = "",
         geographic_data_path: str = "",
@@ -83,6 +86,9 @@ class AddressTransformerSpark(Transformer):
         geo_district_column: str | None = None,
         geo_subdistrict_column: str | None = None,
     ) -> None:
+        self.spark = spark
+        self.sedona = sedona
+
         self.province_path = province_path
         self.bangkok_area_path = bangkok_area_path
         self.geographic_data_path = geographic_data_path
@@ -106,14 +112,16 @@ class AddressTransformerSpark(Transformer):
             subdistrict_column=self.subdistrict_column,
         )
 
-        # self.coordinate_transformer = CoordinateTransformerSpark(
-        #     path=self.geographic_data_path,
-        #     coords_column=self.coords_column,
-        #     district_column=self.district_column,
-        #     subdistrict_column=self.subdistrict_column,
-        #     geo_district_column=self.geo_district_column,
-        #     geo_subdistrict_column=self.geo_subdistrict_column,
-        # )
+        self.coordinate_transformer = CoordinateTransformerSpark(
+            spark=self.spark,
+            sedona=self.sedona,
+            path=self.geographic_data_path,
+            coords_column=self.coords_column,
+            district_column=self.district_column,
+            subdistrict_column=self.subdistrict_column,
+            geo_district_column=self.geo_district_column,
+            geo_subdistrict_column=self.geo_subdistrict_column,
+        )
 
     def _transform(self, df: DataFrame) -> DataFrame:
         """
@@ -134,7 +142,7 @@ class AddressTransformerSpark(Transformer):
             stages=[
                 self.province_transformer,
                 self.districtsubdistrict_transformer,
-                # self.coordinate_transformer,
+                self.coordinate_transformer,
             ]
         )
 
