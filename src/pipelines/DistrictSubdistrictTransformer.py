@@ -71,11 +71,16 @@ class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
         path: str = "",
         district_column: str | None = None,
         subdistrict_column: str | None = None,
+        cutoff: int | None = None,
+        prefix_bonus: bool | None = None,
     ) -> None:
         self.path = path
 
         self.district_column = district_column or "district"
         self.subdistrict_column = subdistrict_column or "subdistrict"
+
+        self.cutoff = cutoff or 60
+        self.prefix_bonus = prefix_bonus if prefix_bonus is not None else False
 
         official_area_name = load_bangkok_official_area_names(self.path)
 
@@ -130,7 +135,11 @@ class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
             .apply(normalize)
             .apply(
                 lambda x: fuzzy_match(
-                    x, self.official_districts, self._cache_district, cutoff=90
+                    x,
+                    self.official_districts,
+                    self._cache_district,
+                    cutoff=self.cutoff,
+                    prefix_bonus=self.prefix_bonus,
                 )
             )
         )
@@ -140,7 +149,11 @@ class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
             .apply(normalize)
             .apply(
                 lambda x: fuzzy_match(
-                    x, self.official_subdistricts, self._cache_subdistrict, cutoff=90
+                    x,
+                    self.official_subdistricts,
+                    self._cache_subdistrict,
+                    cutoff=self.cutoff,
+                    prefix_bonus=self.prefix_bonus,
                 )
             )
         )

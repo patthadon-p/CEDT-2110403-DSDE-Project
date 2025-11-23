@@ -20,7 +20,7 @@ Usage:
 from .ConfigUtils import get_configs_path, get_dot_env_path, read_config_path
 from .DatetimeUtils import get_buddhist_year
 from .DistrictSubdistrictUtils import load_bangkok_official_area_names
-from .FuzzyUtils import fuzzy_match, normalize
+from .FuzzyUtils import fuzzy_match, normalize, scorer_with_prefix_bonus
 from .GeographicUtils import load_geographic_data, save_geographic_data
 from .ProvinceUtils import load_province_whitelist
 from .SparkUtils import create_spark_session
@@ -40,6 +40,7 @@ __all__ = [
     # FuzzyUtils.py
     "fuzzy_match",
     "normalize",
+    "scorer_with_prefix_bonus",
     # GeographicUtils.py
     "load_geographic_data",
     "save_geographic_data",

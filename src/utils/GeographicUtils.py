@@ -125,6 +125,6 @@ def save_geographic_data(
         / "processed"
         / (save_name or "cleansed_geo.csv")
     )
-    df.to_csv(save_path, index=False)
+    df.to_csv(save_path, index=False, escapechar="\\", encoding="utf-8-sig")
 
     return None
