@@ -1,5 +1,5 @@
 # Import necessary modules
-from pyspark.ml import Pipeline, Transformer
+from pyspark.ml import Transformer
 from pyspark.sql import DataFrame, SparkSession
 
 # Other Transformer
@@ -28,6 +28,10 @@ class CleansingPipelineSpark(Transformer):
         subdistrict_column: str | None = None,
         geo_district_column: str | None = None,
         geo_subdistrict_column: str | None = None,
+        cutoff_district_subdistrict: int | None = None,
+        cutoff_coordinate: int | None = None,
+        prefix_bonus_district_subdistrict: bool = False,
+        prefix_bonus_coordinate: bool = True,
         date_columns: list[str] | None = None,
         state_mapping: dict | None = None,
         old_state_column: str | None = None,
@@ -52,6 +56,12 @@ class CleansingPipelineSpark(Transformer):
         self.subdistrict_column = subdistrict_column
         self.geo_district_column = geo_district_column
         self.geo_subdistrict_column = geo_subdistrict_column
+
+        self.cutoff_district_subdistrict = cutoff_district_subdistrict
+        self.cutoff_coordinate = cutoff_coordinate
+
+        self.prefix_bonus_district_subdistrict = prefix_bonus_district_subdistrict
+        self.prefix_bonus_coordinate = prefix_bonus_coordinate
 
         self.date_columns = date_columns
 
@@ -81,6 +91,10 @@ class CleansingPipelineSpark(Transformer):
             subdistrict_column=self.subdistrict_column,
             geo_district_column=self.geo_district_column,
             geo_subdistrict_column=self.geo_subdistrict_column,
+            cutoff_district_subdistrict=self.cutoff_district_subdistrict,
+            cutoff_coordinate=self.cutoff_coordinate,
+            prefix_bonus_district_subdistrict=self.prefix_bonus_district_subdistrict,
+            prefix_bonus_coordinate=self.prefix_bonus_coordinate,
         )
 
         self.state_to_status_transformer = StateToStatusTransformerSpark(
@@ -92,16 +106,12 @@ class CleansingPipelineSpark(Transformer):
         )
 
     def _transform(self, df: DataFrame) -> DataFrame:
-        cleansing_pipeline = Pipeline(
-            stages=[
-                self.ingest_pre_processor,
-                self.date_transformer,
-                self.address_transformer,
-                self.state_to_status_transformer,
-            ]
-        )
 
-        df_transformed = cleansing_pipeline.fit(df).transform(df)
+        df_transformed = self.ingest_pre_processor.transform(df)
+        df_transformed = self.date_transformer.transform(df_transformed)
+        df_transformed = self.address_transformer.transform(df_transformed)
+        df_transformed = self.state_to_status_transformer.transform(df_transformed)
+
         df_transformed = df_transformed.dropna()
 
         return df_transformed

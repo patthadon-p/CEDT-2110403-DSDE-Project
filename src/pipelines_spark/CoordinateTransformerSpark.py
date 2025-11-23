@@ -21,6 +21,8 @@ class CoordinateTransformerSpark(Transformer):
         subdistrict_column: str | None = None,
         geo_district_column: str | None = None,
         geo_subdistrict_column: str | None = None,
+        cutoff: int | None = None,
+        prefix_bonus: bool | None = None,
     ) -> None:
         self.spark = spark
         self.sedona = sedona
@@ -34,9 +36,14 @@ class CoordinateTransformerSpark(Transformer):
         self.geo_district_column = geo_district_column or "DISTRICT_N"
         self.geo_subdistrict_column = geo_subdistrict_column or "SUBDISTR_1"
 
+        self.cutoff = cutoff or 60
+        self.prefix_bonus = prefix_bonus if prefix_bonus is not None else True
+
         dst = DistrictSubdistrictTransformerSpark(
             district_column=self.geo_district_column,
             subdistrict_column=self.geo_subdistrict_column,
+            cutoff=self.cutoff,
+            prefix_bonus=self.prefix_bonus,
         )
 
         gdf = load_geographic_data(self.path)
@@ -55,10 +62,10 @@ class CoordinateTransformerSpark(Transformer):
     def _transform(self, df: DataFrame) -> DataFrame:
         # Split coordinates into latitude, longitude (you used lat then lon)
         df = df.withColumn(
-            "latitude",
+            "longitude",
             F.split(F.col(self.coords_column), ",").getItem(0).cast("double"),
         ).withColumn(
-            "longitude",
+            "latitude",
             F.split(F.col(self.coords_column), ",").getItem(1).cast("double"),
         )
 
@@ -78,15 +85,17 @@ class CoordinateTransformerSpark(Transformer):
 
         # Spatial join points with polygons
         joined = pts.join(
-            polys,
+            F.broadcast(polys),
             F.expr("ST_Within(pts.geom_point, polys.geom_polygon)"),
             how="left",
         )
 
         # Filter rows where district and subdistrict match
-        joined = joined.dropna(
-            subset=["district", "subdistrict", "latitude", "longitude"], how="any"
+        joined = joined.filter(
+            (F.col(self.district_column) == F.col(self.geo_district_column))
+            & (F.col(self.subdistrict_column) == F.col(self.geo_subdistrict_column))
         )
+
         joined = joined.select(*columns)
 
         return joined

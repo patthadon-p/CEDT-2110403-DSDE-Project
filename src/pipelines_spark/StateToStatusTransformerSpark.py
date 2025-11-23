@@ -1,18 +1,3 @@
-"""
-State and status column standardization utilities.
-
-This module provides the StateToStatusTransformer class, a Scikit-learn
-transformer designed to map raw categorical "state" values to standardized
-"status" labels using a lookup dictionary. This ensures consistency in the
-target variable or other key categorical features.
-
-Classes
--------
-StateToStatusTransformer
-    A transformer that renames a column and replaces its values according to a
-    predefined mapping dictionary loaded either directly or from a configuration file.
-"""
-
 from pyspark.ml import Transformer
 from pyspark.sql import DataFrame, SparkSession
 
@@ -20,20 +5,6 @@ from utils.StatusUtils import load_status_mapping
 
 
 class StateToStatusTransformerSpark(Transformer):
-    """
-    Maps raw state values to standardized status values and renames the column in a Spark DataFrame.
-
-    Parameters
-    ----------
-    path : str, optional
-        File path for the JSON containing the status mapping. Used only if `mapping` is None.
-    mapping : dict or None, optional
-        Predefined dictionary ({old_value: new_status}) for mapping. Overrides path if provided.
-    old_column : str, optional
-        Name of the input column containing raw state values. Default "state".
-    new_column : str, optional
-        Name of the output column for standardized status values. Default "status".
-    """
 
     def __init__(
         self,
@@ -57,9 +28,6 @@ class StateToStatusTransformerSpark(Transformer):
         )
 
     def _transform(self, df: DataFrame) -> DataFrame:
-        """
-        Applies the mapping and renames the column.
-        """
         df_joined = df.join(self.mapping_df, on=self.old_column, how="left")
 
         if self.new_column != self.old_column:
