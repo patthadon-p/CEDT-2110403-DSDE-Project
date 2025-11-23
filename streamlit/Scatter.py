@@ -260,11 +260,10 @@ else:
 
         df_typeb["zone"] = df_typeb.apply(label_type, axis=1)
 
-        # base chart
-        
-               # --------------------------------
+        # --------------------------------
         # base chart (เปลี่ยนมาใช้ Plotly)
         # --------------------------------
+
         # จัดลำดับ zone ให้สีเรียงตามใจเรา
         zone_order = [
             "Danger Zone",
@@ -298,7 +297,7 @@ else:
         )
 
         # กำหนดขนาด marker ใส่ opacity ให้คล้าย Altair
-        fig.update_traces(marker=dict(size=12, opacity=0.9), selector=dict(mode="markers"))
+        fig.update_traces(marker=dict(size=15, opacity=0.9), selector=dict(mode="markers"))
 
         # กำหนดขอบเขตแกน (คล้าย scale(domain=[...]) ใน Altair)
         fig.update_xaxes(range=[10, 40], title="Total Score")
@@ -309,7 +308,7 @@ else:
             x=float(low_score_threshold),
             line_dash="dash",
             line_color="black",
-            annotation_text="Low Score Threshold",
+            annotation_text=" ",
             annotation_position="top left",
         )
 
@@ -317,21 +316,19 @@ else:
             y=float(high_complaints_threshold),
             line_dash="dash",
             line_color="black",
-            annotation_text="High Complaints Threshold",
+            annotation_text=" ",
             annotation_position="top right",
         )
 
         # ปรับ layout รวม ๆ
         fig.update_layout(
-            height=500,
+            height=600,
             legend_title_text="Zone",
             hovermode="closest",
         )
 
         # แสดงใน Streamlit (Plotly interactive by default)
         st.plotly_chart(fig, use_container_width=True)
-
-
 
 
 # -----------------------------
@@ -402,7 +399,7 @@ else:
         fig.update_xaxes(title_text=metric_titles[m], row=row, col=col)
 
     # ทำให้แกน Y ของทุก subplot ตรงกัน
-    fig.update_yaxes(title_text="จำนวนร้องเรียน", matches="y")
+    fig.update_yaxes(title_text=f"จำนวนร้องเรียนเรื่อง{type_filter if type_filter else 'ทั้งหมด'}", matches="y")
 
     fig.update_layout(
         height=650,
@@ -416,92 +413,6 @@ else:
 
     st.plotly_chart(fig, use_container_width=True)
 
-
-# -----------------------------
-# 7) Multi-color Scatter: Metric vs Complaints per Top 5 Problem Types
-# -----------------------------
-
-st.markdown("---")
-st.subheader("🎨 Scatter แบบหลายสี: มิติคุณภาพเขต vs จำนวนร้องเรียน (Top 5 ประเภทปัญหา)")
-
-metrics_all = ["total_score", "public_service", "economy", "welfare", "environment"]
-metric_x_multi = st.selectbox(
-    "เลือกมิติคุณภาพเขตสำหรับแกน X", metrics_all, key="metric_x_multi"
-)
-
-# 1) ใช้เฉพาะ filter ตามช่วงเวลา
-filtered_time_only = filtered_time.copy()
-
-# 2) ตัด NaN / ค่าว่างออกจาก type_clean (ไม่เอา NaN เลย)
-filtered_time_only = filtered_time_only.dropna(subset=["type_clean"])
-filtered_time_only = filtered_time_only[
-    filtered_time_only["type_clean"].astype(str).str.strip() != ""
-]
-
-if filtered_time_only.empty:
-    st.info("ไม่มีข้อมูลประเภทปัญหาหลังตัด NaN / ค่าว่าง ออก")
-elif "district" not in filtered_time_only.columns:
-    st.error(
-        "ไม่พบคอลัมน์ 'district' ใน cleansed_data.csv (ต้องมี district เพื่อสร้าง Scatter)"
-    )
-else:
-    # 3) หา Top 5 ประเภทปัญหาที่พบมากที่สุดในช่วงเวลานี้
-    top5_types = filtered_time_only["type_clean"].value_counts().head(5).index.tolist()
-
-    if len(top5_types) == 0:
-        st.info("ไม่มีประเภทปัญหาเพียงพอสำหรับสร้าง Top 5 ในช่วงเวลา / เงื่อนไขที่เลือก")
-    else:
-        st.write("Top 5 ประเภทปัญหาในช่วงเวลานี้:", top5_types)
-
-        # 4) ใช้เฉพาะแถวที่เป็น Top 5 ประเภทปัญหา
-        top5_df = filtered_time_only[filtered_time_only["type_clean"].isin(top5_types)]
-
-        # 5) นับจำนวนร้องเรียนต่อ (เขต, ประเภทปัญหา)
-        type_district_counts = (
-            top5_df.groupby(["district", "type_clean"])
-            .size()
-            .reset_index(name="complaints")
-        )
-
-        # 6) รวมกับคะแนนเขต
-        df_multi = type_district_counts.merge(df_score, on="district", how="left")
-
-        if df_multi.empty:
-            st.info("ไม่มีข้อมูลเพียงพอสำหรับสร้างกราฟแบบหลายสี")
-        else:
-            chart_multi = (
-                alt.Chart(df_multi)
-                .mark_circle(size=90, opacity=0.7)
-                .encode(
-                    x=alt.X(
-                        f"{metric_x_multi}:Q",
-                        title=metric_x_multi.replace("_", " ").title(),
-                    ),
-                    y=alt.Y("complaints:Q", title="จำนวนร้องเรียน (ต่อเขต ต่อประเภทปัญหา)"),
-                    color=alt.Color(
-                        "type_clean:N", title="ประเภทปัญหา", sort=top5_types
-                    ),
-                    tooltip=[
-                        "district:N",
-                        "type_clean:N",
-                        alt.Tooltip(f"{metric_x_multi}:Q", title=metric_x_multi),
-                        "complaints:Q",
-                    ],
-                )
-                .properties(
-                    width=600,
-                    height=400,
-                    title=f"{metric_x_multi} vs จำนวนร้องเรียน (Top 5 ประเภทปัญหา)",
-                )
-                .interactive()
-            )
-
-            st.altair_chart(chart_multi, width="stretch")
-
-
-# -----------------------------
-# ลิ้งค์ปัญหาดูกับรายได้ต่อครัวเรือน
-# -----------------------------
 
 # -----------------------------
 # 8) Pearson Heatmap: District Quality Metrics vs All Problem Types
@@ -607,7 +518,6 @@ else:
         )
 
         st.altair_chart(heatmap, use_container_width=True)
-
 
 # -----------------------------
 # 9) Pearson Heatmap: Problem Type vs Problem Type
@@ -720,8 +630,101 @@ else:
 
         st.altair_chart(heatmap_prob, use_container_width=True)
 
-        st.markdown("#### 📋 ตารางค่า Pearson r ระหว่างประเภทปัญหาด้วยกันเอง (Full Matrix)")
-        st.dataframe(corr_matrix_prob.round(2))
+st.markdown("---")
+st.subheader("📊 Scatter Matrix - เปรียบเทียบจำนวนปัญหาระหว่างประเภท (ต่อเขต)")
 
+# -----------------------------
+# 1) Filter ตามช่วงเวลา
+# -----------------------------
+df_time = df_cleansed[
+    (
+        df_cleansed[["timestamp_year", "timestamp_month", "timestamp_date"]]
+        .apply(tuple, axis=1)
+        >= (start_date.year, start_date.month, start_date.day)
+    )
+    & (
+        df_cleansed[["timestamp_year", "timestamp_month", "timestamp_date"]]
+        .apply(tuple, axis=1)
+        <= (end_date.year, end_date.month, end_date.day)
+    )
+].copy()
 
-       
+# clean type_clean
+df_time = df_time.dropna(subset=["type_clean"])
+df_time = df_time[df_time["type_clean"].astype(str).str.strip() != ""]
+
+# -----------------------------
+# 2) ตัวเลือกประเภท
+# -----------------------------
+problem_options = sorted(df_time["type_clean"].unique())
+
+selected_types = st.multiselect(
+    "เลือกประเภทปัญหา (2–5)",
+    options=problem_options,
+    default=problem_options[:5] if len(problem_options) >= 5 else problem_options,
+    key="scatter_matrix_v3"
+)
+
+if len(selected_types) < 2:
+    st.warning("กรุณาเลือกอย่างน้อย 2 ประเภท")
+else:
+    # -----------------------------
+    # 3) นับจำนวนแบบ district × type_clean
+    # -----------------------------
+    df_counts = (
+        df_time[df_time["type_clean"].isin(selected_types)]
+        .groupby(["district", "type_clean"])
+        .size()
+        .reset_index(name="count")
+    )
+
+    if df_counts.empty:
+        st.warning("ไม่มีข้อมูล")
+    else:
+        # -----------------------------
+        # 4) Pivot เป็น wide เพื่อใช้ scatter matrix
+        # -----------------------------
+        matrix_df = (
+            df_counts.pivot_table(
+                index="district",
+                columns="type_clean",
+                values="count",
+                aggfunc="sum",
+                fill_value=0
+            )
+            .reset_index()
+        )
+
+        # ใช้เฉพาะ selected types ที่ pivot แล้วมีคอลัมน์
+        dim_cols = [t for t in selected_types if t in matrix_df.columns]
+
+        if len(dim_cols) < 2:
+            st.warning("Pivot แล้วได้ประเภทน้อยกว่า 2")
+        else:
+            # st.write("จำนวนปัญหาในแต่ละเขต:")
+            # st.dataframe(matrix_df[["district"] + dim_cols])
+
+            # -----------------------------
+            # 5) Scatter Matrix
+            # -----------------------------
+            fig = px.scatter_matrix(
+                matrix_df,
+                dimensions=dim_cols,
+                color="district",
+                hover_data=["district"],
+                title="Scatter Matrix - จำนวนปัญหาแต่ละประเภท (ต่อเขต)",
+            )
+
+            fig.update_traces(marker=dict(size=7, opacity=0.8))
+            fig.update_xaxes(showline=True, linewidth=1, linecolor="black")
+            fig.update_yaxes(showline=True, linewidth=1, linecolor="black")
+
+            fig.update_layout(
+                height=700,
+                width=900,
+                plot_bgcolor="#F8FAFC",
+                paper_bgcolor="white",
+                hovermode="closest"
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
