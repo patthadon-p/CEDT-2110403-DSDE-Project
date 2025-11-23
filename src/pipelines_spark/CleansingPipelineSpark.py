@@ -1,6 +1,6 @@
 # Import necessary modules
 from pyspark.ml import Pipeline, Transformer
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, SparkSession
 
 # Other Transformer
 from .AddressTransformerSpark import AddressTransformerSpark
@@ -13,6 +13,8 @@ class CleansingPipelineSpark(Transformer):
 
     def __init__(
         self,
+        spark: SparkSession,
+        sedona: SparkSession,
         ingest_path: str = "",
         province_path: str = "",
         bangkok_area_path: str = "",
@@ -31,6 +33,9 @@ class CleansingPipelineSpark(Transformer):
         old_state_column: str | None = None,
         new_state_column: str | None = None,
     ) -> None:
+        self.spark = spark
+        self.sedona = sedona
+
         self.ingest_path = ingest_path
         self.province_path = province_path
         self.bangkok_area_path = bangkok_area_path
@@ -65,6 +70,8 @@ class CleansingPipelineSpark(Transformer):
         )
 
         self.address_transformer = AddressTransformerSpark(
+            spark=self.spark,
+            sedona=self.sedona,
             province_path=self.province_path,
             bangkok_area_path=self.bangkok_area_path,
             geographic_data_path=self.geographic_data_path,
