@@ -124,6 +124,10 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
         subdistrict_column: str | None = None,
         geo_district_column: str | None = None,
         geo_subdistrict_column: str | None = None,
+        cutoff_district_subdistrict: int | None = None,
+        cutoff_coordinate: int | None = None,
+        prefix_bonus_district_subdistrict: bool = False,
+        prefix_bonus_coordinate: bool = True,
         date_columns: list[str] | None = None,
         state_mapping: dict | None = None,
         old_state_column: str | None = None,
@@ -145,6 +149,12 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
         self.subdistrict_column = subdistrict_column
         self.geo_district_column = geo_district_column
         self.geo_subdistrict_column = geo_subdistrict_column
+
+        self.cutoff_district_subdistrict = cutoff_district_subdistrict
+        self.cutoff_coordinate = cutoff_coordinate
+
+        self.prefix_bonus_district_subdistrict = prefix_bonus_district_subdistrict
+        self.prefix_bonus_coordinate = prefix_bonus_coordinate
 
         self.date_columns = date_columns
 
@@ -172,6 +182,10 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
             subdistrict_column=self.subdistrict_column,
             geo_district_column=self.geo_district_column,
             geo_subdistrict_column=self.geo_subdistrict_column,
+            cutoff_district_subdistrict=self.cutoff_district_subdistrict,
+            cutoff_coordinate=self.cutoff_coordinate,
+            prefix_bonus_district_subdistrict=self.prefix_bonus_district_subdistrict,
+            prefix_bonus_coordinate=self.prefix_bonus_coordinate,
         )
 
         self.state_to_status_transformer = StateToStatusTransformer(

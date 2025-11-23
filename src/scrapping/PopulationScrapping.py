@@ -31,21 +31,21 @@ class PopulationScrapping:
     Handles scraping, loading, and cleaning of population data from the
     Department of Provincial Administration (DOPA) website.
 
-    This class initializes configuration based on a JSON file, constructs the
-    target URL for a specific administrative level and year (Buddhist calendar),
-    fetches the data file, and performs data cleaning and transformation
-    before returning the final DataFrame.
+        This class initializes configuration based on a JSON file, constructs the
+        target URL for a specific administrative level and year (Buddhist calendar),
+        fetches the data file, and performs data cleaning and transformation
+        before returning the final DataFrame.
 
-    Parameters
-    ----------
-    url : str, optional
-        Base URL for the DOPA population data. Defaults to the value in the config file.
-    year : int or str or None, optional
-        The year of the data to fetch (in Buddhist calendar). Defaults to the
-        current Buddhist year.
-    level : str, optional
-        The administrative level of the data (e.g., 'province', 'district').
-        Defaults to the value in the config file.
+        Parameters
+        ----------
+        url : str, optional
+            Base URL for the DOPA population data. Defaults to the value in the config file.
+        year : int or str or None, optional
+            The year of the data to fetch (in Buddhist calendar). Defaults to the
+            current Buddhist year.
+        level : str, optional
+            The administrative level of the data (e.g., 'province', 'district').
+            Defaults to the value in the config file.
 
     Attributes
     ----------

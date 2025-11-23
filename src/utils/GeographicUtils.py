@@ -125,6 +125,6 @@ def save_geographic_data(
     df["province_name"] = "กรุงเทพมหานคร"
 
     save_path = get_data_dir() / "processed" / save_name
-    df.to_csv(save_path, index=False)
+    df.to_csv(save_path, index=False, escapechar="\\", encoding="utf-8-sig")
 
     return None

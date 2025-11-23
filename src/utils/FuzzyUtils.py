@@ -18,7 +18,7 @@ fuzzy_match
 # Import necessary modules
 import re
 
-from rapidfuzz import process
+from rapidfuzz import fuzz, process
 
 
 def normalize(
@@ -65,13 +65,29 @@ def normalize(
     t = re.sub(r"\s+", " ", t).strip()
 
     for prefix in prefix_sub:
-        t = re.sub(rf"({prefix})\1+", r"\1", t)
+        t = re.sub(rf"({prefix})+", "", t)
 
     return t
 
 
+def scorer_with_prefix_bonus(
+    query: str, choice: str, score_cutoff: float | None = None
+) -> float:
+    base_score = fuzz.ratio(query, choice)
+    prefix_bonus = 20 if choice.startswith(query) else 0
+
+    if score_cutoff is not None and base_score + prefix_bonus < score_cutoff:
+        return 0
+
+    return base_score + prefix_bonus
+
+
 def fuzzy_match(
-    text: str | None, choices: list[str], cache: dict[str, str], cutoff: float = 60
+    text: str | None,
+    choices: list[str],
+    cache: dict[str, str],
+    cutoff: float = 60,
+    prefix_bonus: bool = False,
 ) -> str | None:
     """
     Performs fuzzy (approximate) matching using a score cutoff and caches the result.
@@ -112,7 +128,9 @@ def fuzzy_match(
     if text is None or text == "":
         return text
 
-    match = process.extractOne(text, choices, score_cutoff=cutoff)
+    scorer = scorer_with_prefix_bonus if prefix_bonus else fuzz.ratio
+
+    match = process.extractOne(text, choices, score_cutoff=cutoff, scorer=scorer)
     result = match[0] if match else text
     cache[text] = result
     return result

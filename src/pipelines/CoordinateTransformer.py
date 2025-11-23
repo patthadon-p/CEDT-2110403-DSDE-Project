@@ -69,6 +69,8 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
         subdistrict_column: str | None = None,
         geo_district_column: str | None = None,
         geo_subdistrict_column: str | None = None,
+        cutoff: int | None = None,
+        prefix_bonus: bool | None = None,
     ) -> None:
         self.path = path
 
@@ -80,9 +82,14 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
         self.geo_district_column = geo_district_column or "DISTRICT_N"
         self.geo_subdistrict_column = geo_subdistrict_column or "SUBDISTR_1"
 
+        self.cutoff = cutoff or 60
+        self.prefix_bonus = prefix_bonus if prefix_bonus is not None else True
+
         dst = DistrictSubdistrictTransformer(
             district_column=self.geo_district_column,
             subdistrict_column=self.geo_subdistrict_column,
+            cutoff=self.cutoff,
+            prefix_bonus=self.prefix_bonus,
         )
 
         self.bangkok_gdf = gpd.GeoDataFrame(
