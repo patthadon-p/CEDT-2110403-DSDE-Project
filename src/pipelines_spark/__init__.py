@@ -19,8 +19,7 @@ Usage:
 # Import specific classes and functions for direct access
 from .AddressTransformerSpark import AddressTransformerSpark
 from .CleansingPipelineSpark import CleansingPipelineSpark
-
-# from .CoordinateTransformerSpark import CoordinateTransformerSpark
+from .CoordinateTransformerSpark import CoordinateTransformerSpark
 from .DateTransformerSpark import DateTransformerSpark
 from .DistrictSubdistrictTransformerSpark import DistrictSubdistrictTransformerSpark
 from .IngestionPreprocessorSpark import IngestionPreprocessorSpark
@@ -34,8 +33,8 @@ __all__ = [
     "AddressTransformerSpark",
     # CleansingPipelineSpark.py
     "CleansingPipelineSpark",
-    # # CoordinateTransformer.py
-    # "CoordinateTransformer",
+    # CoordinateTransformerSpark.py
+    "CoordinateTransformerSpark",
     # DateTransformerSpark.py
     "DateTransformerSpark",
     # DistrictSubdistrictTransformerSpark.py
