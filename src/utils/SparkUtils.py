@@ -60,8 +60,9 @@ def create_spark_session(
     spark: SparkSession = (
         SparkSession.builder.appName(app_name or "DataCleansingSpark")  # type: ignore
         .config("spark.executorEnv.PYTHONPATH", project_root)
-        .config("spark.driver.memory", "4g")
-        .config("spark.executor.memory", "4g")
+        .master("local[*]")
+        .config("spark.driver.memory", "12g")
+        .config("spark.executor.memory", "12g")
         .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         .config(
             "spark.kryo.registrator",
