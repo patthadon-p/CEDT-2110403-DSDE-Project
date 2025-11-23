@@ -22,6 +22,7 @@ from .AddressTransformerSpark import AddressTransformerSpark
 from .CleansingPipelineSpark import CleansingPipelineSpark
 
 # from .CoordinateTransformerSpark import CoordinateTransformerSpark
+from .DataFilterTransformerSpark import DataFilterTransformerSpark
 from .DateTransformerSpark import DateTransformerSpark
 from .DistrictSubdistrictTransformerSpark import DistrictSubdistrictTransformerSpark
 from .EncoderPipelineSpark import EncoderPipelineSpark
@@ -43,6 +44,8 @@ __all__ = [
     "CleansingPipelineSpark",
     # # CoordinateTransformer.py
     # "CoordinateTransformer",
+    # DataFilterTransformerSpark.py
+    "DataFilterTransformerSpark",
     # DateTransformerSpark.py
     "DateTransformerSpark",
     # DistrictSubdistrictTransformerSpark.py
