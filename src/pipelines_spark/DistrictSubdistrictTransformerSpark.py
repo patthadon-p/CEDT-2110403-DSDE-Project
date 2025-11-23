@@ -65,7 +65,7 @@ class DistrictSubdistrictTransformerSpark(
                 return None
             normalized = normalize(x)
             return fuzzy_match(
-                normalized, self.official_districts, self._cache_district
+                normalized, self.official_districts, self._cache_district, cutoff=90
             )
 
         def subdistrict_udf(x: str | None) -> str | None:
@@ -73,7 +73,10 @@ class DistrictSubdistrictTransformerSpark(
                 return None
             normalized = normalize(x)
             return fuzzy_match(
-                normalized, self.official_subdistricts, self._cache_subdistrict
+                normalized,
+                self.official_subdistricts,
+                self._cache_subdistrict,
+                cutoff=90,
             )
 
         spark_district_udf = F.udf(district_udf, StringType())
