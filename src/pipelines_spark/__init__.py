@@ -24,6 +24,7 @@ from .CleansingPipelineSpark import CleansingPipelineSpark
 from .DateTransformerSpark import DateTransformerSpark
 from .DistrictSubdistrictTransformerSpark import DistrictSubdistrictTransformerSpark
 from .IngestionPreprocessorSpark import IngestionPreprocessorSpark
+from .OrganizationEncoderSpark import OrganizationEncoderSpark
 from .ProvinceTransformerSpark import ProvinceTransformerSpark
 from .StateToStatusTransformerSpark import StateToStatusTransformerSpark
 
@@ -42,6 +43,8 @@ __all__ = [
     "DistrictSubdistrictTransformerSpark",
     # IngestionPreprocessorSpark.py
     "IngestionPreprocessorSpark",
+    # OrganizationEncoderSpark.py
+    "OrganizationEncoderSpark",
     # ProvinceTransformerSpark.py
     "ProvinceTransformerSpark",
     # StateToStatusTransformerSpark.py
