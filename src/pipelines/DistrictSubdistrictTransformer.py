@@ -129,7 +129,9 @@ class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
             df[self.district_column]
             .apply(normalize)
             .apply(
-                lambda x: fuzzy_match(x, self.official_districts, self._cache_district)
+                lambda x: fuzzy_match(
+                    x, self.official_districts, self._cache_district, cutoff=90
+                )
             )
         )
 
@@ -138,7 +140,7 @@ class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
             .apply(normalize)
             .apply(
                 lambda x: fuzzy_match(
-                    x, self.official_subdistricts, self._cache_subdistrict
+                    x, self.official_subdistricts, self._cache_subdistrict, cutoff=90
                 )
             )
         )
