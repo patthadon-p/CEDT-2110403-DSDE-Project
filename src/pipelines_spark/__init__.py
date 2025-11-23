@@ -28,6 +28,7 @@ from .EncoderPipelineSpark import EncoderPipelineSpark
 from .IngestionPreprocessorSpark import IngestionPreprocessorSpark
 from .OrganizationEncoderSpark import OrganizationEncoderSpark
 from .ProvinceTransformerSpark import ProvinceTransformerSpark
+from .ResolutionTimeTransformerSpark import ResolutionTimeTransformerSpark
 from .StateToStatusTransformerSpark import StateToStatusTransformerSpark
 from .TypeEncoderSpark import TypeEncoderSpark
 
@@ -54,6 +55,8 @@ __all__ = [
     "OrganizationEncoderSpark",
     # ProvinceTransformerSpark.py
     "ProvinceTransformerSpark",
+    # ResolutionTimeTransformerSpark.py
+    "ResolutionTimeTransformerSpark",
     # StateToStatusTransformerSpark.py
     "StateToStatusTransformerSpark",
     # TypeEncoderSpark.py
