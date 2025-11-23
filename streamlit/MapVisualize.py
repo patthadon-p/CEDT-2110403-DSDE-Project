@@ -21,7 +21,6 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-from src.visualize.MapVisualizer import MapVisualizer
 from src.utils import read_config_path
 
 # -------------------------------------------------------
@@ -71,7 +70,25 @@ def load_data() -> pd.DataFrame:
     
     return df
 
+@st.cache_data
+def load_pop_2022() -> pd.DataFrame:
+    df = pd.read_csv(read_config_path(domain="scrapping", key="population_2565_scrapped_path"))
+    return df
+
+@st.cache_data
+def load_pop_2023() -> pd.DataFrame:
+    df = pd.read_csv(read_config_path(domain="scrapping", key="population_2566_scrapped_path"))
+    return df
+
+@st.cache_data
+def load_pop_2024() -> pd.DataFrame:
+    df = pd.read_csv(read_config_path(domain="scrapping", key="population_2567_scrapped_path"))
+    return df
+
 df_cleansed = load_data()
+pop2022 = load_pop_2022()
+pop2023 = load_pop_2023()
+pop2024 = load_pop_2024()
 
 # -------------------------------------------------------
 # Type list for sidebar filter
@@ -120,16 +137,69 @@ type_mask = pd.Series([True] * len(df_cleansed)) if type_filter == "ทั้ง
 date_mask = (df_cleansed["date"] >= pd.Timestamp(start_date)) & (df_cleansed["date"] <= pd.Timestamp(end_date))
 filtered_df = df_cleansed[type_mask & date_mask].copy()
 
+# Split and Join with population
+df2022 = filtered_df[filtered_df['year']==2022]
+df2023 = filtered_df[filtered_df['year']==2023]
+df2024 = filtered_df[filtered_df['year']==2024]
+dfwithpop2022 =  pd.merge(
+    df2022,
+    pop2022,
+    left_on=["district","subdistrict"],
+    right_on=["district-name","subdistrict-name"],
+    how="left"
+)
+dfwithpop2023 =  pd.merge(
+    df2023,
+    pop2023,
+    left_on=["district","subdistrict"],
+    right_on=["district-name","subdistrict-name"],
+    how="left"
+)
+dfwithpop2024 =  pd.merge(
+    df2024,
+    pop2024,
+    left_on=["district","subdistrict"],
+    right_on=["district-name","subdistrict-name"],
+    how="left"
+)
+dfwithpop = pd.concat([dfwithpop2022, dfwithpop2023, dfwithpop2024], ignore_index=True)
+
 # -------------------------------------------------------
 # Compute top 10 districts
 # -------------------------------------------------------
 top10_district = (
-    filtered_df.groupby("subdistrict")
+    dfwithpop.groupby("subdistrict")
     .size()
     .sort_values(ascending=False)
     .head(10)
     .reset_index(name="จำนวนปัญหา")
 )
+
+# -------------------------------------------------------
+# Compute top 10 districts by rate 
+# -------------------------------------------------------
+
+# 1. Aggregate: Count problems and get mean population per subdistrict
+agg_rate_df = dfwithpop.groupby("subdistrict-name").agg(
+    count=("subdistrict-name", "size"), 
+    total=("total", "mean")             
+).reset_index()
+
+# 2. Calculate the rate (probperpop)
+agg_rate_df["probperpop"] = agg_rate_df["count"] / agg_rate_df["total"].fillna(1) 
+
+# 3. Sort, select top 10, and rename columns
+top10_perpop = (
+    agg_rate_df.sort_values(by="probperpop", ascending=False)
+    .head(10)
+    [["subdistrict-name", "probperpop"]] # Select columns
+)
+
+# 4. Rename columns for display
+top10_perpop.columns = [
+    "แขวง", 
+    "ปัญหา/ประชากร"
+]
 
 # -------------------------------------------------------
 # Heat Map Visualizer
@@ -193,6 +263,96 @@ def plot_heatmap(
         location=[center_latlon.y, center_latlon.x],
         zoom_start=10,
         tooltip=["district_name", "subdistrict_name", "count"],
+        min_zoom=10,
+        max_zoom=16,
+        max_bounds=False,
+        map_kwds={"bounds": bounds},
+    )
+
+    # Enable map interactions
+    m.options.update({
+        "zoomControl": True,
+        "scrollWheelZoom": True,
+        "doubleClickZoom": True,
+        "touchZoom": True,
+        "dragging": True,
+    })
+
+    return m
+
+
+# -------------------------------------------------------
+# Heat Map Per Population Visualizer
+# -------------------------------------------------------
+def plot_heatmap_perpop(
+    df: pd.DataFrame,
+    region_path: str,
+    latitude_column: str = "latitude",
+    longitude_column: str = "longitude",
+    type_filter: str | None = None,
+    value_column: str = "count",
+):
+    """
+    Plot choropleth heatmap of points aggregated by subdistrict.
+    Uses the 'total' column already merged into the input DataFrame (dfwithpop).
+    """
+    # Load static region shapefile / CSV with WKT geometry
+    df_region = pd.read_csv(region_path)
+    df_region["geometry"] = df_region["geometry"].map(wkt.loads)
+    gdf_region = gpd.GeoDataFrame(df_region, geometry="geometry", crs="EPSG:4326")
+    
+    # Select only necessary columns from region data for the final merge
+    region_geom = gdf_region[["subdistrict_name", "geometry"]].copy()
+
+    # Filter data by problem type if necessary
+    df_points = df.copy()
+    if type_filter and type_filter != "ทั้งหมด":
+        df_points = df_points[df_points["type_cleaned"].apply(lambda x: type_filter in x)]
+
+    # Aggregate counts and get the mean population (since 'total' is already in df)
+    if value_column == "count":
+        # Group by the subdistrict name from the region data (subdistrict-name from pop data)
+        agg_df = df_points.groupby("subdistrict-name").agg(
+            count=("subdistrict-name", "size"),
+            total=("total", "mean") 
+        ).reset_index()
+        
+        # Rename for merging and calculation
+        agg_df.rename(columns={"subdistrict-name": "subdistrict_name"}, inplace=True)
+
+        # Calculate the normalized rate
+        agg_df["probperpop"] = agg_df["count"] / agg_df["total"].fillna(1) 
+
+    else:
+        # Aggregate mean of the value_column (e.g., 'avg_speed' if it existed)
+        agg_df = df_points.groupby("subdistrict-name")[value_column].mean().reset_index(name="count")
+        agg_df.rename(columns={"subdistrict-name": "subdistrict_name"}, inplace=True)
+        # Note: If value_column is not 'count', 'probperpop' won't be calculated here.
+
+    # 4. Merge aggregated data back to region GeoDataFrame for plotting
+    gdf_merged = region_geom.merge(agg_df, on="subdistrict_name", how="left")
+    gdf_merged["probperpop"] = gdf_merged["probperpop"].fillna(0)
+    gdf_merged["count"] = gdf_merged["count"].fillna(0) # Fill NaN counts with 0
+
+    # 5. Compute map center and plot (rest of the function is fine)
+    gdf_proj = gdf_merged.to_crs(epsg=3857)
+    union_geom = gdf_proj.geometry.unary_union
+    center_proj = union_geom.centroid
+    center_latlon = gpd.GeoSeries([center_proj], crs=gdf_proj.crs).to_crs(epsg=4326).geometry[0]
+
+    # Map bounds
+    minx, miny, maxx, maxy = gdf_merged.total_bounds
+    bounds = [[miny, minx], [maxy, maxx]]
+
+    # Folium choropleth map
+    m = gdf_merged.explore(
+        column="probperpop",
+        cmap="Oranges",
+        legend=True,
+        scheme="natural_breaks",
+        location=[center_latlon.y, center_latlon.x],
+        zoom_start=10,
+        tooltip=["subdistrict_name", "probperpop", "count"],
         min_zoom=10,
         max_zoom=16,
         max_bounds=False,
@@ -280,15 +440,22 @@ with col1:
         domain="processed", key="cleansed_geographic_data_path"
     )
     heatmap = plot_heatmap(
-        df=filtered_df,
+        df=dfwithpop,
+        region_path=region_path,
+        type_filter=type_filter,
+    )
+    heatmapperpop = plot_heatmap_perpop(
+        df=dfwithpop,
         region_path=region_path,
         type_filter=type_filter,
     )
     st_folium(heatmap, width=800, height=400)
+    st.subheader(f"Heatmap แสดงความรุนแรงปัญหา{type_filter}ในแต่ละแขวง")
+    st_folium(heatmapperpop, width=800, height=400)
 
 
     st.subheader(f"Scatter Map แสดงตำแหน่งต่างๆที่เกิดปัญหา{type_filter}")
-    scatter_map = plot_scatter_map(filtered_df)
+    scatter_map = plot_scatter_map(dfwithpop)
     st.pydeck_chart(scatter_map, width=800, height=400)
 
 
@@ -296,3 +463,5 @@ with col1:
 with col2:
     st.subheader(f"10 อันดับแขวงที่มีปัญหา{type_filter}มากที่สุด")
     st.dataframe(top10_district, width='stretch')
+    st.subheader(f"10 อันดับแขวงที่มีปัญหา{type_filter}มากที่สุด (ความรุนแรง)")
+    st.dataframe(top10_perpop, width='stretch')
