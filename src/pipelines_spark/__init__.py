@@ -27,6 +27,7 @@ from .IngestionPreprocessorSpark import IngestionPreprocessorSpark
 from .OrganizationEncoderSpark import OrganizationEncoderSpark
 from .ProvinceTransformerSpark import ProvinceTransformerSpark
 from .StateToStatusTransformerSpark import StateToStatusTransformerSpark
+from .TypeEncoderSpark import TypeEncoderSpark
 
 # Define what gets imported with 'from pipelines import *'
 __all__ = [
@@ -49,4 +50,6 @@ __all__ = [
     "ProvinceTransformerSpark",
     # StateToStatusTransformerSpark.py
     "StateToStatusTransformerSpark",
+    # TypeEncoderSpark.py
+    "TypeEncoderSpark",
 ]
