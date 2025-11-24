@@ -19,7 +19,7 @@ Usage:
 """
 
 # Import all submodules and their contents
-from . import pipelines, scrapping, utils, visualize
+from . import pipelines, scrapping, utils
 
 # Import specific items to make them available at package level
 # from .pipelines import *
