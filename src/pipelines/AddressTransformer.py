@@ -83,6 +83,10 @@ class AddressTransformer(BaseEstimator, TransformerMixin):
         subdistrict_column: str | None = None,
         geo_district_column: str | None = None,
         geo_subdistrict_column: str | None = None,
+        cutoff_district_subdistrict: int | None = None,
+        cutoff_coordinate: int | None = None,
+        prefix_bonus_district_subdistrict: bool | None = None,
+        prefix_bonus_coordinate: bool | None = None,
     ) -> None:
         """
         Initializes the meta-transformer by instantiating the sub-transformers
@@ -128,6 +132,12 @@ class AddressTransformer(BaseEstimator, TransformerMixin):
         self.geo_district_column = geo_district_column
         self.geo_subdistrict_column = geo_subdistrict_column
 
+        self.cutoff_district_subdistrict = cutoff_district_subdistrict
+        self.cutoff_coordinate = cutoff_coordinate
+
+        self.prefix_bonus_district_subdistrict = prefix_bonus_district_subdistrict
+        self.prefix_bonus_coordinate = prefix_bonus_coordinate
+
         self.province_transformer = ProvinceTransformer(
             path=self.province_path,
             province_column=self.province_column,
@@ -137,6 +147,8 @@ class AddressTransformer(BaseEstimator, TransformerMixin):
             path=self.bangkok_area_path,
             district_column=self.district_column,
             subdistrict_column=self.subdistrict_column,
+            cutoff=self.cutoff_district_subdistrict,
+            prefix_bonus=self.prefix_bonus_district_subdistrict,
         )
 
         self.coordinate_transformer = CoordinateTransformer(
@@ -146,6 +158,8 @@ class AddressTransformer(BaseEstimator, TransformerMixin):
             subdistrict_column=self.subdistrict_column,
             geo_district_column=self.geo_district_column,
             geo_subdistrict_column=self.geo_subdistrict_column,
+            cutoff=self.cutoff_coordinate,
+            prefix_bonus=self.prefix_bonus_coordinate,
         )
 
     def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> "AddressTransformer":

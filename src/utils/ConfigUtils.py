@@ -63,6 +63,25 @@ def get_data_dir() -> Path:
     return data_path
 
 
+def get_dot_env_path() -> str:
+    """
+    Determines the absolute path to the main configuration file.
+
+    It assumes the structure is: `project_root/configs/.env`,
+    where the utility file is located two directory levels deep
+    from the project root (e.g., in `project_root/src/utils/`).
+
+    Returns
+    -------
+    str
+        The absolute path to the '.env' file.
+    """
+
+    base_dir = Path(__file__).resolve().parents[2]
+    env_path = base_dir / "configs" / ".env"
+    return str(env_path)
+
+
 def read_config_path(key: str, domain: str = "data", filepath: str = "") -> str:
     """
     Reads a file path from the config file and resolves it to an absolute path.

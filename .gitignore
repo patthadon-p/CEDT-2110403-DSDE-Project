@@ -118,7 +118,8 @@ dmypy.json
 data/raw/
 
 # Cleansed Data (Large Files)
-data/processed/Cleansed_data.csv
+data/processed/cleansed_data.csv
+data/processed/cleansed_data_spark.csv
 
 # Model files
 *.model

@@ -46,12 +46,18 @@ Usage:
 """
 
 # Import specific classes and functions for direct access
-from .ConfigUtils import get_configs_path, get_data_dir, read_config_path
+from .ConfigUtils import (
+    get_configs_path,
+    get_data_dir,
+    get_dot_env_path,
+    read_config_path,
+)
 from .DatetimeUtils import get_buddhist_year
 from .DistrictSubdistrictUtils import load_bangkok_official_area_names
-from .FuzzyUtils import fuzzy_match, normalize
+from .FuzzyUtils import fuzzy_match, normalize, scorer_with_prefix_bonus
 from .GeographicUtils import load_geographic_data, save_geographic_data
 from .ProvinceUtils import load_province_whitelist
+from .SparkUtils import create_spark_session
 from .StatusUtils import load_status_mapping
 
 # Define what gets imported with 'from utils import *'
@@ -60,6 +66,7 @@ __all__ = [
     # ConfigUtils.py
     "get_configs_path",
     "get_data_dir",
+    "get_dot_env_path",
     "read_config_path",
     # DatetimeUtils.py
     "get_buddhist_year",
@@ -68,6 +75,7 @@ __all__ = [
     # FuzzyUtils.py
     "fuzzy_match",
     "normalize",
+    "scorer_with_prefix_bonus",
     # GeographicUtils.py
     "load_geographic_data",
     "save_geographic_data",
@@ -75,4 +83,6 @@ __all__ = [
     "load_province_whitelist",
     # StatusUtils.py
     "load_status_mapping",
+    # SparkUtils.py
+    "create_spark_session",
 ]
