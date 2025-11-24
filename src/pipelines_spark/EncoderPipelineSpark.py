@@ -14,14 +14,20 @@ class EncoderPipelineSpark(Transformer):
         self,
         district_column: str | None = None,
         subdistrict_column: str | None = None,
-        encoded_column: str | None = None,
+        latitude_column: str | None = None,
+        longitude_column: str | None = None,
+        address_encoded_column: str | None = None,
+        latlong_encoded_column: str | None = None,
         organization_column: str | None = None,
         type_column: str | None = None,
     ) -> None:
 
         self.district_column = district_column
         self.subdistrict_column = subdistrict_column
-        self.encoded_column = encoded_column
+        self.latitude_column = latitude_column
+        self.longitude_column = longitude_column
+        self.address_encoded_column = address_encoded_column
+        self.latlong_encoded_column = latlong_encoded_column
 
         self.organization_column = organization_column
         self.type_column = type_column
@@ -29,7 +35,10 @@ class EncoderPipelineSpark(Transformer):
         self.address_encoder = AddressEncoderSpark(
             district_column=self.district_column,
             subdistrict_column=self.subdistrict_column,
-            encoded_column=self.encoded_column,
+            latitude_column=self.latitude_column,
+            longitude_column=self.longitude_column,
+            address_encoded_column=self.address_encoded_column,
+            latlong_encoded_column=self.latlong_encoded_column,
         )
 
         self.organization_encoder = OrganizationEncoderSpark(
