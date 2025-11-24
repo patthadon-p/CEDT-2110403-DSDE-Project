@@ -40,7 +40,30 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    # ... (ส่วน Parameters ถูกต้องแล้ว)
+    path : str, optional
+        File path to the geographic boundary data (e.g., GeoJSON, Shapefile),
+        passed to `load_geographic_data`. Default is "".
+    coords_column : str or None, optional
+        Name of the column containing coordinate strings (e.g., "lat,lon").
+        Defaults to "coords".
+    district_column : str or None, optional
+        Name of the input column containing the text-based district name.
+        Defaults to "district".
+    subdistrict_column : str or None, optional
+        Name of the input column containing the text-based subdistrict name.
+        Defaults to "subdistrict".
+    geo_district_column : str or None, optional
+        Name of the district column in the geographic boundary data (`bangkok_gdf`).
+        Defaults to "DISTRICT_N".
+    geo_subdistrict_column : str or None, optional
+        Name of the subdistrict column in the geographic boundary data (`bangkok_gdf`).
+        Defaults to "SUBDISTR_1".
+    cutoff : int or None, optional
+        The fuzzy matching cutoff score used when cleaning geographic names in the GeoDataFrame.
+        Defaults to 60.
+    prefix_bonus : bool or None, optional
+        Whether to apply a bonus score for common prefixes during fuzzy matching in the GeoDataFrame cleaning.
+        Defaults to True.
 
     Attributes
     ----------
@@ -59,6 +82,10 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
         The final column name for the district column in the geographic boundary data.
     geo_subdistrict_column : str
         The final column name for the subdistrict column in the geographic boundary data.
+    cutoff : int
+        The fuzzy matching cutoff score used.
+    prefix_bonus : bool
+        The status of the prefix bonus setting used for cleaning the GeoDataFrame.
     """
 
     def __init__(
@@ -92,6 +119,12 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
             Name of the district column in the geographic boundary data. Defaults to "DISTRICT_N".
         geo_subdistrict_column : str or None, optional
             Name of the subdistrict column in the geographic boundary data. Defaults to "SUBDISTR_1".
+        cutoff : int or None, optional
+            The fuzzy matching cutoff score used when cleaning geographic names in the GeoDataFrame.
+            Defaults to 60.
+        prefix_bonus : bool or None, optional
+            Whether to apply a bonus score for common prefixes during fuzzy matching in the GeoDataFrame cleaning.
+            Defaults to True.
         """
 
         self.path = path

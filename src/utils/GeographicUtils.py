@@ -109,6 +109,8 @@ def save_geographic_data(
     Notes
     -----
     The output file is saved to: project_root/data/processed/{save_name}.
+    **The file is saved with 'utf-8-sig' encoding and uses a backslash ('\\')
+    as an escape character, which is essential for saving embedded WKT geometry.**
     """
 
     filepath = read_config_path(key="geographic_columns_path", filepath=filepath)

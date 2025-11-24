@@ -12,11 +12,12 @@ get_configs_path
     Returns the absolute path to the main 'configs.yaml' file.
 get_data_dir
     Returns the absolute path to the main 'data' directory.
+get_dot_env_path
+    Returns the absolute path to the project's '.env' file.
 read_config_path
     Reads a file path from the config file using a key, and resolves it
     to an absolute path relative to the config file's location.
 """
-
 # Import necessary modules
 import os
 from pathlib import Path
@@ -65,9 +66,9 @@ def get_data_dir() -> Path:
 
 def get_dot_env_path() -> str:
     """
-    Determines the absolute path to the main configuration file.
+    Determines the absolute path to the project's environment file.
 
-    It assumes the structure is: `project_root/configs/.env`,
+    It assumes the structure is: `project_root/.env`,
     where the utility file is located two directory levels deep
     from the project root (e.g., in `project_root/src/utils/`).
 

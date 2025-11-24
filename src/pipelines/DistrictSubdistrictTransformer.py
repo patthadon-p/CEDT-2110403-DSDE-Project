@@ -29,10 +29,10 @@ class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
 
     This transformer sequentially applies two main steps to the target columns:
     1. **Text Normalization:** Cleans up whitespace and standardizes common
-       Thai prefix repetitions (e.g., 'บางบาง' to 'บาง').
+        Thai prefix repetitions (e.g., 'บางบาง' to 'บาง').
     2. **Fuzzy Matching:** Compares the normalized name against a pre-loaded
-       list of official names and replaces it with the closest match, caching
-       the results for efficiency.
+        list of official names and replaces it with the closest match, caching
+        the results for efficiency.
 
     Parameters
     ----------
@@ -45,6 +45,11 @@ class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
     subdistrict_column : str or None, optional
         Name of the column containing subdistrict names to be transformed.
         Defaults to "subdistrict".
+    cutoff : int or None, optional
+        The minimum fuzzy match score required for a name to be accepted. Defaults to 60.
+    prefix_bonus : bool or None, optional
+        Whether to apply a bonus score for matching common prefixes during fuzzy matching.
+        Defaults to False.
 
     Attributes
     ----------
@@ -52,6 +57,10 @@ class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
         The list of standard district names used as fuzzy match targets.
     official_subdistricts : list of str
         The list of standard subdistrict names used as fuzzy match targets.
+    cutoff : int
+        The minimum fuzzy match score required.
+    prefix_bonus : bool
+        The status of the prefix bonus setting.
     _cache_district : dict
         Internal cache for storing matched district names ({input: official_name}).
     _cache_subdistrict : dict
@@ -85,8 +94,13 @@ class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
         subdistrict_column : str or None, optional
             Name of the column containing subdistrict names to be transformed.
             Defaults to "subdistrict".
+        cutoff : int or None, optional
+            The minimum fuzzy match score required for a name to be accepted. Defaults to 60.
+        prefix_bonus : bool or None, optional
+            Whether to apply a bonus score for matching common prefixes during fuzzy matching.
+            Defaults to False.
         """
-
+        
         self.path = path
 
         self.district_column = district_column or "district"
@@ -129,6 +143,9 @@ class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
         """
         Transforms the DataFrame by normalizing and fuzzy matching district and
         subdistrict names.
+
+        It applies normalization and then uses fuzzy matching with the specified
+        `cutoff` and `prefix_bonus` parameters for both district and subdistrict columns.
 
         Parameters
         ----------

@@ -117,6 +117,9 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
         Transforms the DataFrame by cleaning province names, mapping them
         to standard names, and collecting unmapped variants.
 
+        The fuzzy matching step utilizes a fixed high cutoff score of **90**
+        to ensure high confidence in the match before proceeding with the mapping.
+
         Parameters
         ----------
         X : pandas.DataFrame

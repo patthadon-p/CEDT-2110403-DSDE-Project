@@ -14,6 +14,8 @@ get_configs_path
     Retrieves the absolute path to the configuration directory.
 get_data_dir
     Retrieves the absolute path to the main data directory.
+get_dot_env_path
+    Retrieves the absolute path to the project's '.env' file.
 read_config_path
     Reads a specific file path from a general configuration file.
 get_buddhist_year
@@ -24,6 +26,8 @@ fuzzy_match
     Performs fuzzy string matching against a list of targets using caching.
 normalize
     Applies standard text normalization rules (e.g., lowercase, remove extra spaces).
+scorer_with_prefix_bonus
+    A rapidfuzz scorer function that applies a bonus score for matching prefixes.
 load_geographic_data
     Loads geographic boundary data (GeoDataFrame) from a specified path.
 save_geographic_data
@@ -32,6 +36,8 @@ load_province_whitelist
     Loads the mapping dictionary for province name standardization.
 load_status_mapping
     Loads the mapping dictionary for state-to-status standardization.
+create_spark_session
+    Initializes and returns a configured PySpark/Sedona SparkSession.
 
 Usage:
     # Import everything

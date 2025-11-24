@@ -80,6 +80,16 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
     geo_subdistrict_column : str or None, optional
         Name of the column for the enriched subdistrict name from spatial join. Default is None.
 
+    # --- Fuzzy Matching Parameters (Passed to AddressTransformer) ---
+    cutoff_district_subdistrict : int or None, optional
+        The fuzzy matching cutoff score for DistrictSubdistrictTransformer. Default is None.
+    cutoff_coordinate : int or None, optional
+        The fuzzy matching cutoff score for CoordinateTransformer. Default is None.
+    prefix_bonus_district_subdistrict : bool, optional
+        Whether to apply prefix matching bonus in DistrictSubdistrictTransformer. Default is False.
+    prefix_bonus_coordinate : bool, optional
+        Whether to apply prefix matching bonus in CoordinateTransformer. Default is True.
+
     # --- Column Names (Passed to DateTransformer) ---
     date_columns : list of str or None, optional
         List of column names to be standardized as datetime objects. Default is None.
@@ -168,6 +178,14 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
             Name of the column for the enriched district name from spatial join. Default is None.
         geo_subdistrict_column : str or None, optional
             Name of the column for the enriched subdistrict name from spatial join. Default is None.
+        cutoff_district_subdistrict : int or None, optional
+            The fuzzy matching cutoff score for DistrictSubdistrictTransformer. Default is None.
+        cutoff_coordinate : int or None, optional
+            The fuzzy matching cutoff score for CoordinateTransformer. Default is None.
+        prefix_bonus_district_subdistrict : bool, optional
+            Whether to apply prefix matching bonus in DistrictSubdistrictTransformer. Default is False.
+        prefix_bonus_coordinate : bool, optional
+            Whether to apply prefix matching bonus in CoordinateTransformer. Default is True.
         date_columns : list of str or None, optional
             List of column names to be standardized as datetime objects. Default is None.
         state_mapping : dict or None, optional

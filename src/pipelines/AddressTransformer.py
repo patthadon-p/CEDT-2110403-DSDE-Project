@@ -57,6 +57,14 @@ class AddressTransformer(BaseEstimator, TransformerMixin):
     geo_subdistrict_column : str or None, optional
         Name of the column for the enriched subdistrict name from spatial join.
         Default is None.
+    cutoff_district_subdistrict : int or None, optional
+        The fuzzy matching cutoff score passed to DistrictSubdistrictTransformer. Default is None.
+    cutoff_coordinate : int or None, optional
+        The fuzzy matching cutoff score passed to CoordinateTransformer. Default is None.
+    prefix_bonus_district_subdistrict : bool or None, optional
+        Whether to apply prefix matching bonus in DistrictSubdistrictTransformer. Default is None.
+    prefix_bonus_coordinate : bool or None, optional
+        Whether to apply prefix matching bonus in CoordinateTransformer. Default is None.
 
     Attributes
     ----------
@@ -92,8 +100,8 @@ class AddressTransformer(BaseEstimator, TransformerMixin):
         Initializes the meta-transformer by instantiating the sub-transformers
         (Province, District/Subdistrict, and Coordinate Transformers).
 
-        The method passes the relevant configuration paths and column names
-        to each specialized sub-transformer.
+        The method passes the relevant configuration paths, column names, and
+        fuzzy matching settings to each specialized sub-transformer.
 
         Parameters
         ----------
@@ -118,6 +126,14 @@ class AddressTransformer(BaseEstimator, TransformerMixin):
         geo_subdistrict_column : str or None, optional
             Name of the column for the enriched subdistrict name from spatial join.
             Default is None.
+        cutoff_district_subdistrict : int or None, optional
+            The fuzzy matching cutoff score passed to DistrictSubdistrictTransformer. Default is None.
+        cutoff_coordinate : int or None, optional
+            The fuzzy matching cutoff score passed to CoordinateTransformer. Default is None.
+        prefix_bonus_district_subdistrict : bool or None, optional
+            Whether to apply prefix matching bonus in DistrictSubdistrictTransformer. Default is None.
+        prefix_bonus_coordinate : bool or None, optional
+            Whether to apply prefix matching bonus in CoordinateTransformer. Default is None.
         """
 
         self.province_path = province_path

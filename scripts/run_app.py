@@ -4,11 +4,13 @@ Streamlit Application Launcher (run_app.py)
 This script serves as the main entry point to run various Streamlit applications
 located in the 'streamlit/' directory of the project.
 
-It provides an interactive command-line interface (CLI) that allows the user to:
+It provides an **interactive command-line interface (CLI)** that allows the user to:
 1. List all available Streamlit application files.
 2. Select an app to run using its index number, full filename, or a keyword shortcut.
-3. Automatically configure the Python path to include project dependencies.
-4. Execute the chosen app using the Streamlit command line tool via `subprocess`.
+3. Automatically configures the **Python path** (`sys.path`) to ensure project
+   modules (in `src/`) are importable.
+4. Executes the chosen app using the `streamlit run` command via `subprocess`,
+   preferring the executable in the virtual environment (`.venv`).
 """
 
 # run_app.py
