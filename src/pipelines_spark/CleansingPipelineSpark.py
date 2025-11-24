@@ -32,7 +32,8 @@ class CleansingPipelineSpark(Transformer):
         cutoff_coordinate: int | None = None,
         prefix_bonus_district_subdistrict: bool = False,
         prefix_bonus_coordinate: bool = True,
-        date_columns: list[str] | None = None,
+        start_time_column: str | None = None,
+        end_time_column: str | None = None,
         state_mapping: dict | None = None,
         old_state_column: str | None = None,
         new_state_column: str | None = None,
@@ -63,7 +64,8 @@ class CleansingPipelineSpark(Transformer):
         self.prefix_bonus_district_subdistrict = prefix_bonus_district_subdistrict
         self.prefix_bonus_coordinate = prefix_bonus_coordinate
 
-        self.date_columns = date_columns
+        self.start_time_column = start_time_column
+        self.end_time_column = end_time_column
 
         self.state_mapping = state_mapping
         self.old_state_column = old_state_column
@@ -76,7 +78,8 @@ class CleansingPipelineSpark(Transformer):
         )
 
         self.date_transformer = DateTransformerSpark(
-            columns=self.date_columns,
+            start_time_column=self.start_time_column,
+            end_time_column=self.end_time_column,
         )
 
         self.address_transformer = AddressTransformerSpark(
