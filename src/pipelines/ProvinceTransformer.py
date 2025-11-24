@@ -66,6 +66,23 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self, path: str = "", province_column: str | None = None) -> None:
+        """
+        Initializes the transformer by loading the province whitelist mapping
+        and setting the target column name.
+
+        The internal cache (`_cache_province`) is initialized to store fuzzy
+        matching results for efficiency.
+
+        Parameters
+        ----------
+        path : str, optional
+            File path to the JSON file containing the province whitelist mapping.
+            Default is "".
+        province_column : str or None, optional
+            Name of the column containing province names to be transformed.
+            Defaults to "province".
+        """
+
         self.path = path
 
         self.whitelist = load_province_whitelist(self.path)

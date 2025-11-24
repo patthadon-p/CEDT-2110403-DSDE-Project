@@ -129,6 +129,51 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
         old_state_column: str | None = None,
         new_state_column: str | None = None,
     ) -> None:
+        """
+        Initializes the CleansingPipeline by instantiating all necessary sub-transformers
+        with the provided configuration parameters.
+
+        This method passes the relevant file paths and column names to each
+        specialized transformer (Ingestion, Date, Address, Status) for configuration.
+
+        Parameters
+        ----------
+        ingest_path : str, optional
+            File path for the JSON containing ingestion settings (rename/drop columns) for IngestionPreprocessor. Default is "".
+        drop_columns : list of str or None, optional
+            List of columns to be dropped, passed to IngestionPreprocessor. Default is None.
+        drop_na_columns : list of str or None, optional
+            List of columns whose rows must not contain NaN/null values, passed to IngestionPreprocessor. Default is None.
+        province_path : str, optional
+            File path for the province name whitelist/mapping, passed to AddressTransformer. Default is "".
+        bangkok_area_path : str, optional
+            File path for the Bangkok official area name mapping, passed to AddressTransformer. Default is "".
+        geographic_data_path : str, optional
+            File path for the geographic data (GeoDataFrame) used for spatial joins, passed to AddressTransformer. Default is "".
+        state_mapping_path : str, optional
+            File path for the JSON containing the state-to-status mapping, passed to StateToStatusTransformer. Default is "".
+        coords_column : str or None, optional
+            Name of the column containing coordinates. Default is None.
+        province_column : str or None, optional
+            Name of the column containing province names. Default is None.
+        district_column : str or None, optional
+            Name of the column containing district names. Default is None.
+        subdistrict_column : str or None, optional
+            Name of the column containing subdistrict names. Default is None.
+        geo_district_column : str or None, optional
+            Name of the column for the enriched district name from spatial join. Default is None.
+        geo_subdistrict_column : str or None, optional
+            Name of the column for the enriched subdistrict name from spatial join. Default is None.
+        date_columns : list of str or None, optional
+            List of column names to be standardized as datetime objects. Default is None.
+        state_mapping : dict or None, optional
+            Direct mapping dictionary (alternative to state_mapping_path). Default is None.
+        old_state_column : str or None, optional
+            Name of the column containing the raw state values. Default is None.
+        new_state_column : str or None, optional
+            Name of the output column for the standardized status values. Default is None.
+        """
+
         self.ingest_path = ingest_path
         self.province_path = province_path
         self.bangkok_area_path = bangkok_area_path

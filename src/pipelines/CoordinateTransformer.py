@@ -70,6 +70,28 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
         geo_district_column: str | None = None,
         geo_subdistrict_column: str | None = None,
     ) -> None:
+        """
+        Initializes the transformer by loading and cleaning the geographic boundary data.
+
+        The geographic boundary data is cleaned using `DistrictSubdistrictTransformer`
+        and then saved locally before being stored in `self.bangkok_gdf`.
+
+        Parameters
+        ----------
+        path : str, optional
+            File path to the geographic boundary data. Default is "".
+        coords_column : str or None, optional
+            Name of the column containing coordinate strings. Defaults to "coords".
+        district_column : str or None, optional
+            Name of the input column containing the text-based district name. Defaults to "district".
+        subdistrict_column : str or None, optional
+            Name of the input column containing the text-based subdistrict name. Defaults to "subdistrict".
+        geo_district_column : str or None, optional
+            Name of the district column in the geographic boundary data. Defaults to "DISTRICT_N".
+        geo_subdistrict_column : str or None, optional
+            Name of the subdistrict column in the geographic boundary data. Defaults to "SUBDISTR_1".
+        """
+
         self.path = path
 
         self.coords_column = coords_column or "coords"
@@ -114,8 +136,29 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """
+        Performs coordinate extraction, spatial join, and filtering to validate
+        data points against geographic boundaries.
+
+        Parameters
+        ----------
+        X : pandas.DataFrame
+            The input DataFrame containing the coordinate and address columns.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The transformed DataFrame containing only the data points that
+            are geometrically and textually consistent with the geographic
+            boundary data.
+        """
 
         def coords_check(row: dict) -> bool:
+            """
+            Internal helper function to check if the spatially derived
+            district/subdistrict matches the original text columns.
+            """
+
             district_points = row[self.district_column]
             subdistrict_points = row[self.subdistrict_column]
 

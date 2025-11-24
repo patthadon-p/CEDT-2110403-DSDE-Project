@@ -79,6 +79,8 @@ class PopulationScrapping:
         Class attribute: List of column names to apply to the scraped data.
     TO_DROP_COLUMNS : list of str
         Class attribute: List of column names to drop during cleaning.
+    DTYPE_MAPPING : dict of str: str
+        Class attribute: Mapping of column names to their target data types after cleaning.
     """
 
     def __init__(
@@ -87,6 +89,20 @@ class PopulationScrapping:
         year: int | str | None = None,
         level: str = "",
     ) -> None:
+        """
+        Initializes the scraper by loading configuration and setting up the target URL.
+
+        Parameters
+        ----------
+        url : str, optional
+            Base URL for the DOPA population data. Defaults to the value in the config file.
+        year : int or str or None, optional
+            The year of the data to fetch (in Buddhist calendar). Defaults to the
+            current Buddhist year.
+        level : str, optional
+            The administrative level of the data (e.g., 'province', 'district').
+            Defaults to the value in the config file.
+        """
 
         self.population_scrapping_path = read_config_path(
             domain="scrapping", key="population_scrapping_path"
@@ -269,10 +285,10 @@ class PopulationScrapping:
         Fetches the data, performs cleaning, normalization, and optional saving.
 
         The cleaning steps include:
-        1. Dropping specified columns.
-        2. Filtering out rows where administrative names (up to the current level) are blank.
-        3. Removing specified prefixes (e.g., 'จังหวัด', 'อำเภอ') from administrative names.
-        4. Dropping administrative name columns that are at a lower priority than the target level.
+        1. Dropping specified columns and filtering out blank administrative name rows.
+        2. Removing specified prefixes (e.g., 'จังหวัด', 'อำเภอ') from administrative names.
+        3. Dropping administrative name columns that are at a lower priority than the target level.
+        4. **Casting remaining numeric columns to integer type (removing thousands separators).**
 
         Parameters
         ----------

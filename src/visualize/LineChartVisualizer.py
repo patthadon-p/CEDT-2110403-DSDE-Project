@@ -1,3 +1,17 @@
+"""
+Line chart visualization utilities.
+
+This module provides the LineChartVisualizer class, designed to generate
+a multi-series line chart using Matplotlib. It visualizes the trend of
+different categories (problem types) over time (by year).
+
+Classes
+-------
+LineChartVisualizer
+    A class for preparing data and generating a line chart to show the
+    yearly trend of event counts for different problem types.
+"""
+
 # Import necessary libraries
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -8,7 +22,42 @@ rcParams["font.family"] = "Tahoma"
 
 
 class LineChartVisualizer:
+    """
+    Generates a multi-series line chart visualizing the count of problem types over years.
+
+    The input DataFrame is expected to contain a list of categories in the
+    'type_cleaned' column, which is exploded upon initialization.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        The input DataFrame containing, at a minimum, the 'timestamp_year'
+        and 'type_cleaned' columns.
+
+    Attributes
+    ----------
+    df : pandas.DataFrame
+        The processed copy of the input DataFrame with the 'type_cleaned'
+        column exploded and standardized.
+
+    Raises
+    ------
+    ValueError
+        If the input DataFrame is missing the required 'timestamp_year' column.
+    """
+
     def __init__(self, df: pd.DataFrame) -> None:
+        """
+        Initializes the visualizer, preprocesses the DataFrame, and explodes
+        the categorical columns.
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            The input DataFrame containing, at a minimum, the 'timestamp_year'
+            and 'type_cleaned' columns.
+        """
+
         self.df = df.copy()
         self.df = self.df.explode("type_cleaned")
         self.df["type_cleaned"] = self.df["type_cleaned"].str.strip()
@@ -17,6 +66,23 @@ class LineChartVisualizer:
             raise ValueError("DataFrame must have a 'timestamp_year' column.")
 
     def plot(self, figsize: tuple = (12, 6)) -> Figure:
+        """
+        Generates and returns the Matplotlib Figure containing the line chart.
+
+        The data is grouped by year and problem type, pivoted, and plotted as
+        multiple line series showing trends from 2021-2025.
+
+        Parameters
+        ----------
+        figsize : tuple, optional
+            The size of the output figure (width, height) in inches. Default is (12, 6).
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The generated Matplotlib figure object.
+        """
+
         df_grouped = (
             self.df.groupby(["timestamp_year", "type_cleaned"])
             .size()

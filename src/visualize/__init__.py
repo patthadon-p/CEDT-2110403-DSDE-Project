@@ -4,11 +4,21 @@ Visualize Module
 This module provides map and geospatial visualization utilities
 for the CEDT-2110403-DSDE-Project.
 
+It provides direct access to the main visualizer classes used for
+creating interactive plots and geospatial maps within Streamlit applications.
+
+Classes
+-------
+LineChartVisualizer
+    A class for generating interactive line charts (e.g., using Plotly).
+MapVisualizer
+    A class for creating dynamic and interactive map visualizations (e.g., using Folium or Plotly).
+
 Usage:
     # Import everything
     from visualize import *
 
-    # Import specific functions
+    # Import specific classes
     from visualize import MapVisualizer
 
     # Access directly

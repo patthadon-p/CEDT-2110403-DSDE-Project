@@ -64,6 +64,27 @@ class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
         district_column: str | None = None,
         subdistrict_column: str | None = None,
     ) -> None:
+        """
+        Initializes the transformer by loading the official area names for
+        district and subdistrict columns.
+
+        The official area names are loaded from the JSON file specified by `path`
+        and stored as target lists for fuzzy matching, along with initializing
+        the internal matching caches.
+
+        Parameters
+        ----------
+        path : str, optional
+            File path to the JSON file containing the official area name mapping.
+            Default is "".
+        district_column : str or None, optional
+            Name of the column containing district names to be transformed.
+            Defaults to "district".
+        subdistrict_column : str or None, optional
+            Name of the column containing subdistrict names to be transformed.
+            Defaults to "subdistrict".
+        """
+
         self.path = path
 
         self.district_column = district_column or "district"
