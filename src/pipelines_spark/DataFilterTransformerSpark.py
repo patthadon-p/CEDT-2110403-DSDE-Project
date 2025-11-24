@@ -21,6 +21,10 @@ class DataFilterTransformerSpark(Transformer):
             "comment",
             "coords",
             "address",
+            "timestamp_date",
+            "last_activity_date",
+            "last_activity_month",
+            "last_activity_year",
         ]
 
     def _transform(self, df: DataFrame) -> DataFrame:
