@@ -54,6 +54,7 @@ from .ConfigUtils import (
 )
 from .DatetimeUtils import get_buddhist_year
 from .DistrictSubdistrictUtils import load_bangkok_official_area_names
+from .EncoderUtils import multi_value_vectorizer
 from .FuzzyUtils import fuzzy_match, normalize, scorer_with_prefix_bonus
 from .GeographicUtils import load_geographic_data, save_geographic_data
 from .ProvinceUtils import load_province_whitelist
@@ -72,6 +73,8 @@ __all__ = [
     "get_buddhist_year",
     # DistrictSubdistrictUtils.py
     "load_bangkok_official_area_names",
+    # EncoderUtils.py
+    "multi_value_vectorizer",
     # FuzzyUtils.py
     "fuzzy_match",
     "normalize",

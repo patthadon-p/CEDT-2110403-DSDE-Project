@@ -4,6 +4,8 @@ from pyspark.ml.feature import CountVectorizer
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
+from src.utils.EncoderUtils import multi_value_vectorizer
+
 
 class TypeEncoderSpark(Transformer):
 
@@ -20,21 +22,10 @@ class TypeEncoderSpark(Transformer):
             self.type, F.expr(f"substring({self.type}, 2, length({self.type})-2)")
         )
 
-        df_array = df.withColumn(
-            self.type,
-            F.when(
-                F.col(self.type).isNotNull(),
-                F.split(F.col(self.type), ","),
-            ).otherwise(F.array()),
+        encoded_df = multi_value_vectorizer(
+            df,
+            input_column=self.type,
+            output_column=self.type_encoded,
         )
-
-        cv = CountVectorizer(
-            inputCol=self.type,
-            outputCol=self.type_encoded,
-        )
-        cv_model = cv.fit(df_array)
-        encoded_df = cv_model.transform(df_array)
-
-        encoded_df = encoded_df.drop(self.type)
 
         return encoded_df
