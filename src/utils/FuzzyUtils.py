@@ -10,6 +10,8 @@ Functions
 normalize
     Cleans and standardizes input strings by removing extra whitespace
     and correcting repeated prefixes.
+scorer_with_prefix_bonus
+    A rapidfuzz scorer function that applies a bonus score for matching prefixes.
 fuzzy_match
     Performs approximate string matching against a list of known choices
     and caches the results.
@@ -30,16 +32,14 @@ def normalize(
 
     This function performs two main steps:
     1. Removes all excessive whitespace and strips leading/trailing spaces.
-    2. Replaces repeated occurrences of common prefixes (e.g., 'บางบาง'
-        or 'คลองคลอง') with a single instance of the prefix.
+    2. **Removes** all occurrences of common prefixes (e.g., 'บาง', 'คลอง').
 
     Parameters
     ----------
     text : str or None
         The input string to be normalized. Returns None if input is None.
     prefix_sub : list of str or None, optional
-        A list of prefixes to be checked and reduced if they appear
-        consecutively more than once. **If None, defaults to ["บาง", "คลอง"].**
+        A list of prefixes to be **removed** from the text. **If None, defaults to ["บาง", "คลอง"].**
 
     Returns
     -------
@@ -49,11 +49,11 @@ def normalize(
     Examples
     --------
     >>> normalize("  บางบางนา ")
-    'บางนา'
+    'นา'  # Assuming "บาง" is in prefix_sub
     >>> normalize("คลอง คลองตัน")
-    'คลองตัน'
+    'ตัน' # Assuming "คลอง" is in prefix_sub
     >>> normalize("   Hello World  ", prefix_sub=['World'])
-    'Hello World'
+    'Hello ' # Only 'World' is removed, spaces remain. (Note: The first part of normalize handles multiple spaces)
     """
 
     if text is None:
@@ -73,6 +73,30 @@ def normalize(
 def scorer_with_prefix_bonus(
     query: str, choice: str, score_cutoff: float | None = None
 ) -> float:
+    """
+    Custom scorer function for rapidfuzz that applies a bonus score if the choice
+    starts with the query (prefix match).
+
+    The score calculated is the standard fuzz.ratio plus a fixed bonus (20)
+    if the `choice` string starts with the `query` string. This helps prioritize
+    results where the input is an exact prefix of the candidate choice.
+
+    Parameters
+    ----------
+    query : str
+        The query string being searched.
+    choice : str
+        The candidate string to match against.
+    score_cutoff : float or None, optional
+        Minimum score required. If provided, and the total score (base + bonus)
+        is below this, 0 is returned immediately. Default is None.
+
+    Returns
+    -------
+    float
+        The calculated match score (base ratio + prefix bonus) or 0 if the cutoff condition is not met.
+    """
+    
     base_score = fuzz.ratio(query, choice)
     prefix_bonus = 20 if choice.startswith(query) else 0
 

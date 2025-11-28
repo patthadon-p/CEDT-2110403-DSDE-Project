@@ -4,6 +4,43 @@ Pipelines Module
 This module contains data transformation and processing pipelines
 for the CEDT-2110403-DSDE-Project.
 
+It provides direct access to all major **Spark-based** transformer classes designed
+for data cleansing, standardization, feature engineering, and encoding in a
+Big Data environment using PySpark.
+
+Classes
+-------
+AddressEncoderSpark
+    A PySpark transformer for encoding standardized address columns into features.
+AddressTransformerSpark
+    A PySpark meta-transformer that orchestrates address cleaning and enrichment.
+CleansingPipelineSpark
+    The main PySpark meta-transformer for comprehensive data ingestion and cleansing.
+CoordinateTransformerSpark
+    A PySpark transformer for validating coordinates and performing spatial joins.
+DataFilterTransformerSpark
+    A PySpark transformer for filtering rows based on complex criteria.
+DateTransformerSpark
+    A PySpark transformer for converting date columns and extracting temporal features.
+DistrictSubdistrictTransformerSpark
+    A PySpark transformer for cleaning and standardizing district/subdistrict names.
+EncoderPipelineSpark
+    A PySpark meta-pipeline for sequential feature encoding (e.g., StringIndexers/OHE).
+IngestionPreprocessorSpark
+    A PySpark transformer for initial column renaming and basic filtering.
+ModelPrepPipelineSpark
+    A PySpark meta-pipeline combining all transformation and encoding steps for model consumption.
+OrganizationEncoderSpark
+    A PySpark transformer for encoding the organization column.
+ProvinceTransformerSpark
+    A PySpark transformer for cleaning and standardizing province names.
+ResolutionTimeTransformerSpark
+    A PySpark transformer for calculating and transforming event resolution time features.
+StateToStatusTransformerSpark
+    A PySpark transformer for mapping raw state values to standardized status codes.
+TypeEncoderSpark
+    A PySpark transformer for encoding the problem type column.
+
 Usage:
     # Import everything
     from pipelines import *

@@ -69,6 +69,18 @@ class BangkokIndexScrapping:
     """
 
     def __init__(self, url: str = "") -> None:
+        """
+        Initializes the scraper by loading all necessary configuration parameters.
+
+        This involves reading the configuration file to set up column names,
+        indices for dropping/renaming, target URLs, and lists of numeric columns.
+
+        Parameters
+        ----------
+        url : str, optional
+            A custom base URL to override the one specified in the configuration file.
+            Default is "".
+        """
 
         self.config_path = read_config_path(
             domain="scrapping", key="bangkok_index_scrapping_path"

@@ -40,7 +40,30 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    # ... (ส่วน Parameters ถูกต้องแล้ว)
+    path : str, optional
+        File path to the geographic boundary data (e.g., GeoJSON, Shapefile),
+        passed to `load_geographic_data`. Default is "".
+    coords_column : str or None, optional
+        Name of the column containing coordinate strings (e.g., "lat,lon").
+        Defaults to "coords".
+    district_column : str or None, optional
+        Name of the input column containing the text-based district name.
+        Defaults to "district".
+    subdistrict_column : str or None, optional
+        Name of the input column containing the text-based subdistrict name.
+        Defaults to "subdistrict".
+    geo_district_column : str or None, optional
+        Name of the district column in the geographic boundary data (`bangkok_gdf`).
+        Defaults to "DISTRICT_N".
+    geo_subdistrict_column : str or None, optional
+        Name of the subdistrict column in the geographic boundary data (`bangkok_gdf`).
+        Defaults to "SUBDISTR_1".
+    cutoff : int or None, optional
+        The fuzzy matching cutoff score used when cleaning geographic names in the GeoDataFrame.
+        Defaults to 60.
+    prefix_bonus : bool or None, optional
+        Whether to apply a bonus score for common prefixes during fuzzy matching in the GeoDataFrame cleaning.
+        Defaults to True.
 
     Attributes
     ----------
@@ -59,6 +82,10 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
         The final column name for the district column in the geographic boundary data.
     geo_subdistrict_column : str
         The final column name for the subdistrict column in the geographic boundary data.
+    cutoff : int
+        The fuzzy matching cutoff score used.
+    prefix_bonus : bool
+        The status of the prefix bonus setting used for cleaning the GeoDataFrame.
     """
 
     def __init__(
@@ -72,6 +99,34 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
         cutoff: int | None = None,
         prefix_bonus: bool | None = None,
     ) -> None:
+        """
+        Initializes the transformer by loading and cleaning the geographic boundary data.
+
+        The geographic boundary data is cleaned using `DistrictSubdistrictTransformer`
+        and then saved locally before being stored in `self.bangkok_gdf`.
+
+        Parameters
+        ----------
+        path : str, optional
+            File path to the geographic boundary data. Default is "".
+        coords_column : str or None, optional
+            Name of the column containing coordinate strings. Defaults to "coords".
+        district_column : str or None, optional
+            Name of the input column containing the text-based district name. Defaults to "district".
+        subdistrict_column : str or None, optional
+            Name of the input column containing the text-based subdistrict name. Defaults to "subdistrict".
+        geo_district_column : str or None, optional
+            Name of the district column in the geographic boundary data. Defaults to "DISTRICT_N".
+        geo_subdistrict_column : str or None, optional
+            Name of the subdistrict column in the geographic boundary data. Defaults to "SUBDISTR_1".
+        cutoff : int or None, optional
+            The fuzzy matching cutoff score used when cleaning geographic names in the GeoDataFrame.
+            Defaults to 60.
+        prefix_bonus : bool or None, optional
+            Whether to apply a bonus score for common prefixes during fuzzy matching in the GeoDataFrame cleaning.
+            Defaults to True.
+        """
+
         self.path = path
 
         self.coords_column = coords_column or "coords"
@@ -121,8 +176,29 @@ class CoordinateTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """
+        Performs coordinate extraction, spatial join, and filtering to validate
+        data points against geographic boundaries.
+
+        Parameters
+        ----------
+        X : pandas.DataFrame
+            The input DataFrame containing the coordinate and address columns.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The transformed DataFrame containing only the data points that
+            are geometrically and textually consistent with the geographic
+            boundary data.
+        """
 
         def coords_check(row: dict) -> bool:
+            """
+            Internal helper function to check if the spatially derived
+            district/subdistrict matches the original text columns.
+            """
+
             district_points = row[self.district_column]
             subdistrict_points = row[self.subdistrict_column]
 

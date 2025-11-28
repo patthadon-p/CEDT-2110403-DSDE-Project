@@ -8,6 +8,8 @@ Classes
 -------
 PopulationScrapping
     Handles the process of scraping and cleaning DOPA population data.
+BangkokIndexScrapping
+    Handles the process of scraping and cleaning Bangkok Index score data.
 """
 
 # Import specific classes and functions for direct access

@@ -59,6 +59,26 @@ class StateToStatusTransformer(BaseEstimator, TransformerMixin):
         old_column: str | None = None,
         new_column: str | None = None,
     ) -> None:
+        """
+        Initializes the transformer by loading the status mapping dictionary
+        and setting the old and new column names.
+
+        The mapping is loaded from the specified `path` only if the `mapping`
+        parameter is not explicitly provided.
+
+        Parameters
+        ----------
+        path : str, optional
+            File path for the JSON containing the status mapping. Default is "".
+        mapping : dict or None, optional
+            A predefined dictionary ({old_value: new_status}) to use for mapping.
+            Default is None.
+        old_column : str or None, optional
+            Name of the input column containing the raw state values. Defaults to "state".
+        new_column : str or None, optional
+            Name of the output column for the standardized status values. Defaults to "status".
+        """
+
         self.old_column = old_column or "state"
         self.new_column = new_column or "status"
 

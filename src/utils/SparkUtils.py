@@ -1,3 +1,16 @@
+"""
+Utilities for initializing and configuring PySpark and Apache Sedona sessions.
+
+This module handles setting up the necessary environment variables (HADOOP_HOME, SPARK_HOME),
+configuring the Python path for PySpark executors, and creating a combined SparkSession
+and SedonaContext tailored for geospatial processing.
+
+Functions
+---------
+create_spark_session
+    Initializes and returns a configured PySpark SparkSession and a SedonaContext.
+"""
+
 # Add current directory to Python path for imports
 import os
 import sys
@@ -42,6 +55,10 @@ def create_spark_session(
     """
     Creates and returns a SparkSession with Sedona enabled.
 
+    The function loads environment variables, initializes findspark, and configures
+    Spark with Kryo serialization and necessary Maven packages for Apache Sedona
+    (GeoSpark).
+
     Parameters
     ----------
     app_name : str, optional
@@ -49,8 +66,9 @@ def create_spark_session(
 
     Returns
     -------
-    SparkSession
-        Configured SparkSession with Sedona support.
+    tuple[pyspark.sql.SparkSession, pyspark.sql.SparkSession]
+        A tuple containing the configured SparkSession and the SedonaContext 
+        (which is also a SparkSession instance).
     """
 
     # Initialize findspark

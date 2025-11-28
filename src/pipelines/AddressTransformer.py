@@ -57,6 +57,14 @@ class AddressTransformer(BaseEstimator, TransformerMixin):
     geo_subdistrict_column : str or None, optional
         Name of the column for the enriched subdistrict name from spatial join.
         Default is None.
+    cutoff_district_subdistrict : int or None, optional
+        The fuzzy matching cutoff score passed to DistrictSubdistrictTransformer. Default is None.
+    cutoff_coordinate : int or None, optional
+        The fuzzy matching cutoff score passed to CoordinateTransformer. Default is None.
+    prefix_bonus_district_subdistrict : bool or None, optional
+        Whether to apply prefix matching bonus in DistrictSubdistrictTransformer. Default is None.
+    prefix_bonus_coordinate : bool or None, optional
+        Whether to apply prefix matching bonus in CoordinateTransformer. Default is None.
 
     Attributes
     ----------
@@ -88,6 +96,46 @@ class AddressTransformer(BaseEstimator, TransformerMixin):
         prefix_bonus_district_subdistrict: bool | None = None,
         prefix_bonus_coordinate: bool | None = None,
     ) -> None:
+        """
+        Initializes the meta-transformer by instantiating the sub-transformers
+        (Province, District/Subdistrict, and Coordinate Transformers).
+
+        The method passes the relevant configuration paths, column names, and
+        fuzzy matching settings to each specialized sub-transformer.
+
+        Parameters
+        ----------
+        province_path : str, optional
+            File path for the province name whitelist/mapping. Default is "".
+        bangkok_area_path : str, optional
+            File path for the Bangkok official area name mapping. Default is "".
+        geographic_data_path : str, optional
+            File path for the geographic data (GeoDataFrame) used for spatial joins.
+            Default is "".
+        coords_column : str or None, optional
+            Name of the column containing coordinates. Default is None.
+        province_column : str or None, optional
+            Name of the column containing province names. Default is None.
+        district_column : str or None, optional
+            Name of the column containing district names. Default is None.
+        subdistrict_column : str or None, optional
+            Name of the column containing subdistrict names. Default is None.
+        geo_district_column : str or None, optional
+            Name of the column for the enriched district name from spatial join.
+            Default is None.
+        geo_subdistrict_column : str or None, optional
+            Name of the column for the enriched subdistrict name from spatial join.
+            Default is None.
+        cutoff_district_subdistrict : int or None, optional
+            The fuzzy matching cutoff score passed to DistrictSubdistrictTransformer. Default is None.
+        cutoff_coordinate : int or None, optional
+            The fuzzy matching cutoff score passed to CoordinateTransformer. Default is None.
+        prefix_bonus_district_subdistrict : bool or None, optional
+            Whether to apply prefix matching bonus in DistrictSubdistrictTransformer. Default is None.
+        prefix_bonus_coordinate : bool or None, optional
+            Whether to apply prefix matching bonus in CoordinateTransformer. Default is None.
+        """
+
         self.province_path = province_path
         self.bangkok_area_path = bangkok_area_path
         self.geographic_data_path = geographic_data_path

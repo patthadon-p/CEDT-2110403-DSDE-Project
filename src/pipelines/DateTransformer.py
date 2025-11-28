@@ -39,6 +39,15 @@ class DateTransformer(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self, columns: list[str] | None = None) -> None:
+        """
+        Initializes the transformer and sets the list of date columns to be processed.
+
+        Parameters
+        ----------
+        columns : list of str or None, optional
+            List of column names to transform. Defaults to ["timestamp", "last_activity"].
+        """
+
         self.columns = columns or ["timestamp", "last_activity"]
 
     def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> "DateTransformer":
