@@ -46,7 +46,7 @@ class DateTransformerSpark(Transformer):
     resolution_time_column : str
         The name of the output column for the time difference (in days). Defaults to "resolution_time".
     """
-    
+
     def __init__(
         self, start_time_column: str | None = None, end_time_column: str | None = None
     ) -> None:
@@ -60,7 +60,7 @@ class DateTransformerSpark(Transformer):
         end_time_column : str or None, optional
             Name of the column containing the end/resolution timestamp. Defaults to "last_activity".
         """
-        
+
         self.start_time_column = start_time_column or "timestamp"
         self.end_time_column = end_time_column or "last_activity"
         self.resolution_time_column = "resolution_time"
@@ -81,7 +81,7 @@ class DateTransformerSpark(Transformer):
             The transformed DataFrame with new temporal features and the resolution time column,
             and the original timestamp columns dropped.
         """
-        
+
         for c in [self.start_time_column, self.end_time_column]:
             if c in df.columns:
                 df = df.withColumn(c, to_timestamp(col(c)))

@@ -73,7 +73,7 @@ class ModelPrepPipelineSpark(Transformer):
     resol_time_transformer : ResolutionTimeTransformerSpark
         Instantiated transformer for generating resolution time features.
     """
-    
+
     def __init__(
         self,
         filter_columns: dict[str, str] | None = None,
@@ -121,7 +121,7 @@ class ModelPrepPipelineSpark(Transformer):
         resolution_time_column : str or None, optional
             Output column name for the calculated resolution time feature. Default is None.
         """
-        
+
         self.filter_columns = filter_columns
         self.drop_columns = drop_columns
 
@@ -164,7 +164,7 @@ class ModelPrepPipelineSpark(Transformer):
         pyspark.sql.DataFrame
             The transformed DataFrame ready for use in a machine learning model.
         """
-        
+
         df_transformed = self.data_filter_transformer.transform(df)
         df_transformed = self.encoder_pipeline.transform(df_transformed)
 

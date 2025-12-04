@@ -42,7 +42,7 @@ class DataFilterTransformerSpark(Transformer):
     drop_columns : list
         The final list of columns to be dropped.
     """
-    
+
     def __init__(
         self,
         filter_columns: dict[str, str] | None = None,
@@ -60,7 +60,7 @@ class DataFilterTransformerSpark(Transformer):
             A list of column names to be permanently dropped from the DataFrame.
             Defaults to removing raw/identifier columns.
         """
-        
+
         self.filter_columns = filter_columns or {
             "province": "กรุงเทพมหานคร",
             "status": "done",
@@ -94,7 +94,7 @@ class DataFilterTransformerSpark(Transformer):
         pyspark.sql.DataFrame
             The transformed DataFrame with filtered rows and dropped columns.
         """
-        
+
         for column, value in self.filter_columns.items():
             if column in df.columns:
                 df = df.filter(col(column).isin([value])).drop(column)

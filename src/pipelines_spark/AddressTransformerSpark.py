@@ -78,7 +78,7 @@ class AddressTransformerSpark(Transformer):
     coordinate_transformer : CoordinateTransformerSpark
         The instantiated transformer for coordinate-based spatial enrichment.
     """
-    
+
     def __init__(
         self,
         spark: SparkSession,
@@ -133,7 +133,7 @@ class AddressTransformerSpark(Transformer):
         prefix_bonus_coordinate : bool or None, optional
             Prefix matching bonus setting for CoordinateTransformerSpark. Default is None.
         """
-        
+
         self.spark = spark
         self.sedona = sedona
 
@@ -195,7 +195,7 @@ class AddressTransformerSpark(Transformer):
         pyspark.sql.DataFrame
             The transformed DataFrame with standardized and enriched address columns.
         """
-        
+
         df_transformed = self.province_transformer.transform(df)
         df_transformed = self.districtsubdistrict_transformer.transform(df_transformed)
         df_transformed = self.coordinate_transformer.transform(df_transformed)

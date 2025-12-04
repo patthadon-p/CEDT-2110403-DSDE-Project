@@ -15,7 +15,7 @@ TypeEncoderSpark
 
 # Import necessary modules
 from pyspark.ml import Transformer
-from pyspark.ml.feature import CountVectorizer
+from pyspark.ml.feature import CountVectorizer  # noqa: F401
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
@@ -44,7 +44,7 @@ class TypeEncoderSpark(Transformer):
     type_encoded : str
         The name of the output vector column. Defaults to "<type>_encoded".
     """
-    
+
     def __init__(
         self,
         type_column: str | None = None,
@@ -57,7 +57,7 @@ class TypeEncoderSpark(Transformer):
         type_column : str or None, optional
             Name of the input column containing problem type strings. Defaults to "type".
         """
-        
+
         self.type = type_column or "type"
         self.type_encoded = self.type + "_encoded"
 
@@ -79,7 +79,7 @@ class TypeEncoderSpark(Transformer):
             The transformed DataFrame with the original type column
             replaced by the CountVectorizer feature vector column.
         """
-        
+
         df = df.withColumn(
             self.type, F.expr(f"substring({self.type}, 2, length({self.type})-2)")
         )

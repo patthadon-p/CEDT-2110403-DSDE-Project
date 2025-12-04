@@ -67,7 +67,7 @@ def create_spark_session(
     Returns
     -------
     tuple[pyspark.sql.SparkSession, pyspark.sql.SparkSession]
-        A tuple containing the configured SparkSession and the SedonaContext 
+        A tuple containing the configured SparkSession and the SedonaContext
         (which is also a SparkSession instance).
     """
 

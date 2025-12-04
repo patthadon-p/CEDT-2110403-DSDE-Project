@@ -102,7 +102,7 @@ class CleansingPipelineSpark(Transformer):
     state_to_status_transformer : StateToStatusTransformerSpark
         Instantiated transformer for mapping state values to standard statuses.
     """
-    
+
     def __init__(
         self,
         spark: SparkSession,
@@ -184,7 +184,7 @@ class CleansingPipelineSpark(Transformer):
         new_state_column : str or None, optional
             Name of the output column for the standardized status values. Default is None.
         """
-        
+
         self.spark = spark
         self.sedona = sedona
 
@@ -273,7 +273,7 @@ class CleansingPipelineSpark(Transformer):
             The transformed and cleansed DataFrame with standardized features and
             missing rows removed.
         """
-        
+
         df_transformed = self.ingest_pre_processor.transform(df)
         df_transformed = self.date_transformer.transform(df_transformed)
         df_transformed = self.address_transformer.transform(df_transformed)

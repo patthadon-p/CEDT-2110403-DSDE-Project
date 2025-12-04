@@ -54,7 +54,7 @@ class ProvinceTransformerSpark(
     _cache_province : dict
         Internal cache used by the `fuzzy_match` function (PySpark driver side).
     """
-    
+
     def __init__(self, path: str = "", province_column: str | None = None) -> None:
         """
         Initializes the PySpark Province Transformer.
@@ -68,7 +68,7 @@ class ProvinceTransformerSpark(
         province_column : str or None, optional
             Name of the column containing province names to be transformed. Defaults to "province".
         """
-        
+
         super().__init__()
         self.path = path
         self.whitelist = load_province_whitelist(self.path)
@@ -91,7 +91,7 @@ class ProvinceTransformerSpark(
             The transformed DataFrame with the province column containing
             standardized names, and rows without a valid standardized name filtered out.
         """
-        
+
         cleaned_df = (
             df.withColumn(
                 self.province_column,

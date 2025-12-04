@@ -57,7 +57,7 @@ class EncoderPipelineSpark(Transformer):
     type_encoder : TypeEncoderSpark
         The instantiated transformer for problem type encoding.
     """
-    
+
     def __init__(
         self,
         district_column: str | None = None,
@@ -127,7 +127,7 @@ class EncoderPipelineSpark(Transformer):
         pyspark.sql.DataFrame
             The transformed DataFrame with encoded and hash vector columns added.
         """
-       
+
         df_transformed = self.address_encoder.transform(df)
         df_transformed = self.organization_encoder.transform(df_transformed)
         df_transformed = self.type_encoder.transform(df_transformed)

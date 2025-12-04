@@ -18,6 +18,7 @@ read_config_path
     Reads a file path from the config file using a key, and resolves it
     to an absolute path relative to the config file's location.
 """
+
 # Import necessary modules
 import os
 from pathlib import Path

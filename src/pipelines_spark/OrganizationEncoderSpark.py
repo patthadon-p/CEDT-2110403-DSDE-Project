@@ -15,9 +15,7 @@ OrganizationEncoderSpark
 
 # Import necessary modules
 from pyspark.ml import Transformer
-from pyspark.ml.feature import CountVectorizer
 from pyspark.sql import DataFrame
-from pyspark.sql import functions as F
 
 from src.utils.EncoderUtils import multi_value_vectorizer
 
@@ -43,7 +41,7 @@ class OrganizationEncoderSpark(Transformer):
     organization_encoded : str
         The name of the output vector column. Defaults to "<organization>_encoded".
     """
-    
+
     def __init__(
         self,
         organization_column: str | None = None,
@@ -56,12 +54,11 @@ class OrganizationEncoderSpark(Transformer):
         organization_column : str or None, optional
             Name of the input column containing organization names. Defaults to "organization".
         """
-        
+
         self.organization = organization_column or "organization"
         self.organization_encoded = self.organization + "_encoded"
 
     def _transform(self, df: DataFrame) -> DataFrame:
-        
         """
         Applies multi-value splitting and CountVectorizer feature encoding.
 
@@ -76,7 +73,7 @@ class OrganizationEncoderSpark(Transformer):
             The transformed DataFrame with the original organization column
             replaced by the CountVectorizer feature vector column.
         """
-        
+
         encoded_df = multi_value_vectorizer(
             df,
             input_column=self.organization,

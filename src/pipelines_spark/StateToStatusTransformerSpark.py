@@ -59,7 +59,7 @@ class StateToStatusTransformerSpark(Transformer):
     mapping_df : pyspark.sql.DataFrame
         The small PySpark DataFrame derived from `mapping` used for the join operation.
     """
-    
+
     def __init__(
         self,
         spark: SparkSession,
@@ -85,7 +85,7 @@ class StateToStatusTransformerSpark(Transformer):
         new_column : str or None, optional
             Name of the output column for the standardized status values. Defaults to "status".
         """
-        
+
         super().__init__()
 
         self.spark = spark
@@ -114,7 +114,7 @@ class StateToStatusTransformerSpark(Transformer):
             The transformed DataFrame with the target column's values replaced
             by standardized status values.
         """
-        
+
         df_joined = df.join(self.mapping_df, on=self.old_column, how="left")
 
         if self.new_column != self.old_column:

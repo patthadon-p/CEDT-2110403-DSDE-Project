@@ -56,7 +56,7 @@ class IngestionPreprocessorSpark(Transformer):
     rename_dict : dict of {str: str}
         Dictionary mapping old column names to new column names.
     """
-    
+
     def __init__(
         self,
         filepath: str = "",
@@ -118,7 +118,7 @@ class IngestionPreprocessorSpark(Transformer):
             The transformed DataFrame with renamed columns, dropped unnecessary columns,
             and filtered rows.
         """
-        
+
         for old, new in self.rename_dict.items():
             if old in df.columns:
                 df = df.withColumnRenamed(old, new)

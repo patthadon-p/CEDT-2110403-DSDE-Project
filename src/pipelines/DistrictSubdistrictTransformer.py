@@ -100,7 +100,7 @@ class DistrictSubdistrictTransformer(BaseEstimator, TransformerMixin):
             Whether to apply a bonus score for matching common prefixes during fuzzy matching.
             Defaults to False.
         """
-        
+
         self.path = path
 
         self.district_column = district_column or "district"

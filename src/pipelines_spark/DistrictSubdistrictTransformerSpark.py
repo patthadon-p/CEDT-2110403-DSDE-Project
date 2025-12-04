@@ -65,7 +65,7 @@ class DistrictSubdistrictTransformerSpark(
     _cache_subdistrict : dict
         Internal dictionary used to cache matched subdistrict names (PySpark driver side).
     """
-    
+
     def __init__(
         self,
         path: str = "",
@@ -92,7 +92,7 @@ class DistrictSubdistrictTransformerSpark(
         prefix_bonus : bool or None, optional
             Whether to apply a bonus score for common prefixes during fuzzy matching. Defaults to False.
         """
-        
+
         super().__init__()
         self.path = path
         self.district_column = district_column or "district"
@@ -126,7 +126,7 @@ class DistrictSubdistrictTransformerSpark(
         pyspark.sql.DataFrame
             The transformed DataFrame with standardized district and subdistrict names.
         """
-        
+
         def district_udf(x: str | None) -> str | None:
             if x is None:
                 return None

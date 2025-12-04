@@ -85,7 +85,7 @@ class CoordinateTransformerSpark(Transformer):
     prefix_bonus : bool
         The status of the prefix bonus setting used for cleaning the GeoDataFrame.
     """
-    
+
     def __init__(
         self,
         spark: SparkSession,
@@ -128,7 +128,7 @@ class CoordinateTransformerSpark(Transformer):
         prefix_bonus : bool or None, optional
             Whether to apply a bonus score for common prefixes during fuzzy matching in the GeoDataFrame cleaning. Defaults to True.
         """
-        
+
         self.spark = spark
         self.sedona = sedona
 
@@ -181,7 +181,7 @@ class CoordinateTransformerSpark(Transformer):
             are geometrically and textually consistent with the geographic
             boundary data. Original columns are preserved.
         """
-        
+
         # Split coordinates into latitude, longitude (you used lat then lon)
         df = df.withColumn(
             "longitude",

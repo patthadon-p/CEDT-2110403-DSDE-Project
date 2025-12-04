@@ -96,7 +96,7 @@ def scorer_with_prefix_bonus(
     float
         The calculated match score (base ratio + prefix bonus) or 0 if the cutoff condition is not met.
     """
-    
+
     base_score = fuzz.ratio(query, choice)
     prefix_bonus = 20 if choice.startswith(query) else 0
 
