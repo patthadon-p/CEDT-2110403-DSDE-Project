@@ -62,25 +62,13 @@ def load_geo_data():
     Loads geometry data from cleansed_geo.csv and converts to GeoDataFrame.
     """
     try:
-        # สมมติว่าคุณเพิ่ม key นี้ใน config แล้ว หรือจะใส่ path ตรงๆ ก็ได้
-        # path = "path/to/cleansed_geo.csv"
         path = read_config_path(domain="processed", key="cleansed_geographic_data_path") 
-        
-        # อ่าน CSV
         df = pd.read_csv(path)
-        
-        # แปลง Text (WKT) ให้เป็น Geometry Object
         df['geometry'] = df['geometry'].apply(wkt.loads)
-        
-        # สร้าง GeoDataFrame
         gdf = gpd.GeoDataFrame(df, geometry='geometry')
-        
-        # ตั้งค่าระบบพิกัด (ปกติข้อมูลจากเว็บมักเป็น EPSG:4326 - Lat/Long)
         gdf.set_crs(epsg=4326, inplace=True)
-        
         return gdf
     except Exception as e:
-        # กรณีโหลดไม่ได้ หรือไม่มีไฟล์
         return None
 
 # -----------------------------------------------------------------------------
@@ -185,73 +173,57 @@ def render_input_section(predictor):
     st.markdown("---")
 
     # ---------------------------------------------------------
-    # ส่วนที่ 2: Location & Details (Single Column Flow)
+    # 2. Location & Details
     # ---------------------------------------------------------
     st.subheader("2. Location & Details")
     
-    # --- 2.1 MAP SECTION (Full Width) ---
+    # --- MAP SECTION ---
     st.markdown("**📍 Point Selection**")
     
-    # โหลด Geo Data
     gdf = load_geo_data()
     
-    # Default Center (กรุงเทพ)
     map_center = [13.7563, 100.5018]
     zoom_level = 11
     highlight_layer = None
 
-    # Logic: ถ้าเลือกเขตแล้ว ให้ Filter GeoDataFrame และ Zoom ไปที่นั่น
     if gdf is not None and selected_district != "--- Select District ---":
         try:
-            # Filter ตามเขต
             target_area = gdf[gdf['district_name'] == selected_district]
-            
-            # ถ้าเลือกแขวงด้วย ให้ Filter แขวงเพิ่ม (ถ้ามีข้อมูล)
             if selected_subdistrict:
                 sub_target = target_area[target_area['subdistrict_name'] == selected_subdistrict]
                 if not sub_target.empty:
                     target_area = sub_target
             
             if not target_area.empty:
-                # หาจุดกึ่งกลาง (Centroid) เพื่อตั้ง Map Center
                 centroid = target_area.geometry.centroid.iloc[0]
                 map_center = [centroid.y, centroid.x]
-                zoom_level = 14 # Zoom เข้าไปใกล้ๆ
+                zoom_level = 14 
                 
-                # สร้าง Layer เส้นขอบเขต
                 highlight_layer = folium.GeoJson(
                     target_area,
                     name="Selected Area",
-                    style_function=lambda x: {
-                        'fillColor': '#ffaf00', 
-                        'color': 'red', 
-                        'weight': 3, 
-                        'fillOpacity': 0.2
-                    },
+                    style_function=lambda x: {'fillColor': '#ffaf00', 'color': 'red', 'weight': 3, 'fillOpacity': 0.2},
                     tooltip=folium.GeoJsonTooltip(fields=['district_name', 'subdistrict_name'])
                 )
         except Exception as e:
-            # กัน Error กรณีชื่อใน CSV กับ Dropdown ไม่ตรงกันเป๊ะ
             print(f"Map Filter Error: {e}")
 
-    # สร้าง Map
     m = folium.Map(location=map_center, zoom_start=zoom_level)
     m.add_child(folium.LatLngPopup())
     
-    # ใส่ Highlight Layer ถ้ามี
     if highlight_layer:
         highlight_layer.add_to(m)
     
     map_data = st_folium(
         m, 
-        height=400, 
+        height=500, 
         width=None, 
         key="main_map", 
         returned_objects=["last_clicked"] 
     )
     st.session_state.temp_map_data = map_data
 
-    # --- CONFIRMATION BUTTON & LOGIC ---
+    # --- CONFIRMATION ---
     if map_data and map_data.get("last_clicked"):
         click_lat = map_data["last_clicked"]["lat"]
         click_lng = map_data["last_clicked"]["lng"]
@@ -264,7 +236,7 @@ def render_input_section(predictor):
     
     add_margin(t=20)
     
-    # --- 2.2 COORDINATES STATUS (Read-Only) ---
+    # --- COORDINATES STATUS (Read-Only) ---
     st.markdown("**🛠️ Coordinates Status**")
     
     if st.session_state["confirmed_lat"] is not None:
@@ -278,7 +250,7 @@ def render_input_section(predictor):
     add_margin(t=20)
     st.markdown("---")
 
-    # --- 2.3 DETAILS FORM ---
+    # --- DETAILS FORM ---
     st.markdown("**📋 Case Details**")
     
     selected_orgs = st.multiselect("Organization", predictor.organizations, placeholder="Select organizations...")
