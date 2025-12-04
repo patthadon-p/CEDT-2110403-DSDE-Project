@@ -327,7 +327,7 @@ def render_map_visualizer(df_cleansed: pd.DataFrame, pop_data: dict, type_filter
         .head(10)
         [["subdistrict-name", "probperpop"]]
     )
-    top10_perpop.columns = ["แขวง", "ปัญหาต่อประชากร 1,000 คน"] # Rename for display
+    top10_perpop.columns = ["แขวง", "ความรุนแรง"] # Rename for display
 
     # 3. Add Key Metrics (KPIs)
     total_issues = len(dfwithpop)
@@ -387,7 +387,7 @@ def render_map_visualizer(df_cleansed: pd.DataFrame, pop_data: dict, type_filter
         st.subheader(f"2. แขวงที่มีความรุนแรงของปัญหา{type_label}สูงที่สุด")
         st.dataframe(
             top10_perpop.style.format({
-                "ปัญหาต่อประชากร 1,000 คน": "{:,.2f}"
+                "ความรุนแรง": "{:,.2f}"
             }), 
             use_container_width=True
         )
@@ -395,8 +395,14 @@ def render_map_visualizer(df_cleansed: pd.DataFrame, pop_data: dict, type_filter
     # **คอลัมน์คู่ col1, col2 สิ้นสุดที่นี่**
     st.markdown("---") 
     
-    # --- Section 4: Scatter Map (Full Width) ---
+    # --- Section 4: Heatmap (NEW) ---
     type_label = type_filter if type_filter != "ทั้งหมด" else ""
+    st.header(f"🔥 แผนที่ความหนาแน่นของปัญหา{type_label} (Heatmap)")
+    heatmap = plot_heatmap(dfwithpop) 
+    st.pydeck_chart(heatmap, use_container_width=True, height=500)
+    st.markdown("---")
+    
+    # --- Section 5: Scatter Map (Full Width) ---
     st.header(f"📍 แผนที่แสดงจุดที่เกิดปัญหา{type_label} (Scatter Map)")
     scatter_map = plot_scatter_map(dfwithpop) 
     st.pydeck_chart(scatter_map, use_container_width=True, height=500)
@@ -558,11 +564,70 @@ def plot_choroplethmap_perpop(df: pd.DataFrame, region_path: str, type_filter: s
     m = gdf_merged.explore(
         column="probperpop", cmap="Oranges", legend=True, scheme="natural_breaks",
         location=[center_latlon.y, center_latlon.x], zoom_start=10,
-        tooltip=["subdistrict_name", "probperpop", "count"],
+        tooltip=["subdistrict_name", "probperpop"],
         min_zoom=10, max_zoom=16, map_kwds={"bounds": bounds}
     )
     m.options.update({"zoomControl": True, "scrollWheelZoom": True, "dragging": True})
     return m
+
+# Insert this function into the '4. PLOTTING FUNCTIONS' section
+
+def plot_heatmap(
+    df: pd.DataFrame,
+    lon_col: str = "longitude",
+    lat_col: str = "latitude",
+    max_points: int = 100_000,
+):
+    """Creates a Pydeck HeatmapLayer visualization."""
+    
+    # --- 1. Sampling and Data Preparation ---
+    if len(df) > max_points:
+        st.warning(f"Dataset too large ({len(df):,} rows). Showing a sample of {max_points:,} points.")
+        df_plot = df.sample(max_points).copy()
+    else:
+        df_plot = df.copy()
+        
+    # Ensure coordinates are numeric
+    df_plot = df_plot.dropna(subset=[lat_col, lon_col])
+
+    cols_to_select = [lon_col, lat_col, "subdistrict", "district", "day", "month", "year", "comment", "color_rgb", 'type_cleaned']
+    df_small = df_plot[[col for col in cols_to_select if col in df_plot.columns]]
+
+
+    # --- 2. Pydeck Layer Configuration ---
+    # Heatmap visualization uses the location data and weights. 
+    # Since we are counting complaints, we don't need a weight column 
+    # (Pydeck implicitly weights each point as 1).
+    
+    heatmap_layer = pdk.Layer(
+        "HeatmapLayer",
+        data=df_small,
+        opacity=1,
+        # Get coordinates for the heatmap
+        get_position=[lon_col, lat_col],
+        radius_pixels=25, 
+        threshold=0.5,
+    )
+
+    # --- 3. View State and Deck ---
+    if df_plot.empty:
+        # Default view state if no data
+        view_state = pdk.ViewState(latitude=13.75, longitude=100.51, zoom=9.5, pitch=0)
+    else:
+        # Center the map on the data
+        view_state = pdk.ViewState(
+            latitude=df_plot[lat_col].mean(),
+            longitude=df_plot[lon_col].mean(),
+            zoom=9.5,
+            pitch=0,
+        )
+
+    deck = pdk.Deck(
+        layers=[heatmap_layer],
+        initial_view_state=view_state,
+        map_style="dark",
+    )
+    return deck
 
 def plot_scatter_map(
     df: pd.DataFrame,
