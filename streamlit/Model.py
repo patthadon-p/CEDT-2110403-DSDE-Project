@@ -24,7 +24,6 @@ def load_and_process_data():
     """
     # 1. Load Data
     path = read_config_path(domain="processed", key="cleansed_data_path")
-    # Added 'organization' to columns needed
     cols_needed = ["district", "subdistrict", "type", "organization"]
     df = pd.read_csv(path, usecols=lambda c: c in cols_needed)
     
@@ -46,8 +45,7 @@ def load_and_process_data():
     )
     problem_types = sorted(unique_types[unique_types != ""].unique().tolist())
 
-    # 4. Process Organizations (NEW)
-    # Logic: Split string by comma, remove brackets, get unique values
+    # 4. Process Organizations
     unique_orgs = (
         df["organization"].astype(str)
         .str.replace(r"[{}]", "", regex=True)
@@ -55,7 +53,6 @@ def load_and_process_data():
         .explode()
         .str.strip()
     )
-    # Filter empty and sort
     organizations = sorted(unique_orgs[unique_orgs != ""].unique().tolist())
     
     return district_map, problem_types, organizations
@@ -68,37 +65,49 @@ class TraffyTimePredictor:
         # Load all data components
         self.district_map, self.problem_types, self.organizations = load_and_process_data()
 
-    def prepare_features(self, district, subdistrict, problem_type, organization, report_date, lat, long):
+    def _create_sparse_vector_string(self, size, indices):
+        """Helper to format list of indices into Spark SparseVector string format"""
+        # Sort and remove duplicates
+        unique_indices = sorted(list(set(indices)))
+        # Create values list (1.0 for each active index)
+        values = [1.0] * len(unique_indices)
+        return f"({size}, {unique_indices}, {values})"
+
+    def prepare_features(self, district, subdistrict, problem_types_list, organization_list, report_date, lat, long):
         """
-        Transforms raw inputs into the specific model schema including Organization.
+        Transforms raw inputs into the specific model schema.
+        Handles MULTIPLE selections for Types and Organizations.
         """
         # 1. Time Features
         ts_month = int(report_date.month)
         ts_year = int(report_date.year)
         
         # 2. Address Vector (District + Subdistrict)
-        # Simulation: Hash inputs to mimic Spark's SparseVector hashing
+        # Simulation: Hash inputs
         d_hash = hash(district) % 2048
         s_hash = hash(subdistrict) % 2048
-        indices = sorted([d_hash, s_hash])
-        # Format: (Size, [Indices], [Values])
-        address_vec = f"(2048, {indices}, [1.0, 1.0])" 
+        address_vec = self._create_sparse_vector_string(2048, [d_hash, s_hash])
         
-        # 3. Type Vector
-        try:
-            t_idx = self.problem_types.index(problem_type)
-        except:
-            t_idx = 0
-        type_vec = f"(25, [{t_idx}], [1.0])"
+        # 3. Type Vector (Handle Multiple)
+        type_indices = []
+        for t in problem_types_list:
+            try:
+                idx = self.problem_types.index(t)
+                type_indices.append(idx)
+            except:
+                pass # Skip unknown types
         
-        # 4. Organization Vector (NEW)
-        # We try to find the index of the selected org or use hash if generic
-        try:
+        # Create Sparse Vector string (Size 25 is arbitrary based on previous examples)
+        type_vec = self._create_sparse_vector_string(25, type_indices)
+        
+        # 4. Organization Vector (Handle Multiple)
+        org_indices = []
+        for org in organization_list:
             # Simulation: using hash to get a consistent index within 1786 size
-            org_idx = hash(organization) % 1786
-        except:
-            org_idx = 0
-        org_vec = f"(1786, [{org_idx}], [1.0])"
+            idx = hash(org) % 1786
+            org_indices.append(idx)
+            
+        org_vec = self._create_sparse_vector_string(1786, org_indices)
         
         # 5. LatLong Vector
         latlong_vec = [float(lat), float(long)]
@@ -109,7 +118,7 @@ class TraffyTimePredictor:
             "timestamp_year": ts_year,
             "address_encoded": address_vec,
             "latlong_encoded": latlong_vec,
-            "organization_encoded": org_vec,  # Added
+            "organization_encoded": org_vec,
             "type_encoded": type_vec
         }
 
@@ -117,18 +126,25 @@ class TraffyTimePredictor:
         """
         Simulates the model inference (GBTRegressor).
         """
-        # Mock Logic for prediction visualization
-        try:
-            p_type_idx = int(model_input["type_encoded"].split('[')[1].split(']')[0])
-        except:
-            p_type_idx = 0
-            
+        # Mock Logic
         base_days = 3.0
         
-        # Mock specific logic
-        if p_type_idx % 2 != 0: 
-            base_days += 7.0 
-        
+        # Extract indices string to check for specific types (Mocking logic)
+        # format: "(25, [1, 2], [1.0, 1.0])"
+        try:
+            type_str = model_input["type_encoded"]
+            # Extract the middle part: [1, 2]
+            indices_part = type_str.split('[')[1].split(']')[0]
+            indices = [int(x.strip()) for x in indices_part.split(',') if x.strip()]
+            
+            # Logic: If ANY selected type is "slow" (simulated by odd index), add time
+            for idx in indices:
+                if idx % 2 != 0:
+                    base_days += 5.0
+                    break # Add penalty once
+        except:
+            pass
+            
         import random
         variance = random.uniform(-1, 5)
         final_prediction = max(1, base_days + variance)
@@ -139,9 +155,6 @@ class TraffyTimePredictor:
             
         return round(final_prediction, 1), level
 
-# -----------------------------------------------------------------------------
-# 3. PAGE RENDERER (UI)
-# -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 # 3. PAGE RENDERER (UI)
 # -----------------------------------------------------------------------------
@@ -184,36 +197,33 @@ def render_prediction_page():
         selected_subdistrict = st.sidebar.selectbox("Subdistrict (แขวง)", sub_options)
         is_ready = True
 
-    # --- COORDINATES SECTION (UPDATED) ---
+    # Coordinates
     st.sidebar.markdown("##### Coordinates (พิกัด)")
     c1, c2 = st.sidebar.columns(2)
-    
-    # ปรับปรุง: value=None (ให้ว่าง), format="%.6f" (ทศนิยม 6 ตำแหน่งเพื่อความแม่นยำ), ใส่ placeholder
     lat = c1.number_input(
-        "Latitude", 
-        min_value=-90.0, 
-        max_value=90.0, 
-        value=None,  # เริ่มต้นเป็นค่าว่าง
-        format="%.6f", 
-        placeholder="13.xxxx"
+        "Latitude", min_value=-90.0, max_value=90.0, value=None, 
+        format="%.6f", placeholder="13.xxxx"
     )
-    
     long = c2.number_input(
-        "Longitude", 
-        min_value=-180.0, 
-        max_value=180.0, 
-        value=None,  # เริ่มต้นเป็นค่าว่าง
-        format="%.6f", 
-        placeholder="100.xxxx"
+        "Longitude", min_value=-180.0, max_value=180.0, value=None, 
+        format="%.6f", placeholder="100.xxxx"
     )
 
-    # 3. ORGANIZATION
+    # 3. ORGANIZATION (Multi-Select)
     st.sidebar.subheader("3. Responsible Org")
-    selected_org = st.sidebar.selectbox("Organization (หน่วยงาน)", predictor.organizations)
+    selected_orgs = st.sidebar.multiselect(
+        "Organization (เลือกได้มากกว่า 1)", 
+        predictor.organizations,
+        placeholder="Select organizations..."
+    )
 
-    # 4. TYPE
+    # 4. TYPE (Multi-Select)
     st.sidebar.subheader("4. Problem Type")
-    selected_type = st.sidebar.selectbox("Type (ประเภท)", predictor.problem_types)
+    selected_types = st.sidebar.multiselect(
+        "Type (เลือกได้มากกว่า 1)", 
+        predictor.problem_types,
+        placeholder="Select problem types..."
+    )
     
     st.sidebar.markdown("---")
     
@@ -227,10 +237,14 @@ def render_prediction_page():
             st.warning("⚠️ กรุณาเลือก **เขต (District)** ให้เรียบร้อยก่อน")
         elif lat is None or long is None:
             st.warning("⚠️ กรุณาระบุ **พิกัด (Latitude และ Longitude)** ให้ครบถ้วน")
+        elif not selected_orgs:
+            st.warning("⚠️ กรุณาเลือก **หน่วยงาน (Organization)** อย่างน้อย 1 หน่วยงาน")
+        elif not selected_types:
+            st.warning("⚠️ กรุณาเลือก **ประเภทปัญหา (Type)** อย่างน้อย 1 ประเภท")
         else:
             # A. Prepare Data
             features = predictor.prepare_features(
-                selected_district, selected_subdistrict, selected_type, selected_org, report_date, lat, long
+                selected_district, selected_subdistrict, selected_types, selected_orgs, report_date, lat, long
             )
             
             # B. Run Prediction
@@ -279,7 +293,7 @@ def render_prediction_page():
                 """, language="json")
 
     elif not run_btn and (not is_ready or lat is None or long is None):
-        st.info("👈 กรุณากรอกข้อมูลใน Sidebar ทางซ้ายให้ครบถ้วน (เขต, แขวง, พิกัด)")
+        st.info("👈 กรุณากรอกข้อมูลใน Sidebar ทางซ้ายให้ครบถ้วน")
 
 if __name__ == "__main__":
     st.set_page_config(layout="wide", page_title="AI Time Predictor")
