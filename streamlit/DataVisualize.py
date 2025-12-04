@@ -203,8 +203,8 @@ class TraffyFilter:
         
         # --- Navigation ---
         page_options = {
-            "Map Visualizer": "Map",
-            "Data Analysis": "Analysis",
+            "Spatial Analysis": "Map",
+            "Scatter Analysis": "Scatter",
             "Line Chart": "Line"
         }
         selected_page = st.sidebar.radio(
@@ -268,9 +268,11 @@ class TraffyFilter:
 
 # --- Page 1: Map Visualizer (Traffy Map Visualize) ---
 def render_map_visualizer(df_cleansed: pd.DataFrame, pop_data: dict, type_filter: str, start_date: datetime.date, end_date: datetime.date):
-    st.title("🗺️ Bangkok Traffy Map Visualize")
+    st.title("🗺️ Bangkok Traffy Spatial Analysis")
+    st.markdown("---")
     
     # 1. Filter dataset and merge with population data
+    # ... (Filtering and merging logic remains the same) ...
     df_filtered_raw = df_cleansed[
         (df_cleansed["date"] >= pd.Timestamp(start_date)) & 
         (df_cleansed["date"] <= pd.Timestamp(end_date))
@@ -300,7 +302,8 @@ def render_map_visualizer(df_cleansed: pd.DataFrame, pop_data: dict, type_filter
         st.info("No data available for the selected filters.")
         return
 
-    # 2. Compute Top 10 Tables
+    # 2. Compute Top 10 Tables 
+    # ... (Top 10 logic remains the same) ...
     
     # Top 10 by Count
     top10_district = (
@@ -315,57 +318,104 @@ def render_map_visualizer(df_cleansed: pd.DataFrame, pop_data: dict, type_filter
     # Top 10 by Rate (Problems per Population)
     agg_rate_df = dfwithpop.groupby("subdistrict-name").agg(
         count=("subdistrict-name", "size"), 
-        total=("total", "mean") # Use mean since population should be constant per district/year
+        total=("total", "mean") 
     ).reset_index()
-    agg_rate_df["probperpop"] = agg_rate_df["count"] / agg_rate_df["total"].fillna(1) 
+    agg_rate_df["probperpop"] = (agg_rate_df["count"] / agg_rate_df["total"].fillna(1) * 1000).round(2) 
     
     top10_perpop = (
         agg_rate_df.sort_values(by="probperpop", ascending=False)
         .head(10)
         [["subdistrict-name", "probperpop"]]
     )
-    top10_perpop.columns = ["แขวง", "ปัญหา/ประชากร"]
+    top10_perpop.columns = ["แขวง", "ความรุนแรง"] # Rename for display
 
-    # 3. Layout: Maps and Top 10 Table
+    # 3. Add Key Metrics (KPIs)
+    total_issues = len(dfwithpop)
+    unique_districts = dfwithpop['district'].nunique()
+    
+    # 4. Layout: Key Metrics, Maps, and Top 10 Table
     type_label = type_filter if type_filter != "ทั้งหมด" else ""
-    col1, col2 = st.columns([3, 1])
     region_path = read_config_path(domain="processed", key="cleansed_geographic_data_path")
 
-    # --- Column 1: Maps ---
-    with col1:
-        # Heatmap (Count)
-        st.subheader(f"Heatmap แสดงจำนวนปัญหา{type_label}ในแต่ละแขวง")
-        heatmap = plot_heatmap(df=dfwithpop, region_path=region_path, type_filter=type_filter)
-        st_folium(heatmap, width='100%', height=400)
+    # --- Section 1: Key Metrics (KPIs) ---
+    st.header("🎯 Key Spatial Metrics")
+    kpi1, kpi2, kpi3 = st.columns(3)
+    
+    with kpi1:
+        st.metric("จำนวนปัญหาทั้งหมด", f"{total_issues:,}")
+    with kpi2:
+        st.metric("ช่วงเวลาการวิเคราะห์", f"{start_date.strftime('%Y-%m-%d')} - {end_date.strftime('%Y-%m-%d')}")
+    with kpi3:
+        st.metric("เขตที่ได้รับผลกระทบ", f"{unique_districts:,} เขต")
         
-        # Heatmap (Per Population)
-        st.subheader(f"Heatmap แสดงความรุนแรงปัญหา{type_label}ในแต่ละแขวง")
-        heatmapperpop = plot_heatmap_perpop(df=dfwithpop, region_path=region_path, type_filter=type_filter)
-        st_folium(heatmapperpop, width='100%', height=400)
+    st.markdown("---")
 
-        # Scatter Map
-        st.subheader(f"Scatter Map แสดงตำแหน่งต่างๆที่เกิดปัญหา{type_label}")
-        # Pass the full filtered dataframe for sampling inside the function
-        scatter_map = plot_scatter_map(dfwithpop) 
-        st.pydeck_chart(scatter_map, use_container_width=True, height=400)
+    # --- Section 2: Choropleth Maps and Top 10 Table (In 2 Columns) ---
+    # **เริ่มการแบ่ง 2 คอลัมน์**
+    col1, col2 = st.columns([3, 1])
 
-    # --- Column 2: Top 10 Districts ---
+    with col1:
+        st.header(f"🌎 แผนที่วิเคราะห์ปัญหา{type_label}ตามพื้นที่")
+        
+        # --- Choropleth 1: Count ---
+        st.subheader("จำนวนปัญหาต่อแขวง (Choropleth: Count)")
+        choroplethmap = plot_choroplethmap(df=dfwithpop, region_path=region_path, type_filter=type_filter)
+        st_folium(choroplethmap, width='100%', height=400)
+        
+        st.markdown("---") 
+        
+        # --- Choropleth 2: Per Population ---
+        st.subheader("ความรุนแรงของปัญหาต่อแขวง (Choropleth: Per Population)")
+        choroplethmapperpop = plot_choroplethmap_perpop(df=dfwithpop, region_path=region_path, type_filter=type_filter)
+        st_folium(choroplethmapperpop, width='100%', height=400)
+        # ไม่ต้องใส่ st.markdown("---") ตรงนี้แล้ว
+
+    # --- Section 3: Top 10 Tables (Right Column) ---
     with col2:
-        st.subheader(f"10 อันดับแขวงที่มีปัญหา{type_label}มากที่สุด")
-        st.dataframe(top10_district, use_container_width=True)
-        st.subheader(f"10 อันดับแขวงที่มีปัญหา{type_label}มากที่สุด (ความรุนแรง)")
-        st.dataframe(top10_perpop, use_container_width=True)
+        st.header("🏆 10 อันดับพื้นที่วิกฤต")
+        
+        # Table 1: Top 10 by Count
+        st.subheader(f"1. แขวงที่มีจำนวนปัญหา{type_label}มากที่สุด")
+        st.dataframe(
+            top10_district.style.format({
+                "จำนวนปัญหา": "{:,.0f}"
+            }), 
+            use_container_width=True
+        )
+        
+        # Table 2: Top 10 by Rate
+        st.subheader(f"2. แขวงที่มีความรุนแรงของปัญหา{type_label}สูงที่สุด")
+        st.dataframe(
+            top10_perpop.style.format({
+                "ความรุนแรง": "{:,.2f}"
+            }), 
+            use_container_width=True
+        )
 
+    # **คอลัมน์คู่ col1, col2 สิ้นสุดที่นี่**
+    st.markdown("---") 
+    
+    # --- Section 4: Heatmap (NEW) ---
+    type_label = type_filter if type_filter != "ทั้งหมด" else ""
+    st.header(f"🔥 แผนที่ความหนาแน่นของปัญหา{type_label} (Heatmap)")
+    heatmap = plot_heatmap(dfwithpop) 
+    st.pydeck_chart(heatmap, use_container_width=True, height=500)
+    st.markdown("---")
+    
+    # --- Section 5: Scatter Map (Full Width) ---
+    st.header(f"📍 แผนที่แสดงจุดที่เกิดปัญหา{type_label} (Scatter Map)")
+    scatter_map = plot_scatter_map(dfwithpop) 
+    st.pydeck_chart(scatter_map, use_container_width=True, height=500)
+    
 # --- Page 2: Data Analysis (Datascatter) ---
 def render_analysis_page(df_filtered: pd.DataFrame, df_score: pd.DataFrame, type_filter: str, df_time_only: pd.DataFrame):
     st.title("📊 Bangkok Traffy Data Analysis")
     visualizer = TraffyVisualizer()
 
-    # 1. Timeline (applies type and date filter)
-    visualizer.plot_daily_counts(df_filtered, type_filter)
-    st.markdown("---")
+    # REMOVED: Timeline (plot_daily_counts) is now in render_line_chart_page
+    # st.markdown("---") # Keep for spacing if necessary, but removed for clean-up
 
-    # 2. Score vs Complaints & Quality Dimensions (Applies type and date filter)
+    # 1. Score vs Complaints & Quality Dimensions (Applies type and date filter)
     c1, c2 = st.columns(2)
     with c1:
         st.subheader("📌 Overview: Score vs Complaints")
@@ -377,7 +427,7 @@ def render_analysis_page(df_filtered: pd.DataFrame, df_score: pd.DataFrame, type
     
     st.markdown("---")
 
-    # 3. Correlations & Scatter Matrix (Applies date filter only - uses df_time_only)
+    # 2. Correlations & Scatter Matrix (Applies date filter only - uses df_time_only)
     # Using Tabs hides the large/complex charts so they don't clutter the screen
     t1, t2, t3 = st.tabs(["🔥 Correlation (Metric)", "🔥 Correlation (Type)", "📊 Scatter Matrix"])
 
@@ -394,9 +444,16 @@ def render_analysis_page(df_filtered: pd.DataFrame, df_score: pd.DataFrame, type
         visualizer.plot_scatter_matrix(df_time_only)
 
 # --- Page 3: Line Chart (Line Chart Viewer) ---
-def render_line_chart_page(df_cleansed: pd.DataFrame):
+def render_line_chart_page(df_cleansed: pd.DataFrame, df_filtered: pd.DataFrame, type_filter: str):
     st.title("📈 Bangkok Traffy Line Chart Viewer")
     
+    # 1. Daily Counts (Timeline) - MOVED FROM ANALYSIS PAGE
+    visualizer = TraffyVisualizer()
+    visualizer.plot_daily_counts(df_filtered, type_filter)
+    st.markdown("---")
+
+    # 2. Monthly Trend by Type (Original LineChartVisualizer)
+    st.subheader("Monthly Problem Counts by Type (All Types)")
     try:
         # Renaming columns back is still necessary if the external class is being used
         # We rename 'year' back to the name the original LineChartVisualizer expected: 'timestamp_year'
@@ -425,7 +482,6 @@ def render_line_chart_page(df_cleansed: pd.DataFrame):
         st.error(f"Error rendering Line Chart: {e}. Please check the `LineChartVisualizer` definition.")
         st.info("Debugging note: The DataFrame passed has columns: " + ", ".join(df_cleansed.columns))
 
-
 # -----------------------------------------------------------------------------
 # 4. PLOTTING FUNCTIONS (Copied from original for functionality)
 # -----------------------------------------------------------------------------
@@ -433,7 +489,7 @@ def render_line_chart_page(df_cleansed: pd.DataFrame):
 # --- Plotting Helpers for Map Visualizer ---
 # Note: These functions require geopandas and shapely to run.
 
-def plot_heatmap(df: pd.DataFrame, region_path: str, type_filter: str | None = None, value_column: str = "count"):
+def plot_choroplethmap(df: pd.DataFrame, region_path: str, type_filter: str | None = None, value_column: str = "count"):
     df_points = df.copy()
     if type_filter and type_filter != "ทั้งหมด":
         df_points = df_points[df_points["type_cleaned"].apply(lambda x: type_filter in x)]
@@ -474,7 +530,7 @@ def plot_heatmap(df: pd.DataFrame, region_path: str, type_filter: str | None = N
     m.options.update({"zoomControl": True, "scrollWheelZoom": True, "dragging": True})
     return m
 
-def plot_heatmap_perpop(df: pd.DataFrame, region_path: str, type_filter: str | None = None, value_column: str = "count"):
+def plot_choroplethmap_perpop(df: pd.DataFrame, region_path: str, type_filter: str | None = None, value_column: str = "count"):
     df_region = pd.read_csv(region_path)
     df_region["geometry"] = df_region["geometry"].map(wkt.loads)
     gdf_region = gpd.GeoDataFrame(df_region, geometry="geometry", crs="EPSG:4326")
@@ -508,37 +564,167 @@ def plot_heatmap_perpop(df: pd.DataFrame, region_path: str, type_filter: str | N
     m = gdf_merged.explore(
         column="probperpop", cmap="Oranges", legend=True, scheme="natural_breaks",
         location=[center_latlon.y, center_latlon.x], zoom_start=10,
-        tooltip=["subdistrict_name", "probperpop", "count"],
+        tooltip=["subdistrict_name", "probperpop"],
         min_zoom=10, max_zoom=16, map_kwds={"bounds": bounds}
     )
     m.options.update({"zoomControl": True, "scrollWheelZoom": True, "dragging": True})
     return m
 
-def plot_scatter_map(df: pd.DataFrame, max_points: int = 100_000, lon_col: str = "longitude", lat_col: str = "latitude"):
+# Insert this function into the '4. PLOTTING FUNCTIONS' section
+
+def plot_heatmap(
+    df: pd.DataFrame,
+    lon_col: str = "longitude",
+    lat_col: str = "latitude",
+    max_points: int = 100_000,
+):
+    """Creates a Pydeck HeatmapLayer visualization."""
+    
+    # --- 1. Sampling and Data Preparation ---
     if len(df) > max_points:
         st.warning(f"Dataset too large ({len(df):,} rows). Showing a sample of {max_points:,} points.")
-        df_plot = df.sample(max_points)
+        df_plot = df.sample(max_points).copy()
+    else:
+        df_plot = df.copy()
+        
+    # Ensure coordinates are numeric
+    df_plot = df_plot.dropna(subset=[lat_col, lon_col])
+
+    cols_to_select = [lon_col, lat_col, "subdistrict", "district", "day", "month", "year", "comment", "color_rgb", 'type_cleaned']
+    df_small = df_plot[[col for col in cols_to_select if col in df_plot.columns]]
+
+
+    # --- 2. Pydeck Layer Configuration ---
+    # Heatmap visualization uses the location data and weights. 
+    # Since we are counting complaints, we don't need a weight column 
+    # (Pydeck implicitly weights each point as 1).
+    
+    heatmap_layer = pdk.Layer(
+        "HeatmapLayer",
+        data=df_small,
+        opacity=1,
+        # Get coordinates for the heatmap
+        get_position=[lon_col, lat_col],
+        radius_pixels=25, 
+        threshold=0.5,
+    )
+
+    # --- 3. View State and Deck ---
+    if df_plot.empty:
+        # Default view state if no data
+        view_state = pdk.ViewState(latitude=13.75, longitude=100.51, zoom=9.5, pitch=0)
+    else:
+        # Center the map on the data
+        view_state = pdk.ViewState(
+            latitude=df_plot[lat_col].mean(),
+            longitude=df_plot[lon_col].mean(),
+            zoom=9.5,
+            pitch=0,
+        )
+
+    deck = pdk.Deck(
+        layers=[heatmap_layer],
+        initial_view_state=view_state,
+        map_style="dark",
+    )
+    return deck
+
+def plot_scatter_map(
+    df: pd.DataFrame,
+    max_points: int = 100_000,
+    lon_col: str = "longitude",
+    lat_col: str = "latitude",
+    type_col: str = "type_clean", # CHANGED: Use 'type_clean' for single-type coloring
+):
+    # --- 1. Sampling and Data Preparation ---
+    if len(df) > max_points:
+        st.warning(f"Dataset too large ({len(df):,} rows). Showing a sample of {max_points:,} points.")
+        df_plot = df.sample(max_points).copy()
     else:
         df_plot = df.copy()
 
-    df_small = df_plot[[lon_col, lat_col, "subdistrict", "district", "day", "month", "year", "comment"]]
-    
+    # --- 2. Color Mapping Setup ---
+    # Define a simple color mapping for example types. 
+    # NOTE: You should expand this to cover all types in your data.
+    COLOR_MAP = {
+        # โครงสร้างพื้นฐาน/ถนน - ส้มเข้ม
+        "ถนน": [255, 140, 0], "ทางเท้า": [255, 140, 0], "สะพาน": [255, 140, 0], 
+        "กีดขวาง": [255, 140, 0], "ป้าย": [255, 140, 0], "ป้ายจราจร": [255, 140, 0],
+        
+        # สิ่งแวดล้อม/สุขภาวะ - เขียวเข้ม
+        "ความสะอาด": [34, 139, 34], "ห้องน้ำ": [34, 139, 34], "คลอง": [34, 139, 34], 
+        "PM2.5": [34, 139, 34], "เสียงรบกวน": [34, 139, 34],
+
+        # น้ำ/สาธารณูปโภค - ฟ้าอ่อน
+        "น้ำท่วม": [0, 191, 255], "ท่อระบายน้ำ": [0, 191, 255], "สายไฟ": [0, 191, 255], 
+        "แสงสว่าง": [0, 191, 255],
+
+        # สังคม/ความปลอดภัย - แดง
+        "ความปลอดภัย": [255, 0, 0], "สัตว์จรจัด": [255, 0, 0], "คนจรจัด": [255, 0, 0],
+
+        # การบริการ/อื่นๆ - ชมพูเข้ม
+        "การเดินทาง": [255, 20, 147], "ต้นไม้": [255, 20, 147],
+
+        # การสื่อสาร - น้ำเงินอมเทา
+        "ร้องเรียน": [70, 130, 180], "สอบถาม": [70, 130, 180], "เสนอแนะ": [70, 130, 180],
+        
+        # ค่าว่าง
+        "nan": [192, 192, 192],       
+        "Other": [128, 128, 128],     
+    }
+
+    # Function to get color from the map, defaulting to 'Other' color
+    def get_color(type_value):
+        # The 'type_clean' column might have None/NaN, use 'Other' if so
+        if pd.isna(type_value):
+            return COLOR_MAP["Other"]
+        # Use .get() with fallback to handle types not explicitly in COLOR_MAP
+        return COLOR_MAP.get(str(type_value).strip(), COLOR_MAP["Other"])
+
+    # **FIX:** Apply the color function to the single-type column ('type_clean'), 
+    # not the tuple column ('type_cleaned').
+    df_plot["color_rgb"] = df_plot[type_col].apply(get_color)
+
+    # Select the columns needed for the map and tooltip
+    cols_to_select = [lon_col, lat_col, "subdistrict", "district", "day", "month", "year", "comment", "color_rgb", type_col]
+    df_small = df_plot[[col for col in cols_to_select if col in df_plot.columns]]
+
+    # --- 3. Pydeck Layer Configuration ---
     scatter_layer = pdk.Layer(
-        "ScatterplotLayer", df_small,
-        get_position=[lon_col, lat_col], get_radius=100,
-        get_fill_color=[255, 0, 0], pickable=True, opacity=0.5,
+        "ScatterplotLayer",
+        df_small,
+        get_position=[lon_col, lat_col],
+        get_radius=100,
+        # **Use the 'color_rgb' column for coloring**
+        get_fill_color="color_rgb",
+        pickable=True,
+        opacity=0.7, 
     )
 
+    # --- 4. View State and Deck ---
     view_state = pdk.ViewState(
-        latitude=df_plot[lat_col].mean(), longitude=df_plot[lon_col].mean(),
-        zoom=9.5, pitch=0,
+        latitude=df_plot[lat_col].mean(),
+        longitude=df_plot[lon_col].mean(),
+        zoom=9.5,
+        pitch=0,
     )
 
+    # Update tooltip to include the 'type_clean' information
     deck = pdk.Deck(
-        layers=[scatter_layer], initial_view_state=view_state,
-        tooltip={"text": "{subdistrict} {district}\n{day}/{month}/{year}\n{comment}"},
+        layers=[scatter_layer],
+        initial_view_state=view_state,
+        tooltip={
+            "html": (
+                "<b>Type:</b> {" + type_col + "}<br/>"
+                "<b>Location:</b> {subdistrict} {district}<br/>"
+                "<b>Date:</b> {day}/{month}/{year}<br/>"
+                "<b>Comment:</b> {comment}"
+            ),
+            "style": {"color": "white"}
+        },
     )
     return deck
+
 
 # --- Plotting Helpers for Data Analysis ---
 class TraffyVisualizer:
@@ -546,7 +732,7 @@ class TraffyVisualizer:
     @staticmethod
     def plot_daily_counts(df: pd.DataFrame, type_label: str):
         label = type_label if type_label != "ทั้งหมด" else "ทั้งหมด"
-        st.subheader(f"📈 Timeline: {label}")
+        st.subheader(f"Timeline: {label}")
         
         daily_counts = (
             df.groupby(["year", "month", "day"]).size().reset_index(name="count")
@@ -791,12 +977,13 @@ class TraffyApp:
         # Content Rendering based on Navigation
         if selected_page == "Map":
             render_map_visualizer(self.df_cleansed, self.pop_data, type_filter, start_date, end_date)
-        elif selected_page == "Analysis":
+        elif selected_page == "Scatter":
+            # Pass df_filtered and df_time_only
             render_analysis_page(df_filtered, self.df_score, type_filter, df_time_only)
         elif selected_page == "Line":
-            # Note: The Line Chart original code didn't use the filters, 
-            # so we pass the full cleansed data as originally intended.
-            render_line_chart_page(self.df_cleansed)
+            # Pass df_filtered (for the new daily counts chart) and type_filter
+            # Note: The Line Chart original code still uses full cleansed data
+            render_line_chart_page(self.df_cleansed, df_filtered, type_filter)
 
 
 if __name__ == "__main__":
