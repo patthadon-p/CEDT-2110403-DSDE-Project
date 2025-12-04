@@ -48,6 +48,9 @@ os.environ["JAVA_HOME"] = JAVA_HOME
 # Update system PATH
 os.environ["PATH"] += os.pathsep + os.path.join(HADOOP_HOME, "bin")
 
+os.environ["SPARK_LOCAL_IP"] = "127.0.0.1"
+os.environ["PYSPARK_SUBMIT_ARGS"] = "--conf spark.driver.host=127.0.0.1 pyspark-shell"
+
 
 def create_spark_session(
     app_name: str | None = None,
