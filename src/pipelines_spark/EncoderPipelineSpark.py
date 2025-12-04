@@ -15,6 +15,7 @@ EncoderPipelineSpark
 
 # Import necessary modules
 from pyspark.ml import Transformer
+from pyspark.ml.feature import CountVectorizer  # noqa: F401
 from pyspark.sql import DataFrame
 
 # Other Encoder
