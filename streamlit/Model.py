@@ -9,6 +9,8 @@ import folium
 from streamlit_folium import st_folium
 import geopandas as gpd
 from shapely import wkt
+from shapely.geometry import Point
+from streamlit_js_eval import get_geolocation
 
 # --- Import Utility ---
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -18,27 +20,19 @@ if project_root not in sys.path:
 from src.utils import read_config_path
 
 # -----------------------------------------------------------------------------
-# 0. HELPER: Custom Margin
+# 0. HELPER
 # -----------------------------------------------------------------------------
 def add_margin(t=0, r=0, b=0, l=0):
-    st.markdown(f"""
-        <div style='
-            margin-top: {t}px;
-            margin-right: {r}px;
-            margin-bottom: {b}px;
-            margin-left: {l}px;
-        '></div>
-    """, unsafe_allow_html=True)
+    st.markdown(f"<div style='margin:{t}px {r}px {b}px {l}px'></div>", unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
-# 1. DATA LOADER (Cached)
+# 1. DATA LOADER
 # -----------------------------------------------------------------------------
 @st.cache_data(show_spinner=False)
 def load_and_process_data():
-    """Loads standard dropdown data."""
     path = read_config_path(domain="processed", key="cleansed_data_path")
-    cols_needed = ["district", "subdistrict", "type", "organization"]
-    df = pd.read_csv(path, usecols=lambda c: c in cols_needed)
+    cols = ["district", "subdistrict", "type", "organization"]
+    df = pd.read_csv(path, usecols=lambda c: c in cols)
     
     district_map = (
         df.dropna(subset=["district", "subdistrict"])
@@ -47,20 +41,14 @@ def load_and_process_data():
         .to_dict()
     )
     
-    def clean_and_explode(col_name):
-        s = df[col_name].astype(str).str.replace(r"[{}]", "", regex=True).str.split(",").explode().str.strip()
+    def clean_explode(c):
+        s = df[c].astype(str).str.replace(r"[{}]", "", regex=True).str.split(",").explode().str.strip()
         return sorted(s[s != ""].unique().tolist())
 
-    problem_types = clean_and_explode("type")
-    organizations = clean_and_explode("organization")
-    
-    return district_map, problem_types, organizations
+    return district_map, clean_explode("type"), clean_explode("organization")
 
 @st.cache_data(show_spinner=False)
 def load_geo_data():
-    """
-    Loads geometry data from cleansed_geo.csv and converts to GeoDataFrame.
-    """
     try:
         path = read_config_path(domain="processed", key="cleansed_geographic_data_path") 
         df = pd.read_csv(path)
@@ -68,301 +56,298 @@ def load_geo_data():
         gdf = gpd.GeoDataFrame(df, geometry='geometry')
         gdf.set_crs(epsg=4326, inplace=True)
         return gdf
-    except Exception as e:
-        return None
+    except: return None
+
+def find_location_from_coords(lat, lng):
+    gdf = load_geo_data()
+    if gdf is None: return None, None
+    point = Point(lng, lat)
+    match = gdf[gdf.geometry.contains(point)]
+    if not match.empty:
+        return match.iloc[0]['district_name'], match.iloc[0]['subdistrict_name']
+    return None, None
 
 # -----------------------------------------------------------------------------
-# 2. MODEL LOGIC CLASS
+# 2. STATE MANAGEMENT
+# -----------------------------------------------------------------------------
+def handle_pending_updates():
+    if "pending_coords" in st.session_state:
+        lat = st.session_state.pending_coords["lat"]
+        lng = st.session_state.pending_coords["lng"]
+        src = st.session_state.pending_coords["source"]
+        
+        st.session_state.update({"confirmed_lat": lat, "confirmed_long": lng, "location_source": src})
+        
+        d, s = find_location_from_coords(lat, lng)
+        if d and s:
+            st.session_state["sb_district"] = d
+            st.session_state["sb_subdistrict"] = s
+            st.session_state["geo_match_found"] = True
+        else:
+            st.session_state["geo_match_found"] = False
+        
+        del st.session_state["pending_coords"]
+
+# -----------------------------------------------------------------------------
+# 3. MODEL LOGIC
 # -----------------------------------------------------------------------------
 class TraffyTimePredictor:
     def __init__(self):
-        self.district_map, self.problem_types, self.organizations = load_and_process_data()
+        self.d_map, self.p_types, self.orgs = load_and_process_data()
 
-    def _create_sparse_vector_string(self, size, indices):
-        unique_indices = sorted(list(set(indices)))
-        values = [1.0] * len(unique_indices)
-        return f"({size}, {unique_indices}, {values})"
+    def _sparse_vec(self, size, idx):
+        u = sorted(list(set(idx)))
+        return f"({size}, {u}, {[1.0]*len(u)})"
 
-    def prepare_features(self, district, subdistrict, problem_types_list, organization_list, report_date, lat, long):
-        ts_month = int(report_date.month)
-        ts_year = int(report_date.year)
+    def prepare_features(self, district, subdistrict, types, orgs, date, lat, long):
+        tm = int(date.month); ty = int(date.year)
+        dh = hash(district)%2048; sh = hash(subdistrict)%2048
+        ti = [self.p_types.index(t) for t in types if t in self.p_types]
+        oi = [hash(o)%1786 for o in orgs]
         
-        d_hash = hash(district) % 2048
-        s_hash = hash(subdistrict) % 2048
-        address_vec = self._create_sparse_vector_string(2048, [d_hash, s_hash])
-        
-        type_indices = [self.problem_types.index(t) for t in problem_types_list if t in self.problem_types]
-        type_vec = self._create_sparse_vector_string(25, type_indices)
-        
-        org_indices = [hash(org) % 1786 for org in organization_list]
-        org_vec = self._create_sparse_vector_string(1786, org_indices)
-        
-        latlong_vec = [float(lat), float(long)]
-
         return {
-            "timestamp_month": ts_month,
-            "timestamp_year": ts_year,
-            "address_encoded": address_vec,
-            "latlong_encoded": latlong_vec,
-            "organization_encoded": org_vec,
-            "type_encoded": type_vec
+            "timestamp_month": tm, "timestamp_year": ty,
+            "address_encoded": self._sparse_vec(2048, [dh, sh]),
+            "latlong_encoded": [float(lat), float(long)],
+            "organization_encoded": self._sparse_vec(1786, oi),
+            "type_encoded": self._sparse_vec(25, ti)
         }
 
     def predict(self, model_input):
-        base_days = 3.0
+        base = 3.0
         try:
-            type_str = model_input["type_encoded"]
-            indices_part = type_str.split('[')[1].split(']')[0]
-            if indices_part:
-                indices = [int(x.strip()) for x in indices_part.split(',') if x.strip()]
-                for idx in indices:
-                    if idx % 2 != 0:
-                        base_days += 5.0
-                        break
-        except:
-            pass
-            
-        import random
-        variance = random.uniform(-1, 5)
-        final_prediction = max(1, base_days + variance)
-        
-        if final_prediction < 3: level = "Fast (เร็ว)"
-        elif final_prediction < 10: level = "Normal (ปกติ)"
-        else: level = "Slow (ช้า)"
-            
-        return round(final_prediction, 1), level
+            ts = model_input["type_encoded"].split('[')[1].split(']')[0]
+            if ts: 
+                if any(int(x)%2!=0 for x in ts.split(',') if x.strip()): base += 5.0
+        except: pass
+        val = max(1, base + np.random.uniform(-1, 5))
+        lvl = "Fast (เร็ว)" if val < 3 else "Normal (ปกติ)" if val < 10 else "Slow (ช้า)"
+        return round(val, 1), lvl
 
 # -----------------------------------------------------------------------------
-# 3. UI HELPER FUNCTIONS
+# 4. UI RENDERER
 # -----------------------------------------------------------------------------
-def update_coords():
-    """Callback to update session state coordinates from map click."""
-    if st.session_state.temp_map_data and st.session_state.temp_map_data.get("last_clicked"):
-        lat = st.session_state.temp_map_data["last_clicked"]["lat"]
-        lng = st.session_state.temp_map_data["last_clicked"]["lng"]
-        
-        st.session_state["confirmed_lat"] = lat
-        st.session_state["confirmed_long"] = lng
-
 def render_input_section(predictor):
-    """Renders inputs on the MAIN PAGE."""
+    handle_pending_updates()
     
     if "confirmed_lat" not in st.session_state:
-        st.session_state["confirmed_lat"] = None
-    if "confirmed_long" not in st.session_state:
-        st.session_state["confirmed_long"] = None
+        st.session_state.update({"confirmed_lat": None, "confirmed_long": None, "location_source": None, "geo_match_found": None})
 
-    with st.container():
-        st.subheader("1. General Information")
-        c1, c2, c3 = st.columns(3)
-        
-        with c1:
-            report_date = st.date_input("Report Date", datetime.date.today())
-        with c2:
-            all_districts = sorted(list(predictor.district_map.keys()))
-            district_options = ["--- Select District ---"] + all_districts
-            selected_district = st.selectbox("District", district_options)
-        with c3:
-            if selected_district == "--- Select District ---":
-                st.selectbox("Subdistrict", ["(Select District first)"], disabled=True)
-                selected_subdistrict = None
-            else:
-                sub_options = sorted(predictor.district_map[selected_district])
-                selected_subdistrict = st.selectbox("Subdistrict", sub_options)
+    # --- 1. GENERAL INFORMATION (Date Only) ---
+    st.subheader("1. General Information")
+    c1, _ = st.columns([1, 2])
+    with c1:
+        report_date = st.date_input("Report Date", datetime.date.today())
+    
+    add_margin(t=20); st.markdown("---")
 
-    st.markdown("---")
-
-    # ---------------------------------------------------------
-    # 2. Location & Details
-    # ---------------------------------------------------------
-    st.subheader("2. Location & Details")
+    # --- 2. EXACT LOCATION ---
+    st.subheader("2. Exact Location & Area")
     
-    # --- MAP SECTION ---
-    st.markdown("**📍 Point Selection**")
-    
-    gdf = load_geo_data()
-    
-    map_center = [13.7563, 100.5018]
-    zoom_level = 11
-    highlight_layer = None
-
-    if gdf is not None and selected_district != "--- Select District ---":
-        try:
-            target_area = gdf[gdf['district_name'] == selected_district]
-            if selected_subdistrict:
-                sub_target = target_area[target_area['subdistrict_name'] == selected_subdistrict]
-                if not sub_target.empty:
-                    target_area = sub_target
-            
-            if not target_area.empty:
-                centroid = target_area.geometry.centroid.iloc[0]
-                map_center = [centroid.y, centroid.x]
-                zoom_level = 14 
-                
-                highlight_layer = folium.GeoJson(
-                    target_area,
-                    name="Selected Area",
-                    style_function=lambda x: {'fillColor': '#ffaf00', 'color': 'red', 'weight': 3, 'fillOpacity': 0.2},
-                    tooltip=folium.GeoJsonTooltip(fields=['district_name', 'subdistrict_name'])
-                )
-        except Exception as e:
-            print(f"Map Filter Error: {e}")
-
-    m = folium.Map(location=map_center, zoom_start=zoom_level)
-    m.add_child(folium.LatLngPopup())
-    
-    if highlight_layer:
-        highlight_layer.add_to(m)
-    
-    map_data = st_folium(
-        m, 
-        height=500, 
-        width=None, 
-        key="main_map", 
-        returned_objects=["last_clicked"] 
-    )
-    st.session_state.temp_map_data = map_data
-
-    # --- CONFIRMATION ---
-    if map_data and map_data.get("last_clicked"):
-        click_lat = map_data["last_clicked"]["lat"]
-        click_lng = map_data["last_clicked"]["lng"]
-        
-        add_margin(t=10)
-        st.info(f"Targeting: {click_lat:.4f}, {click_lng:.4f} (Click below to confirm)", icon="🎯")
-        
-        add_margin(t=5)
-        st.button("✅ Use this Location", on_click=update_coords, use_container_width=True)
-    
-    add_margin(t=20)
-    
-    # --- COORDINATES STATUS (Read-Only) ---
-    st.markdown("**🛠️ Coordinates Status**")
-    
-    if st.session_state["confirmed_lat"] is not None:
-        st.success(
-            f"✅ Confirmed Location: **{st.session_state['confirmed_lat']:.6f}, {st.session_state['confirmed_long']:.6f}**", 
-            icon="📍"
-        )
-    else:
-        st.warning("⚠️ Please select and confirm a location on the map.", icon="⏳")
-
-    add_margin(t=20)
-    st.markdown("---")
-
-    # --- DETAILS FORM ---
-    st.markdown("**📋 Case Details**")
-    
-    selected_orgs = st.multiselect("Organization", predictor.organizations, placeholder="Select organizations...")
+    # Toggle Input Method
+    input_mode = st.radio("Input Method:", ["🗺️ Select on Map / Manual", "📍 Use Current Location (GPS)"], horizontal=True, label_visibility="collapsed")
     add_margin(t=10)
-    selected_types = st.multiselect("Problem Type", predictor.problem_types, placeholder="Select problem types...")
+
+    # Layout: Equal Columns
+    col_map, col_info = st.columns([1, 1], gap="large")
+
+    # ตัวแปรสำหรับเก็บค่า District/Subdistrict เพื่อเอาไปใช้ Zoom แผนที่
+    current_district_val = None
+    current_subdistrict_val = None
+
+    # ------------------------------------------------------------------
+    # 🔥 CRITICAL: Render RIGHT Column First (Logic Only) to capture Dropdown state
+    # ------------------------------------------------------------------
+    with col_info:
+        if input_mode == "🗺️ Select on Map / Manual":
+            st.markdown("##### Identified Area")
+            st.caption("Select manually or Auto-filled from map.")
+            
+            d_opts = ["--- Select District ---"] + sorted(list(predictor.d_map.keys()))
+            
+            # District Dropdown
+            d_idx = 0
+            if "sb_district" in st.session_state and st.session_state.sb_district in d_opts:
+                d_idx = d_opts.index(st.session_state.sb_district)
+            
+            sel_d = st.selectbox("District", d_opts, index=d_idx, key="sb_district_widget")
+            
+            # Sync Widget -> State
+            if sel_d != st.session_state.get("sb_district"):
+                st.session_state["sb_district"] = sel_d
+                st.session_state["sb_subdistrict"] = None # Reset sub
+                st.rerun() # Force map update immediately
+
+            # Subdistrict Dropdown
+            if sel_d == "--- Select District ---":
+                st.selectbox("Subdistrict", ["(Select District first)"], disabled=True)
+                sel_s = None
+            else:
+                s_opts = sorted(predictor.d_map[sel_d])
+                s_idx = 0
+                if "sb_subdistrict" in st.session_state and st.session_state.sb_subdistrict in s_opts:
+                    s_idx = s_opts.index(st.session_state.sb_subdistrict)
+                sel_s = st.selectbox("Subdistrict", s_opts, index=s_idx, key="sb_subdistrict_widget")
+                
+                if sel_s != st.session_state.get("sb_subdistrict"):
+                    st.session_state["sb_subdistrict"] = sel_s
+                    st.rerun() # Force map update
+
+            current_district_val = sel_d
+            current_subdistrict_val = sel_s
+
+        else:
+            # GPS Mode: Hide Dropdowns
+            st.markdown("##### Identified Area (GPS)")
+            
+            if st.session_state.get("location_source") == "Current GPS" and st.session_state.get("geo_match_found"):
+                d = st.session_state.get("sb_district")
+                s = st.session_state.get("sb_subdistrict")
+                st.info(f"📍 **{d}** > **{s}**")
+                current_district_val = d
+                current_subdistrict_val = s
+            else:
+                st.info("Waiting for location...")
+                current_district_val = None
+                current_subdistrict_val = None
+            
+            # add_margin(t=60) # Spacer
+
+        add_margin(t=5)
+        st.markdown("##### Coordinates")
+        if st.session_state["confirmed_lat"]:
+            st.success(f"**{st.session_state['confirmed_lat']:.6f}, {st.session_state['confirmed_long']:.6f}**", icon="✅")
+        else:
+            st.warning("No coordinates confirmed yet.", icon="⏳")
+
+    # ------------------------------------------------------------------
+    # Render LEFT Column (Map) - Uses current_district_val from above
+    # ------------------------------------------------------------------
+    with col_map:
+        if input_mode == "🗺️ Select on Map / Manual":
+            st.markdown("**📍 Point Selection**")
+            st.caption("Click map then 'Confirm Pin'.")
+            
+            gdf = load_geo_data()
+            center = [13.7563, 100.5018]; zoom = 11
+            target_geo = None
+
+            # Zoom Logic: Priority = Confirmed Point > Dropdown > Default
+            if st.session_state["confirmed_lat"]:
+                center = [st.session_state["confirmed_lat"], st.session_state["confirmed_long"]]
+                zoom = 15
+            elif gdf is not None and current_district_val and current_district_val != "--- Select District ---":
+                try:
+                    t = gdf[gdf['district_name'] == current_district_val]
+                    if current_subdistrict_val:
+                        sub_t = t[t['subdistrict_name'] == current_subdistrict_val]
+                        if not sub_t.empty: 
+                            t = sub_t
+                            zoom = 14
+                        else: zoom = 12
+                    else: zoom = 12
+                    
+                    if not t.empty:
+                        c = t.geometry.centroid.iloc[0]
+                        center = [c.y, c.x]
+                        target_geo = t
+                except: pass
+
+            m = folium.Map(location=center, zoom_start=zoom)
+            
+            if target_geo is not None:
+                folium.GeoJson(target_geo, style_function=lambda x: {'fillColor': '#ffaf00', 'color': 'red', 'weight': 2, 'fillOpacity': 0.1}).add_to(m)
+            
+            if st.session_state["confirmed_lat"]:
+                folium.Marker([st.session_state["confirmed_lat"], st.session_state["confirmed_long"]], icon=folium.Icon(color="green", icon="check")).add_to(m)
+
+            m.add_child(folium.LatLngPopup())
+            
+            # Key สำคัญมาก: ต้องเปลี่ยนตาม District/Subdistrict เพื่อบังคับ Zoom
+            map_key = f"map_{current_district_val}_{current_subdistrict_val}"
+            map_data = st_folium(m, height=380, width=None, key=map_key, returned_objects=["last_clicked"])
+
+            if map_data and map_data.get("last_clicked"):
+                if st.button("✅ Confirm Pin", use_container_width=True):
+                    st.session_state["pending_coords"] = {
+                        "lat": map_data["last_clicked"]["lat"],
+                        "lng": map_data["last_clicked"]["lng"],
+                        "source": "Map Selection"
+                    }
+                    st.rerun()
+        else:
+            # GPS Mode
+            st.markdown("**📍 GPS Selection**")
+            st.info("Click below to use browser location.")
+            add_margin(t=10)
+            geo_data = get_geolocation()
+            
+            if st.button("📡 Get My Location & Auto-Fill", use_container_width=True):
+                if geo_data:
+                    st.session_state["pending_coords"] = {
+                        "lat": geo_data['coords']['latitude'],
+                        "lng": geo_data['coords']['longitude'],
+                        "source": "Current GPS"
+                    }
+                    st.rerun()
+                else:
+                    st.warning("Waiting for data... Click again.")
+
+    add_margin(t=20); st.markdown("---")
+
+    # --- 3. DETAILS ---
+    st.subheader("3. Case Details")
+    c1, c2 = st.columns(2)
+    with c1: orgs = st.multiselect("Responsible Organization", predictor.orgs)
+    with c2: types = st.multiselect("Problem Type", predictor.p_types)
     
     add_margin(t=30)
-    
-    run_btn = st.button("🚀 Compute Prediction", type="primary", use_container_width=True)
-
-    # --- VALIDATION ---
-    if run_btn:
-        if selected_district == "--- Select District ---":
-            st.warning("⚠️ Please select a **District**.")
-            return None
-        
-        lat = st.session_state["confirmed_lat"]
-        long = st.session_state["confirmed_long"]
-        
-        if lat is None or long is None:
-            st.warning("⚠️ Please **Confirm Location** from the map above.")
-            return None
-        if not selected_orgs:
-            st.warning("⚠️ Please select at least one **Organization**.")
-            return None
-        if not selected_types:
-            st.warning("⚠️ Please select at least one **Problem Type**.")
-            return None
-
-        return {
-            "district": selected_district,
-            "subdistrict": selected_subdistrict,
-            "orgs": selected_orgs,
-            "types": selected_types,
-            "date": report_date,
-            "lat": lat,
-            "long": long
-        }
-    
-    return None
+    if st.button("🚀 Compute Prediction", type="primary", use_container_width=True):
+        if not current_district_val or current_district_val == "--- Select District ---":
+            st.error("⚠️ Select District"); return
+        if not st.session_state["confirmed_lat"]:
+            st.error("⚠️ Confirm Location"); return
+        if not orgs or not types:
+            st.error("⚠️ Fill Details"); return
+            
+        features = predictor.prepare_features(
+            current_district_val, current_subdistrict_val, types, orgs,
+            report_date, st.session_state["confirmed_lat"], st.session_state["confirmed_long"]
+        )
+        with st.spinner("Predicting..."):
+            d, l = predictor.predict(features)
+        display_results(d, l, features)
 
 def display_results(days, level, features):
-    add_margin(t=20)
-    st.markdown("---")
-    col1, col2 = st.columns([1.5, 1])
-    
-    with col1:
+    add_margin(t=20); st.markdown("---")
+    c1, c2 = st.columns([1.5, 1])
+    with c1:
         st.subheader("📊 Prediction Result")
         st.metric("Estimated Time", f"{days} Days", delta=level, delta_color="inverse")
-        
         fig = go.Figure(go.Indicator(
-            mode = "gauge+number",
-            value = days,
-            domain = {'x': [0, 1], 'y': [0, 1]},
-            title = {'text': "Days to Fix", 'font': {'size': 20}},
-            gauge = {
-                'axis': {'range': [None, 30]},
-                'bar': {'color': "#1f77b4"},
+            mode="gauge+number", value=days,
+            gauge={
+                'axis': {'range': [None, 30]}, 'bar': {'color': "black", 'thickness':0.3},
                 'steps': [
-                    {'range': [0, 3], 'color': "#2ca02c"},
-                    {'range': [3, 10], 'color': "#ff7f0e"},
-                    {'range': [10, 30], 'color': "#d62728"}
-                ],
-                'threshold': {'line': {'color': "black", 'width': 4}, 'thickness': 0.75, 'value': days}
+                    {'range': [0, 3], 'color': "#2ca02c"}, {'range': [3, 7], 'color': "#ffd700"},
+                    {'range': [7, 14], 'color': "#ff7f0e"}, {'range': [14, 30], 'color': "#d62728"}
+                ]
             }
         ))
-        fig.update_layout(height=300, margin=dict(l=20, r=20, t=40, b=20))
+        fig.update_layout(height=280, margin=dict(l=20, r=20, t=30, b=20))
         st.plotly_chart(fig, use_container_width=True)
-
-    with col2:
-        st.subheader("🤖 Model Input Schema")
-        st.caption("Feature Vector passed to Spark Model:")
-        st.code(f"""
-{{
-  "timestamp_month": {features['timestamp_month']},
-  "timestamp_year": {features['timestamp_year']},
-  "address_encoded": "{features['address_encoded']}",
-  "latlong_encoded": {features['latlong_encoded']},
-  "organization_encoded": "{features['organization_encoded']}",
-  "type_encoded": "{features['type_encoded']}"
-}}
-        """, language="json")
+    with c2:
+        st.subheader("🤖 Model Input")
+        st.code(str(features), language="json")
 
 # -----------------------------------------------------------------------------
-# 4. MAIN PAGE CONTROLLER
+# 5. MAIN
 # -----------------------------------------------------------------------------
 def render_prediction_page():
     st.title("🔮 AI Resolution Time Predictor")
-    
-    try:
-        predictor = TraffyTimePredictor()
-    except Exception as e:
-        st.error(f"Failed to initialize predictor: {e}")
-        return
-
-    user_inputs = render_input_section(predictor)
-
-    if user_inputs:
-        features = predictor.prepare_features(
-            user_inputs["district"], 
-            user_inputs["subdistrict"], 
-            user_inputs["types"], 
-            user_inputs["orgs"], 
-            user_inputs["date"], 
-            user_inputs["lat"], 
-            user_inputs["long"]
-        )
-        
-        with st.spinner("Analyzing parameters..."):
-            days, level = predictor.predict(features)
-        
-        display_results(days, level, features)
+    try: p = TraffyTimePredictor()
+    except Exception as e: st.error(f"Init Error: {e}"); return
+    render_input_section(p)
 
 if __name__ == "__main__":
     st.set_page_config(layout="wide", page_title="AI Time Predictor")
