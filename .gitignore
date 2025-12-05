@@ -1,4 +1,6 @@
-# Byte-compiled / optimized / DLL files
+###############################################
+# Python
+###############################################
 __pycache__/
 *.py[cod]
 *$py.class
@@ -6,87 +8,59 @@ __pycache__/
 # C extensions
 *.so
 
-# Distribution / packaging
+###############################################
+# Build / Packaging
+###############################################
 .Python
 build/
-develop-eggs/
 dist/
 downloads/
 eggs/
 .eggs/
+*.egg-info/
 lib/
 lib64/
 parts/
 sdist/
 var/
 wheels/
-*.egg-info/
-.installed.cfg
 *.egg
 MANIFEST
-
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
 *.spec
 
+###############################################
+# Logs
+###############################################
+*.log
+logs/
+pylint-report.txt
+flake8-report.txt
+
+###############################################
 # Installer logs
+###############################################
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
+###############################################
+# Test / Coverage
+###############################################
 htmlcov/
 .tox/
 .nox/
 .coverage
 .coverage.*
 .cache
+pytestdebug.log
+.pytest_cache/
 nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
-.pytest_cache/
 
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# celery beat schedule file
-celerybeat-schedule
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
+###############################################
+# Virtual Environments
+###############################################
 .env
 .venv
 env/
@@ -95,33 +69,67 @@ ENV/
 env.bak/
 venv.bak/
 
-# Spyder project settings
-.spyderproject
-.spyproject
+###############################################
+# Jupyter / IPython
+###############################################
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
 
-# Rope project settings
-.ropeproject
+###############################################
+# Documentation
+###############################################
+docs/_build/
+site/
 
-# mkdocs documentation
-/site
-
-# mypy
+###############################################
+# mypy / Pyre / Linting
+###############################################
 .mypy_cache/
 .dmypy.json
-dmypy.json
-
-# Pyre type checker
 .pyre/
+.ruff_cache/
+.black_cache/
 
-# Data Science specific
-# Raw Data (Large Files)
+###############################################
+# IDE / Editor
+###############################################
+.vscode/
+.idea/
+.spyproject
+.ropeproject
+*.swp
+*.swo
+*~
+*.code-workspace
+
+###############################################
+# Operating System
+###############################################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+
+###############################################
+# Data Science & Machine Learning
+###############################################
+
+# Raw & processed data (large files)
 data/raw/
+data/processed/*.csv
+data/processed/*.parquet
 
-# Cleansed Data (Large Files)
-data/processed/cleansed_data.csv
-data/processed/cleansed_data_spark.csv
+# Spark models / pipelines / metadata (VERY long paths)
+data/model/
+**/*.parquet
+**/*.crc
+**/_spark_metadata/
 
-# Model files
+# ML model artifacts
 *.model
 *.sav
 *.pkl
@@ -134,7 +142,7 @@ data/processed/cleansed_data_spark.csv
 *.tflite
 *.mlmodel
 
-# Output files
+# Outputs
 output/
 results/
 plots/
@@ -147,79 +155,48 @@ images/
 *.svg
 *.pdf
 
-# Logs and temporary files
-logs/
-*.log
-temp/
-tmp/
-cache/
-
 # MLflow
 mlruns/
 mlartifacts/
 
-# Weights & Biases
+# W&B
 wandb/
 
 # TensorBoard
 runs/
 tensorboard_logs/
 
-# Airflow
-airflow.cfg
-airflow.db
-airflow-webserver.pid
-logs/
-
 # Dask
 dask-worker-space/
 
-# Database files
+###############################################
+# Databases
+###############################################
 *.db
 *.sqlite
 *.sqlite3
 
-# Configuration files with sensitive data
+###############################################
+# Airflow
+###############################################
+airflow.cfg
+airflow.db
+airflow-webserver.pid
+airflow_logs/
+airflow/
+
+###############################################
+# Sensitive files
+###############################################
 config.ini
 secrets.json
 credentials.json
 .env.local
 .env.production
 
-# IDE specific files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Code formatting and linting
-.ruff_cache/
-.black_cache/
-.isort.cfg
-.pylintrc
-.flake8
-.pre-commit-hooks.yaml
-.bandit
-.mypy_cache/
-.dmypy.json
-dmypy.json
-pylint-report.txt
-flake8-report.txt
-.coverage.*
-htmlcov/
-.pytest_cache/
-
-# OS specific files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
+###############################################
 # Compressed files
+###############################################
 *.zip
 *.tar
 *.tar.gz
