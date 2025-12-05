@@ -15,6 +15,7 @@ OrganizationEncoderSpark
 
 # Import necessary modules
 from pyspark.ml import Transformer
+from pyspark.ml.feature import CountVectorizer, CountVectorizerModel  # noqa: F401
 from pyspark.sql import DataFrame
 
 from src.utils.EncoderUtils import multi_value_vectorizer
@@ -45,6 +46,7 @@ class OrganizationEncoderSpark(Transformer):
     def __init__(
         self,
         organization_column: str | None = None,
+        model_filename: str | None = None,
     ) -> None:
         """
         Initializes the PySpark Organization Encoder.
@@ -57,6 +59,7 @@ class OrganizationEncoderSpark(Transformer):
 
         self.organization = organization_column or "organization"
         self.organization_encoded = self.organization + "_encoded"
+        self.model_filename = model_filename or "organization_vectorizer_model"
 
     def _transform(self, df: DataFrame) -> DataFrame:
         """
@@ -78,6 +81,8 @@ class OrganizationEncoderSpark(Transformer):
             df,
             input_column=self.organization,
             output_column=self.organization_encoded,
+            filename=self.model_filename,
+            drop_original=True,
         )
 
         return encoded_df
