@@ -459,6 +459,12 @@ def clear_coordinates():
 # --- Plotting Helpers for Map Visualizer ---
 # Note: These functions require geopandas and shapely to run.
 
+import pandas as pd
+import geopandas as gpd
+from shapely import wkt
+import pydeck as pdk
+import json # Import json for GeoJSON conversion
+
 def plot_choroplethmap(df: pd.DataFrame, region_path: str, type_filter: str | None = None, value_column: str = "count"):
     df_points = df.copy()
     if type_filter and type_filter != "ทั้งหมด":
@@ -477,31 +483,83 @@ def plot_choroplethmap(df: pd.DataFrame, region_path: str, type_filter: str | No
     joined = gpd.sjoin(gdf_points, gdf_region, how="left", predicate="within")
 
     # 2. Aggregate counts
+    # Ensure the column name used for grouping is correct from the joined GeoDataFrame
     agg_df = joined.groupby("subdistrict_name").size().reset_index(name="count")
 
     # 3. Merge and fill
     gdf_merged = gdf_region.merge(agg_df, on="subdistrict_name", how="left")
     gdf_merged["count"] = gdf_merged["count"].fillna(0)
 
+    # --- Pydeck Specific Steps ---
+
     # 4. Compute map center
-    gdf_proj = gdf_merged.to_crs(epsg=3857)
-    union_geom = gdf_proj.geometry.unary_union
-    center_proj = union_geom.centroid
-    center_latlon = gpd.GeoSeries([center_proj], crs=gdf_proj.crs).to_crs(epsg=4326).geometry[0]
-    minx, miny, maxx, maxy = gdf_merged.total_bounds
-    bounds = [[miny, minx], [maxy, maxx]]
+    # Use the centroid of the combined area for initial view
+    center_latlon = gdf_merged.to_crs(epsg=3857).geometry.unary_union.centroid
+    center_latlon = gpd.GeoSeries([center_latlon], crs="EPSG:3857").to_crs(epsg=4326).geometry[0]
+    
+    # Convert GeoDataFrame to GeoJSON
+    # Set the coloring column as the GeoJSON feature property
+    geojson_data = json.loads(gdf_merged.to_json())
 
-    # 5. Folium choropleth map
-    m = gdf_merged.explore(
-        column="count", cmap="Oranges", legend=True, 
-        location=[center_latlon.y, center_latlon.x], zoom_start=10,
-        tooltip=["district_name", "subdistrict_name", "count"],
-        min_zoom=10, max_zoom=16, map_kwds={"bounds": bounds}
+    # 5. Define the Pydeck Layer
+    # Use GeoJsonLayer for the choropleth
+    # Pydeck uses a JavaScript expression for coloring. A simple way is to use a color scale function.
+    # Note: Pydeck doesn't have a direct equivalent to Folium's explore/colormap, so color scale creation is simplified here.
+    
+    # Simple color function (using an expression) - This will need fine-tuning for a proper choropleth scale
+    # For a basic choropleth, we can use a fixed orange color and vary opacity or use a utility if available.
+    # A cleaner approach is pre-calculating the color or using a library like colorcet/palettable if available.
+    
+    # Placeholder for a gradient color expression based on 'count'
+    # This is a very basic example; for a real production choropleth, you'd define bins/scales better.
+    # Using 'get_fill_color' to map the 'count' property to a color (e.g., [R, G, B, A] array)
+    max_count = gdf_merged["count"].max()
+    
+    if max_count == 0:
+        max_count = 1 # Avoid division by zero
+    
+    # Simple color expression: higher count -> more opaque orange ([255, 140, 0] is DarkOrange)
+    # The A (alpha) channel will scale from 0 to 255 based on the count value.
+    color_expression = f"[255, 140, 0, (properties.count / {max_count}) * 255]"
+
+    geojson_layer = pdk.Layer(
+        "GeoJsonLayer",
+        geojson_data,
+        opacity=0.8,
+        stroked=True,
+        filled=True,
+        extruded=False,
+        wireframe=True,
+        get_fill_color=color_expression,
+        get_line_color=[100, 100, 100],
+        line_width_min_pixels=1,
+        pickable=True, # Enable hover/tooltip
+        auto_highlight=True,
     )
-    m.options.update({"zoomControl": True, "scrollWheelZoom": True, "dragging": True})
-    return m
 
-def plot_choroplethmap_perpop(df: pd.DataFrame, region_path: str, type_filter: str | None = None, value_column: str = "count"):
+    # 6. Define the View State
+    view_state = pdk.ViewState(
+        latitude=center_latlon.y,
+        longitude=center_latlon.x,
+        zoom=9,
+        min_zoom=9,
+        max_zoom=16,
+    )
+
+    # 7. Create the Deck
+    r = pdk.Deck(
+        layers=[geojson_layer],
+        initial_view_state=view_state,
+        map_style='light',
+        tooltip={
+            "html": "<b>Subdistrict:</b> {subdistrict_name}<br/><b>District:</b> {district_name}<br/><b>Count:</b> {count}",
+            "style": {"color": "white"},
+        }
+    )
+
+    return r
+
+def plot_choroplethmap_perpop(df: pd.DataFrame, region_path: str, type_filter: str | None = None, value_column: str = "probperpop"):
     df_region = pd.read_csv(region_path)
     df_region["geometry"] = df_region["geometry"].map(wkt.loads)
     gdf_region = gpd.GeoDataFrame(df_region, geometry="geometry", crs="EPSG:4326")
@@ -512,6 +570,7 @@ def plot_choroplethmap_perpop(df: pd.DataFrame, region_path: str, type_filter: s
         df_points = df_points[df_points["type_cleaned"].apply(lambda x: type_filter in x)]
 
     # Aggregate counts and mean population (using 'subdistrict-name' from pop data)
+    # NOTE: Assuming 'subdistrict-name' is correctly named for pop data in df
     agg_df = df_points.groupby("subdistrict-name").agg(
         count=("subdistrict-name", "size"),
         total=("total", "mean") 
@@ -524,22 +583,60 @@ def plot_choroplethmap_perpop(df: pd.DataFrame, region_path: str, type_filter: s
     gdf_merged["probperpop"] = gdf_merged["probperpop"].fillna(0)
     gdf_merged["count"] = gdf_merged["count"].fillna(0) 
 
-    # Compute map center
-    gdf_proj = gdf_merged.to_crs(epsg=3857)
-    union_geom = gdf_proj.geometry.unary_union
-    center_latlon = gpd.GeoSeries([union_geom.centroid], crs=gdf_proj.crs).to_crs(epsg=4326).geometry[0]
-    minx, miny, maxx, maxy = gdf_merged.total_bounds
-    bounds = [[miny, minx], [maxy, maxx]]
+    # --- Pydeck Specific Steps ---
+    
+    # 1. Compute map center
+    center_latlon = gdf_merged.to_crs(epsg=3857).geometry.unary_union.centroid
+    center_latlon = gpd.GeoSeries([center_latlon], crs="EPSG:3857").to_crs(epsg=4326).geometry[0]
 
-    # Folium choropleth map
-    m = gdf_merged.explore(
-        column="probperpop", cmap="Oranges", legend=True, scheme="natural_breaks",
-        location=[center_latlon.y, center_latlon.x], zoom_start=10,
-        tooltip=["subdistrict_name", "probperpop"],
-        min_zoom=10, max_zoom=16, map_kwds={"bounds": bounds}
+    # Convert GeoDataFrame to GeoJSON
+    geojson_data = json.loads(gdf_merged.to_json())
+
+    # 2. Define the Pydeck Layer
+    max_probperpop = gdf_merged["probperpop"].max()
+    
+    if max_probperpop == 0:
+        max_probperpop = 1 # Avoid division by zero
+
+    # Simple color expression: higher probperpop -> more opaque orange
+    color_expression = f"[255, 140, 0, (properties.probperpop / {max_probperpop}) * 255]"
+
+    geojson_layer = pdk.Layer(
+        "GeoJsonLayer",
+        geojson_data,
+        opacity=0.8,
+        stroked=True,
+        filled=True,
+        extruded=False,
+        wireframe=True,
+        get_fill_color=color_expression,
+        get_line_color=[100, 100, 100],
+        line_width_min_pixels=1,
+        pickable=True, # Enable hover/tooltip
+        auto_highlight=True,
     )
-    m.options.update({"zoomControl": True, "scrollWheelZoom": True, "dragging": True})
-    return m
+
+    # 3. Define the View State
+    view_state = pdk.ViewState(
+        latitude=center_latlon.y,
+        longitude=center_latlon.x,
+        zoom=9,
+        min_zoom=9,
+        max_zoom=16,
+    )
+
+    # 4. Create the Deck
+    r = pdk.Deck(
+        layers=[geojson_layer],
+        initial_view_state=view_state,
+        map_style='light',
+        tooltip={
+            "html": "<b>Subdistrict:</b> {subdistrict_name}<br/><b>Incidents per Pop:</b> {probperpop}",
+            "style": {"color": "white"},
+        }
+    )
+
+    return r
 
 # Heatmap function (assuming Pydeck/Pandas is installed)
 def plot_heatmap(
@@ -1119,14 +1216,14 @@ def render_map_visualizer(df_cleansed: pd.DataFrame, pop_data: dict, type_filter
         with col1:
             st.subheader("จำนวนปัญหาต่อแขวง (Choropleth: Count)")
             choroplethmap = plot_choroplethmap(df=dfwithpop, region_path=region_path, type_filter=type_filter)
-            st_folium(choroplethmap, width='100%', height=380)
+            st.pydeck_chart(choroplethmap, use_container_width=True, height=380)
             
             
             st.markdown("---") 
             
             st.subheader("ความรุนแรงของปัญหาต่อแขวง (Choropleth: Per Population)")
             choroplethmapperpop = plot_choroplethmap_perpop(df=dfwithpop, region_path=region_path, type_filter=type_filter)
-            st_folium(choroplethmapperpop, width='100%', height=380)
+            st.pydeck_chart(choroplethmapperpop, use_container_width=True, height=380)
             
 
         with col2:      
