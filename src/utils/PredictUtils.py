@@ -1,15 +1,13 @@
-from pyspark.sql import DataFrame, SparkSession
+import os
+
 from pyspark.ml.pipeline import PipelineModel
 from pyspark.ml.tuning import CrossValidatorModel, TrainValidationSplitModel
-import os
+from pyspark.sql import DataFrame, SparkSession
 
 
 def predict_with_model(
-    spark: SparkSession,
-    model_path: str,
-    input_df: DataFrame,
-    return_list: bool = False
-):
+    spark: SparkSession, model_path: str, input_df: DataFrame, return_list: bool = False
+) -> DataFrame | list:
     """
     Load a saved Spark ML model (PipelineModel, CrossValidatorModel,
     or TrainValidationSplitModel) and run prediction.
@@ -41,18 +39,24 @@ def predict_with_model(
 
     # Validate model path
     if not isinstance(model_path, str):
-        raise TypeError(f"'model_path' must be a string, got {type(model_path).__name__}")
+        raise TypeError(
+            f"'model_path' must be a string, got {type(model_path).__name__}"
+        )
 
     if not os.path.exists(model_path):
         raise ValueError(f"Model path '{model_path}' does not exist.")
 
     # Validate input DataFrame
     if not isinstance(input_df, DataFrame):
-        raise TypeError(f"'input_df' must be a Spark DataFrame, got {type(input_df).__name__}")
+        raise TypeError(
+            f"'input_df' must be a Spark DataFrame, got {type(input_df).__name__}"
+        )
 
     # Validate return_list
     if not isinstance(return_list, bool):
-        raise TypeError(f"'return_list' must be a boolean, got {type(return_list).__name__}")
+        raise TypeError(
+            f"'return_list' must be a boolean, got {type(return_list).__name__}"
+        )
 
     # -----------------------------
     # MODEL LOADING
@@ -70,7 +74,9 @@ def predict_with_model(
             try:
                 model = PipelineModel.load(model_path)
             except Exception as e:
-                raise RuntimeError(f"Could not load model from '{model_path}': {str(e)}")
+                raise RuntimeError(
+                    f"Could not load model from '{model_path}': {str(e)}"
+                ) from e
 
     # -----------------------------
     # PREDICT
