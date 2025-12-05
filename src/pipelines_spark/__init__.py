@@ -63,6 +63,7 @@ from .DateTransformerSpark import DateTransformerSpark
 from .DistrictSubdistrictTransformerSpark import DistrictSubdistrictTransformerSpark
 from .EncoderPipelineSpark import EncoderPipelineSpark
 from .IngestionPreprocessorSpark import IngestionPreprocessorSpark
+from .ModelDefinePipelineSpark import ModelDefinePipelineSpark
 from .ModelPrepPipelineSpark import ModelPrepPipelineSpark
 from .OrganizationEncoderSpark import OrganizationEncoderSpark
 from .ProvinceTransformerSpark import ProvinceTransformerSpark
@@ -90,6 +91,8 @@ __all__ = [
     "EncoderPipelineSpark",
     # IngestionPreprocessorSpark.py
     "IngestionPreprocessorSpark",
+    # ModelDefinePipelineSpark.py
+    "ModelDefinePipelineSpark",
     # ModelPrepPipelineSpark.py
     "ModelPrepPipelineSpark",
     # OrganizationEncoderSpark.py

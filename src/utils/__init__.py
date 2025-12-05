@@ -58,11 +58,13 @@ from .ConfigUtils import (
     get_dot_env_path,
     read_config_path,
 )
+from .DataSamplingUtils import preprocessed_data_sampler
 from .DatetimeUtils import get_buddhist_year
 from .DistrictSubdistrictUtils import load_bangkok_official_area_names
 from .EncoderUtils import multi_value_vectorizer
 from .FuzzyUtils import fuzzy_match, normalize, scorer_with_prefix_bonus
 from .GeographicUtils import load_geographic_data, save_geographic_data
+from .ModelUtils import evaluate_model, save_model
 from .PredictUtils import predict_with_model
 from .ProvinceUtils import load_province_whitelist
 from .SparkUtils import create_spark_session, preprocessed_data_converter
@@ -76,6 +78,8 @@ __all__ = [
     "get_data_dir",
     "get_dot_env_path",
     "read_config_path",
+    # DataSamplingUtils.py
+    "preprocessed_data_sampler",
     # DatetimeUtils.py
     "get_buddhist_year",
     # DistrictSubdistrictUtils.py
@@ -89,6 +93,9 @@ __all__ = [
     # GeographicUtils.py
     "load_geographic_data",
     "save_geographic_data",
+    # ModelUtils.py
+    "evaluate_model",
+    "save_model",
     # PredictUtils.py
     "predict_with_model",
     # ProvinceUtils.py

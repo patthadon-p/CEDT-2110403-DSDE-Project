@@ -19,7 +19,7 @@ Usage:
 """
 
 # Import all submodules and their contents
-from . import pipelines, scrapping, utils
+from . import pipelines, pipelines_spark, scrapping, utils
 
 # Import specific items to make them available at package level
 # from .pipelines import *
@@ -31,7 +31,7 @@ from . import pipelines, scrapping, utils
 __all__ = [
     # Modules
     "pipelines",
+    "pipelines_spark",
     "scrapping",
     "utils",
-    "visualize",
 ]
