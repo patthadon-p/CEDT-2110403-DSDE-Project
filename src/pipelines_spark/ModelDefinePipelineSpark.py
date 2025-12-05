@@ -100,6 +100,10 @@ class ModelDefinePipelineSpark:
         )
         return None
 
+    def set_model(self, cv_model: CrossValidatorModel) -> None:
+        self.cv_model = cv_model
+        return None
+
     def get_pipeline(self) -> Pipeline:
         return self.pipeline
 

@@ -19,7 +19,7 @@ def evaluate_model(
     evaluators: dict[str, RegressionEvaluator],
 ) -> None:
     print(f"\n===== {name} Results =====")
-    preds = model.transform(test_df)
+    preds = model.bestModel.transform(test_df)
     for metric, evaluator in evaluators.items():
         score = evaluator.evaluate(preds)
         print(f"{metric.upper()}: {score}")
@@ -49,3 +49,9 @@ def save_model(model: CrossValidatorModel, name: str | None = None) -> None:
     new_path.rename(old_path)
 
     print(f"✔ Model saved successfully to: {old_path}")
+
+
+def get_model_path(name: str) -> Path:
+    base_path = Path(get_data_dir()) / "model" / name
+    model_path = Path(str(base_path) + "_cv_model_spark")
+    return model_path

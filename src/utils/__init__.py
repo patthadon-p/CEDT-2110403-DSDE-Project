@@ -64,7 +64,7 @@ from .DistrictSubdistrictUtils import load_bangkok_official_area_names
 from .EncoderUtils import multi_value_vectorizer
 from .FuzzyUtils import fuzzy_match, normalize, scorer_with_prefix_bonus
 from .GeographicUtils import load_geographic_data, save_geographic_data
-from .ModelUtils import evaluate_model, save_model
+from .ModelUtils import evaluate_model, get_model_path, save_model
 from .PredictUtils import predict_with_model
 from .ProvinceUtils import load_province_whitelist
 from .SparkUtils import create_spark_session, preprocessed_data_converter
@@ -96,6 +96,7 @@ __all__ = [
     # ModelUtils.py
     "evaluate_model",
     "save_model",
+    "get_model_path",
     # PredictUtils.py
     "predict_with_model",
     # ProvinceUtils.py
