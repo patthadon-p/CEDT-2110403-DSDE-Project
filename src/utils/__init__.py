@@ -65,7 +65,7 @@ from .FuzzyUtils import fuzzy_match, normalize, scorer_with_prefix_bonus
 from .GeographicUtils import load_geographic_data, save_geographic_data
 from .PredictUtils import predict_with_model
 from .ProvinceUtils import load_province_whitelist
-from .SparkUtils import create_spark_session
+from .SparkUtils import create_spark_session, preprocessed_data_converter
 from .StatusUtils import load_status_mapping
 
 # Define what gets imported with 'from utils import *'
@@ -95,6 +95,7 @@ __all__ = [
     "load_province_whitelist",
     # StatusUtils.py
     "load_status_mapping",
+    "preprocessed_data_converter",
     # SparkUtils.py
     "create_spark_session",
 ]
