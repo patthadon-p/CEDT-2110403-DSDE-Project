@@ -459,6 +459,12 @@ def clear_coordinates():
 # --- Plotting Helpers for Map Visualizer ---
 # Note: These functions require geopandas and shapely to run.
 
+import pandas as pd
+import geopandas as gpd
+from shapely import wkt
+import pydeck as pdk
+import json # Import json for GeoJSON conversion
+
 def plot_choroplethmap(df: pd.DataFrame, region_path: str, type_filter: str | None = None, value_column: str = "count"):
     df_points = df.copy()
     if type_filter and type_filter != "ทั้งหมด":
@@ -477,31 +483,83 @@ def plot_choroplethmap(df: pd.DataFrame, region_path: str, type_filter: str | No
     joined = gpd.sjoin(gdf_points, gdf_region, how="left", predicate="within")
 
     # 2. Aggregate counts
+    # Ensure the column name used for grouping is correct from the joined GeoDataFrame
     agg_df = joined.groupby("subdistrict_name").size().reset_index(name="count")
 
     # 3. Merge and fill
     gdf_merged = gdf_region.merge(agg_df, on="subdistrict_name", how="left")
     gdf_merged["count"] = gdf_merged["count"].fillna(0)
 
+    # --- Pydeck Specific Steps ---
+
     # 4. Compute map center
-    gdf_proj = gdf_merged.to_crs(epsg=3857)
-    union_geom = gdf_proj.geometry.unary_union
-    center_proj = union_geom.centroid
-    center_latlon = gpd.GeoSeries([center_proj], crs=gdf_proj.crs).to_crs(epsg=4326).geometry[0]
-    minx, miny, maxx, maxy = gdf_merged.total_bounds
-    bounds = [[miny, minx], [maxy, maxx]]
+    # Use the centroid of the combined area for initial view
+    center_latlon = gdf_merged.to_crs(epsg=3857).geometry.unary_union.centroid
+    center_latlon = gpd.GeoSeries([center_latlon], crs="EPSG:3857").to_crs(epsg=4326).geometry[0]
+    
+    # Convert GeoDataFrame to GeoJSON
+    # Set the coloring column as the GeoJSON feature property
+    geojson_data = json.loads(gdf_merged.to_json())
 
-    # 5. Folium choropleth map
-    m = gdf_merged.explore(
-        column="count", cmap="Oranges", legend=True, 
-        location=[center_latlon.y, center_latlon.x], zoom_start=10,
-        tooltip=["district_name", "subdistrict_name", "count"],
-        min_zoom=10, max_zoom=16, map_kwds={"bounds": bounds}
+    # 5. Define the Pydeck Layer
+    # Use GeoJsonLayer for the choropleth
+    # Pydeck uses a JavaScript expression for coloring. A simple way is to use a color scale function.
+    # Note: Pydeck doesn't have a direct equivalent to Folium's explore/colormap, so color scale creation is simplified here.
+    
+    # Simple color function (using an expression) - This will need fine-tuning for a proper choropleth scale
+    # For a basic choropleth, we can use a fixed orange color and vary opacity or use a utility if available.
+    # A cleaner approach is pre-calculating the color or using a library like colorcet/palettable if available.
+    
+    # Placeholder for a gradient color expression based on 'count'
+    # This is a very basic example; for a real production choropleth, you'd define bins/scales better.
+    # Using 'get_fill_color' to map the 'count' property to a color (e.g., [R, G, B, A] array)
+    max_count = gdf_merged["count"].max()
+    
+    if max_count == 0:
+        max_count = 1 # Avoid division by zero
+    
+    # Simple color expression: higher count -> more opaque orange ([255, 140, 0] is DarkOrange)
+    # The A (alpha) channel will scale from 0 to 255 based on the count value.
+    color_expression = f"[255, 140, 0, (properties.count / {max_count}) * 255]"
+
+    geojson_layer = pdk.Layer(
+        "GeoJsonLayer",
+        geojson_data,
+        opacity=0.8,
+        stroked=True,
+        filled=True,
+        extruded=False,
+        wireframe=True,
+        get_fill_color=color_expression,
+        get_line_color=[100, 100, 100],
+        line_width_min_pixels=1,
+        pickable=True, # Enable hover/tooltip
+        auto_highlight=True,
     )
-    m.options.update({"zoomControl": True, "scrollWheelZoom": True, "dragging": True})
-    return m
 
-def plot_choroplethmap_perpop(df: pd.DataFrame, region_path: str, type_filter: str | None = None, value_column: str = "count"):
+    # 6. Define the View State
+    view_state = pdk.ViewState(
+        latitude=center_latlon.y,
+        longitude=center_latlon.x,
+        zoom=9,
+        min_zoom=9,
+        max_zoom=16,
+    )
+
+    # 7. Create the Deck
+    r = pdk.Deck(
+        layers=[geojson_layer],
+        initial_view_state=view_state,
+        map_style='light',
+        tooltip={
+            "html": "<b>Subdistrict:</b> {subdistrict_name}<br/><b>District:</b> {district_name}<br/><b>Count:</b> {count}",
+            "style": {"color": "white"},
+        }
+    )
+
+    return r
+
+def plot_choroplethmap_perpop(df: pd.DataFrame, region_path: str, type_filter: str | None = None, value_column: str = "probperpop"):
     df_region = pd.read_csv(region_path)
     df_region["geometry"] = df_region["geometry"].map(wkt.loads)
     gdf_region = gpd.GeoDataFrame(df_region, geometry="geometry", crs="EPSG:4326")
@@ -512,6 +570,7 @@ def plot_choroplethmap_perpop(df: pd.DataFrame, region_path: str, type_filter: s
         df_points = df_points[df_points["type_cleaned"].apply(lambda x: type_filter in x)]
 
     # Aggregate counts and mean population (using 'subdistrict-name' from pop data)
+    # NOTE: Assuming 'subdistrict-name' is correctly named for pop data in df
     agg_df = df_points.groupby("subdistrict-name").agg(
         count=("subdistrict-name", "size"),
         total=("total", "mean") 
@@ -524,22 +583,60 @@ def plot_choroplethmap_perpop(df: pd.DataFrame, region_path: str, type_filter: s
     gdf_merged["probperpop"] = gdf_merged["probperpop"].fillna(0)
     gdf_merged["count"] = gdf_merged["count"].fillna(0) 
 
-    # Compute map center
-    gdf_proj = gdf_merged.to_crs(epsg=3857)
-    union_geom = gdf_proj.geometry.unary_union
-    center_latlon = gpd.GeoSeries([union_geom.centroid], crs=gdf_proj.crs).to_crs(epsg=4326).geometry[0]
-    minx, miny, maxx, maxy = gdf_merged.total_bounds
-    bounds = [[miny, minx], [maxy, maxx]]
+    # --- Pydeck Specific Steps ---
+    
+    # 1. Compute map center
+    center_latlon = gdf_merged.to_crs(epsg=3857).geometry.unary_union.centroid
+    center_latlon = gpd.GeoSeries([center_latlon], crs="EPSG:3857").to_crs(epsg=4326).geometry[0]
 
-    # Folium choropleth map
-    m = gdf_merged.explore(
-        column="probperpop", cmap="Oranges", legend=True, scheme="natural_breaks",
-        location=[center_latlon.y, center_latlon.x], zoom_start=10,
-        tooltip=["subdistrict_name", "probperpop"],
-        min_zoom=10, max_zoom=16, map_kwds={"bounds": bounds}
+    # Convert GeoDataFrame to GeoJSON
+    geojson_data = json.loads(gdf_merged.to_json())
+
+    # 2. Define the Pydeck Layer
+    max_probperpop = gdf_merged["probperpop"].max()
+    
+    if max_probperpop == 0:
+        max_probperpop = 1 # Avoid division by zero
+
+    # Simple color expression: higher probperpop -> more opaque orange
+    color_expression = f"[255, 140, 0, (properties.probperpop / {max_probperpop}) * 255]"
+
+    geojson_layer = pdk.Layer(
+        "GeoJsonLayer",
+        geojson_data,
+        opacity=0.8,
+        stroked=True,
+        filled=True,
+        extruded=False,
+        wireframe=True,
+        get_fill_color=color_expression,
+        get_line_color=[100, 100, 100],
+        line_width_min_pixels=1,
+        pickable=True, # Enable hover/tooltip
+        auto_highlight=True,
     )
-    m.options.update({"zoomControl": True, "scrollWheelZoom": True, "dragging": True})
-    return m
+
+    # 3. Define the View State
+    view_state = pdk.ViewState(
+        latitude=center_latlon.y,
+        longitude=center_latlon.x,
+        zoom=9,
+        min_zoom=9,
+        max_zoom=16,
+    )
+
+    # 4. Create the Deck
+    r = pdk.Deck(
+        layers=[geojson_layer],
+        initial_view_state=view_state,
+        map_style='light',
+        tooltip={
+            "html": "<b>Subdistrict:</b> {subdistrict_name}<br/><b>Incidents per Pop:</b> {probperpop}",
+            "style": {"color": "white"},
+        }
+    )
+
+    return r
 
 # Heatmap function (assuming Pydeck/Pandas is installed)
 def plot_heatmap(
@@ -1119,14 +1216,14 @@ def render_map_visualizer(df_cleansed: pd.DataFrame, pop_data: dict, type_filter
         with col1:
             st.subheader("จำนวนปัญหาต่อแขวง (Choropleth: Count)")
             choroplethmap = plot_choroplethmap(df=dfwithpop, region_path=region_path, type_filter=type_filter)
-            st_folium(choroplethmap, width='100%', height=380)
+            st.pydeck_chart(choroplethmap, use_container_width=True, height=380)
             
             
             st.markdown("---") 
             
             st.subheader("ความรุนแรงของปัญหาต่อแขวง (Choropleth: Per Population)")
             choroplethmapperpop = plot_choroplethmap_perpop(df=dfwithpop, region_path=region_path, type_filter=type_filter)
-            st_folium(choroplethmapperpop, width='100%', height=380)
+            st.pydeck_chart(choroplethmapperpop, use_container_width=True, height=380)
             
 
         with col2:      
@@ -1273,8 +1370,9 @@ def render_prediction_page():
 
 def render_input_section(predictor):
     """Renders the entire input and prediction UI."""
+    # Process any pending coordinates from GPS/Map *before* rendering the widgets
     handle_pending_updates()
-    
+
     # Ensure session state is initialized for coordinates
     if "confirmed_lat" not in st.session_state:
         st.session_state.update({"confirmed_lat": None, "confirmed_long": None, "location_source": None, "geo_match_found": None, "sb_district": "--- Select District ---", "sb_subdistrict": None})
@@ -1283,11 +1381,17 @@ def render_input_section(predictor):
     st.subheader("1. Date selection")
     c1, _ = st.columns([1, 1])
     with c1:
+        # Use session state to hold the date value, just in case
+        if "report_date" not in st.session_state:
+            st.session_state["report_date"] = datetime.date.today()
+            
         report_date = st.date_input(
             "Report Date", 
-            value=datetime.date.today(),
-            max_value=datetime.date.today()
+            value=st.session_state["report_date"],
+            max_value=datetime.date.today(),
+            key="report_date_widget" # Use a key linked to session state
         )
+        st.session_state["report_date"] = report_date
     
     add_margin(t=20); st.markdown("---")
 
@@ -1295,7 +1399,8 @@ def render_input_section(predictor):
     st.subheader("2. Exact Location & Area")
     
     # Toggle Input Method
-    input_mode = st.radio("Input Method:", ["📍 Use Current Location (GPS)", "🗺️ Select on Map / Manual"], horizontal=True, label_visibility="collapsed")
+    # Key ensures its value is preserved in session state
+    input_mode = st.radio("Input Method:", ["📍 Use Current Location (GPS)", "🗺️ Select on Map / Manual"], horizontal=True, key="input_mode_widget", label_visibility="collapsed")
     add_margin(t=10)
 
     col_map, col_info = st.columns([1, 1], gap="large")
@@ -1311,25 +1416,32 @@ def render_input_section(predictor):
             
             d_opts = ["--- Select District ---"] + sorted(list(predictor.d_map.keys()))
             
-            # District Dropdown
+            # Get the current selected value from session state
             sb_d_val = st.session_state.get("sb_district", "--- Select District ---")
             d_idx = d_opts.index(sb_d_val) if sb_d_val in d_opts else 0
             
-            # Use a key to force the widget to use the session state value
+            # District Dropdown
             sel_d = st.selectbox("District", d_opts, index=d_idx, key="sb_district_widget")
             
+            # CRITICAL CHANGE 1: Remove st.rerun() here.
             # Update session state *after* the widget value is confirmed (Streamlit's mechanics)
             if sel_d != st.session_state.get("sb_district"):
                 st.session_state["sb_district"] = sel_d
-                st.session_state["sb_subdistrict"] = None 
-                st.rerun() # Rerun to update subdistrict options
+                # Reset subdistrict to None or first valid option when district changes
+                s_opts = predictor.d_map.get(sel_d, [])
+                st.session_state["sb_subdistrict"] = s_opts[0] if s_opts else None
+
 
             # Subdistrict Dropdown
-            if sel_d == "--- Select District ---":
+            # Use the currently selected/updated District value
+            current_district_for_sub = st.session_state["sb_district"]
+
+            if current_district_for_sub == "--- Select District ---":
                 st.selectbox("Subdistrict", ["(Select District first)"], disabled=True)
                 sel_s = None
             else:
-                s_opts = sorted(predictor.d_map[sel_d])
+                s_opts = sorted(predictor.d_map[current_district_for_sub])
+                
                 # Ensure the stored value is valid for the current district
                 sb_s_val = st.session_state.get("sb_subdistrict")
                 if sb_s_val not in s_opts: sb_s_val = s_opts[0] if s_opts else None
@@ -1338,12 +1450,12 @@ def render_input_section(predictor):
                 
                 sel_s = st.selectbox("Subdistrict", s_opts, index=s_idx, key="sb_subdistrict_widget")
                 
+                # CRITICAL CHANGE 2: Remove st.rerun() here.
                 if sel_s != st.session_state.get("sb_subdistrict"):
                     st.session_state["sb_subdistrict"] = sel_s
-                    st.rerun() # Rerun to update map zoom
             
             # Set the current area for prediction/map logic
-            current_district_val = sel_d
+            current_district_val = sel_d if sel_d != "--- Select District ---" else None
             current_subdistrict_val = sel_s
 
         else:
@@ -1364,17 +1476,17 @@ def render_input_section(predictor):
                 current_district_val = None
                 current_subdistrict_val = None
             
-        add_margin(t=10)
-        st.markdown("##### Coordinates")
-        
-        if st.session_state["confirmed_lat"]:
-            c_coord, c_clear = st.columns([3, 1])
-            with c_coord:
-                st.success(f"**{st.session_state['confirmed_lat']:.6f}, {st.session_state['confirmed_long']:.6f}**", icon="✅")
-            with c_clear:
-                st.button("🗑️ Clear", on_click=clear_coordinates, use_container_width=True, help="Reset coordinates")
-        else:
-            st.warning("No coordinates confirmed yet.", icon="⏳")
+            add_margin(t=10)
+            st.markdown("##### Coordinates")
+            
+            if st.session_state["confirmed_lat"]:
+                c_coord, c_clear = st.columns([3, 1])
+                with c_coord:
+                    st.success(f"**{st.session_state['confirmed_lat']:.6f}, {st.session_state['confirmed_long']:.6f}**", icon="✅")
+                with c_clear:
+                    st.button("🗑️ Clear", on_click=clear_coordinates, use_container_width=True, help="Reset coordinates")
+            else:
+                st.warning("No coordinates confirmed yet.", icon="⏳")
 
     # --- LEFT COLUMN: MAP ---
     with col_map:
@@ -1390,7 +1502,7 @@ def render_input_section(predictor):
             if st.session_state["confirmed_lat"]:
                 center = [st.session_state["confirmed_lat"], st.session_state["confirmed_long"]]
                 zoom = 15
-            elif gdf is not None and current_district_val and current_district_val != "--- Select District ---":
+            elif gdf is not None and current_district_val: # current_district_val is set from the selectbox state now
                 try:
                     t = gdf[gdf['district_name'] == current_district_val]
                     if current_subdistrict_val:
@@ -1415,17 +1527,27 @@ def render_input_section(predictor):
 
             m.add_child(folium.LatLngPopup())
             
-            map_key = f"map_{current_district_val}_{current_subdistrict_val}_{st.session_state['confirmed_lat']}"
+            # Map key should only change when coordinates or the selected area changes
+            map_key = f"map_manual_{current_district_val}_{current_subdistrict_val}_{st.session_state['confirmed_lat']}"
             map_data = st_folium(m, height=380, width=None, key=map_key, returned_objects=["last_clicked"])
 
             if map_data and map_data.get("last_clicked"):
-                if st.button("✅ Confirm Pin", use_container_width=True):
-                    st.session_state["pending_coords"] = {
-                        "lat": map_data["last_clicked"]["lat"],
-                        "lng": map_data["last_clicked"]["lng"],
-                        "source": "Map Selection"
-                    }
-                    st.rerun()
+                # CRITICAL CHANGE 3: Only trigger rerun if the coordinates actually change
+                new_lat = map_data["last_clicked"]["lat"]
+                new_lng = map_data["last_clicked"]["lng"]
+
+                if new_lat != st.session_state.get("confirmed_lat") or new_lng != st.session_state.get("confirmed_long"):
+                    if st.button("✅ Confirm Pin", use_container_width=True):
+                        st.session_state["pending_coords"] = {
+                            "lat": new_lat,
+                            "lng": new_lng,
+                            "source": "Map Selection"
+                        }
+                        st.rerun() # Rerun once to process the pending update
+                else:
+                    st.info("Pin already confirmed at this location.")
+
+
         else:
             # GPS Mode
             st.markdown("**📍 GPS Selection**")
@@ -1434,17 +1556,22 @@ def render_input_section(predictor):
                  add_margin(t=10)
                  geo_data = get_geolocation() # This is non-blocking
                  
-                 # The button triggers the rerun *if* geo_data is ready on the next run
-                 if st.button("📡 Get My Location & Auto-Fill", use_container_width=True):
-                     if geo_data:
-                         st.session_state["pending_coords"] = {
+                 # The logic needs to handle the asynchronous nature of get_geolocation
+                 # If geo_data is returned (on a subsequent rerun), process it.
+                 if geo_data and ("pending_coords" not in st.session_state or st.session_state["pending_coords"].get("source") != "Current GPS"):
+                     # Only set pending coords if we received a result and it's not already set
+                     st.session_state["pending_coords"] = {
                              "lat": geo_data['coords']['latitude'],
                              "lng": geo_data['coords']['longitude'],
                              "source": "Current GPS"
-                         }
-                         st.rerun()
-                     else:
-                         st.warning("Waiting for data... Click again after allowing location access.")
+                     }
+                     st.rerun() # Rerun to process the pending update
+
+                 if not st.session_state.get("location_source") == "Current GPS" or not st.session_state.get("confirmed_lat"):
+                     st.button("📡 Get My Location & Auto-Fill", use_container_width=True, help="This may trigger a single full page reload to get the location data.")
+                 else:
+                     st.success("Location confirmed via GPS.")
+
                  add_margin(b=80)
             else:
                  st.error("GPS functionality disabled. Set `_HAS_JS_EVAL = True` or install `streamlit-js-eval`.")
@@ -1455,14 +1582,17 @@ def render_input_section(predictor):
 
     # --- 3. DETAILS ---
     st.subheader("3. Agencies & Issues")
+    # Use keys for multi-selects to store values in session state automatically
     c1, c2 = st.columns(2)
-    with c1: orgs = st.multiselect("Responsible Organization", predictor.orgs)
-    with c2: types = st.multiselect("Problem Type", predictor.p_types)
+    with c1: orgs = st.multiselect("Responsible Organization", predictor.orgs, key="predictor_orgs")
+    with c2: types = st.multiselect("Problem Type", predictor.p_types, key="predictor_types")
     
     add_margin(t=30)
     if st.button("🚀 Compute Prediction", type="primary", use_container_width=True):
         if not current_district_val or current_district_val == "--- Select District ---":
             st.error("⚠️ Select District"); return
+        if not current_subdistrict_val:
+            st.error("⚠️ Select Subdistrict"); return
         if not st.session_state["confirmed_lat"]:
             st.error("⚠️ Confirm Location"); return
         if not orgs or not types:
