@@ -6,7 +6,7 @@ from pyspark.sql import DataFrame, SparkSession
 
 
 def predict_with_model(
-    spark: SparkSession, model_path: str, input_df: DataFrame, return_list: bool = False
+    spark: SparkSession, model_path: str, input_df: DataFrame, return_pandas: bool = False
 ) -> DataFrame | list:
     """
     Load a saved Spark ML model (PipelineModel, CrossValidatorModel,
@@ -20,8 +20,8 @@ def predict_with_model(
         Directory with the saved model.
     input_df : DataFrame
         Spark DataFrame to predict on.
-    return_list : bool
-        If True, return Python list of predictions. Otherwise return a DataFrame.
+    return_pandas : bool
+        If True, return Pandas DataFrame of predictions. Otherwise return Spark DataFrame.
 
     Returns
     -------
@@ -52,10 +52,10 @@ def predict_with_model(
             f"'input_df' must be a Spark DataFrame, got {type(input_df).__name__}"
         )
 
-    # Validate return_list
-    if not isinstance(return_list, bool):
+    # Validate return_pandas
+    if not isinstance(return_pandas, bool):
         raise TypeError(
-            f"'return_list' must be a boolean, got {type(return_list).__name__}"
+            f"'return_pandas' must be a boolean, got {type(return_pandas).__name__}"
         )
 
     # -----------------------------
@@ -83,7 +83,7 @@ def predict_with_model(
     # -----------------------------
     predictions = model.transform(input_df)
 
-    if return_list:
-        return [row.prediction for row in predictions.select("prediction").collect()]
+    if return_pandas:
+        return predictions.toPandas()
 
     return predictions
