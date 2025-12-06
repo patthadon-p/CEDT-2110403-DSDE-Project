@@ -122,7 +122,7 @@ def render_map_visualizer(
             choroplethmap = plot_choroplethmap(
                 df=dfwithpop, region_path=region_path, type_filter=type_filter
             )
-            st.pydeck_chart(choroplethmap, use_container_width=True, height=380)
+            st.pydeck_chart(choroplethmap, width="stretch", height=380)
 
             st.markdown("---")
 
@@ -130,18 +130,18 @@ def render_map_visualizer(
             choroplethmapperpop = plot_choroplethmap_perpop(
                 df=dfwithpop, region_path=region_path, type_filter=type_filter
             )
-            st.pydeck_chart(choroplethmapperpop, use_container_width=True, height=380)
+            st.pydeck_chart(choroplethmapperpop, width="stretch", height=380)
 
         with col2:
             st.subheader(f"1. แขวงที่มีจำนวนปัญหา{type_label}มากที่สุด")
             st.dataframe(
                 top10_district.style.format({"จำนวนปัญหา": "{:,.0f}"}),
-                use_container_width=True,
+                width="stretch",
             )
             st.subheader(f"2. แขวงที่มีความรุนแรงของปัญหา{type_label}สูงที่สุด")
             st.dataframe(
                 top10_perpop.style.format({"ความรุนแรง": "{:,.2f}"}),
-                use_container_width=True,
+                width="stretch",
             )
 
     elif map_mode == "DBSCAN Clustering":
@@ -179,7 +179,7 @@ def render_map_visualizer(
             dbscan_map = plot_dbscan_map(
                 df=dfwithpop, eps=eps_val, min_samples=min_samples_val, top_n=top_n_val
             )
-            st.pydeck_chart(dbscan_map, use_container_width=True, height=600)
+            st.pydeck_chart(dbscan_map, width="stretch", height=600)
 
         else:
             # Fallback to the mock function defined in src/utils/visualizer
@@ -188,11 +188,11 @@ def render_map_visualizer(
     elif map_mode == "Heatmap":
         st.header(f"🔥 แผนที่ความหนาแน่นของปัญหา{type_label} (Heatmap)")
         heatmap = plot_heatmap(dfwithpop)
-        st.pydeck_chart(heatmap, use_container_width=True, height=600)
+        st.pydeck_chart(heatmap, width="stretch", height=600)
 
     elif map_mode == "Scatter Plot":
         st.header(f"📍 แผนที่แสดงจุดที่เกิดปัญหา{type_label} (Scatter Map)")
         scatter_map = plot_scatter_map(dfwithpop)
-        st.pydeck_chart(scatter_map, use_container_width=True, height=600)
+        st.pydeck_chart(scatter_map, width="stretch", height=600)
 
     st.markdown("---")

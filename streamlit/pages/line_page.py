@@ -41,7 +41,7 @@ def render_line_chart_page(
         fig = viz.plot()
 
         # Display using Plotly command (as defined by the updated LineChartVisualizer)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     except Exception as e:
         st.error(f"Error rendering Line Chart: {e}.")

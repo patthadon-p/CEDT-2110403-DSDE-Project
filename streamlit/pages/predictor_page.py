@@ -181,7 +181,7 @@ def render_input_section(predictor: TraffyTimePredictor) -> None:
                     st.button(
                         "🗑️ Clear",
                         on_click=clear_coordinates,
-                        use_container_width=True,
+                        width="stretch",
                         help="Reset coordinates",
                     )
             else:
@@ -265,7 +265,7 @@ def render_input_section(predictor: TraffyTimePredictor) -> None:
                 if new_lat != st.session_state.get(
                     "confirmed_lat"
                 ) or new_lng != st.session_state.get("confirmed_long"):
-                    if st.button("✅ Confirm Pin", use_container_width=True):
+                    if st.button("✅ Confirm Pin", width="stretch"):
                         st.session_state["pending_coords"] = {
                             "lat": new_lat,
                             "lng": new_lng,
@@ -302,7 +302,7 @@ def render_input_section(predictor: TraffyTimePredictor) -> None:
                 ) != "Current GPS" or not st.session_state.get("confirmed_lat"):
                     st.button(
                         "📡 Get My Location & Auto-Fill",
-                        use_container_width=True,
+                        width="stretch",
                         help="This may trigger a single full page reload to get the location data.",
                     )
                 else:
@@ -330,7 +330,7 @@ def render_input_section(predictor: TraffyTimePredictor) -> None:
         types = st.multiselect("Problem Type", predictor.p_types, key="predictor_types")
 
     add_margin(top=30)
-    if st.button("🚀 Compute Prediction", type="primary", use_container_width=True):
+    if st.button("🚀 Compute Prediction", type="primary", width="stretch"):
         if (
             not current_district_val
             or current_district_val == "--- Select District ---"
@@ -430,7 +430,7 @@ def display_results(days: int, level: str, features: dict) -> None:
             paper_bgcolor="rgba(0,0,0,0)",
             font={"family": "Arial"},
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
         st.markdown(
             """<div style="display:flex;justify-content:center;gap:15px;font-size:0.9em;margin-top:-10px;"><div><span style='color:#2ecc71;font-weight:bold;'>■</span> 0-3 Fast</div><div><span style='color:#f1c40f;font-weight:bold;'>■</span> 3-7 Moderate</div><div><span style='color:#e67e22;font-weight:bold;'>■</span> 7-14 Slow</div><div><span style='color:#e74c3c;font-weight:bold;'>■</span> 14+ Very Slow</div></div>""",

@@ -624,7 +624,7 @@ class TraffyVisualizer:
             hovermode="x unified",
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     @staticmethod
     def plot_score_vs_complaints(
@@ -709,7 +709,7 @@ class TraffyVisualizer:
             },
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     @staticmethod
     def plot_quality_dimensions(
@@ -762,7 +762,7 @@ class TraffyVisualizer:
             margin={"l": 40, "r": 20, "t": 60, "b": 40},
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     @staticmethod
     def plot_heatmap_metric_vs_type(
@@ -816,7 +816,7 @@ class TraffyVisualizer:
             .properties(height=350, title="Correlation: Metric x Type")
         )
 
-        st.altair_chart(heatmap, use_container_width=True)
+        st.altair_chart(heatmap, width="stretch")
 
     @staticmethod
     def plot_heatmap_type_vs_type(df_base: pd.DataFrame) -> None:
@@ -936,4 +936,4 @@ class TraffyVisualizer:
             paper_bgcolor="white",
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
