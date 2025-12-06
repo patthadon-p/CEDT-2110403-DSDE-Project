@@ -39,8 +39,14 @@ def render_prediction_page() -> None:
 
 
 def render_input_section(predictor: TraffyTimePredictor) -> None:
-    # Process any pending coordinates from GPS/Map *before* rendering the widgets
-    handle_pending_updates()
+    # # Process any pending coordinates from GPS/Map *before* rendering the widgets
+    # handle_pending_updates()
+
+    # --- SAFE PATCH 1: Run pending updates, but avoid UI during mid-render ---
+    if "pending_coords" in st.session_state:
+        updated = handle_pending_updates()  # Must return True if something changed
+        if updated:
+            st.rerun()
 
     # Ensure session state is initialized for coordinates
     if "confirmed_lat" not in st.session_state:
@@ -263,18 +269,12 @@ def render_input_section(predictor: TraffyTimePredictor) -> None:
                 new_lat = map_data["last_clicked"]["lat"]
                 new_lng = map_data["last_clicked"]["lng"]
 
-                if new_lat != st.session_state.get(
-                    "confirmed_lat"
-                ) or new_lng != st.session_state.get("confirmed_long"):
-                    if st.button("✅ Confirm Pin", width="stretch"):
-                        st.session_state["pending_coords"] = {
-                            "lat": new_lat,
-                            "lng": new_lng,
-                            "source": "Map Selection",
-                        }
-                        st.rerun()
-                else:
-                    st.info("Pin already confirmed at this location.")
+                if st.button("✅ Confirm Pin", width="stretch"):
+                    st.session_state["pending_coords"] = {
+                        "lat": new_lat,
+                        "lng": new_lng,
+                        "source": "Map Selection",
+                    }
 
         else:
             # GPS Mode
@@ -286,17 +286,13 @@ def render_input_section(predictor: TraffyTimePredictor) -> None:
 
                 # The logic needs to handle the asynchronous nature of get_geolocation
                 # If geo_data is returned (on a subsequent rerun), process it.
-                if geo_data and (
-                    "pending_coords" not in st.session_state
-                    or st.session_state["pending_coords"].get("source") != "Current GPS"
-                ):
+                if geo_data:
                     # Only set pending coords if we received a result and it's not already set
                     st.session_state["pending_coords"] = {
                         "lat": geo_data["coords"]["latitude"],
                         "lng": geo_data["coords"]["longitude"],
                         "source": "Current GPS",
                     }
-                    st.rerun()
 
                 if st.session_state.get(
                     "location_source"

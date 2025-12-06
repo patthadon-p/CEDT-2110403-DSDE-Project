@@ -154,20 +154,30 @@ class TraffyTimePredictor:
 # --- State Management & Callbacks (Time Predictor - From Second Block) ---
 
 
-def handle_pending_updates() -> None:
-    if "pending_coords" in st.session_state:
-        lat = st.session_state.pending_coords["lat"]
-        lng = st.session_state.pending_coords["lng"]
-        src = st.session_state.pending_coords["source"]
+def handle_pending_updates() -> bool:
+    if "pending_coords" not in st.session_state:
+        return False
 
-        # 1. Update Coordinates
-        st.session_state["confirmed_lat"] = lat
-        st.session_state["confirmed_long"] = lng
+    pc = st.session_state["pending_coords"]
+    new_lat = pc["lat"]
+    new_lng = pc["lng"]
+    src = pc["source"]
+
+    # Determine if anything has actually changed
+    changed = (
+        new_lat != st.session_state.get("confirmed_lat")
+        or new_lng != st.session_state.get("confirmed_long")
+        or src != st.session_state.get("location_source")
+    )
+
+    # Only apply updates if changed
+    if changed:
+        st.session_state["confirmed_lat"] = new_lat
+        st.session_state["confirmed_long"] = new_lng
         st.session_state["location_source"] = src
 
-        # 2. Reverse Geocode (Fix: Explicitly set dropdown values)
-        # Use the utility function with the required load_geo_data passed in
-        d, s = find_location_from_coords(lat, lng, load_geo_data)
+        # Reverse geocode
+        d, s = find_location_from_coords(new_lat, new_lng, load_geo_data)
         if d and s:
             st.session_state["sb_district"] = d
             st.session_state["sb_subdistrict"] = s
@@ -175,7 +185,10 @@ def handle_pending_updates() -> None:
         else:
             st.session_state["geo_match_found"] = False
 
-        del st.session_state["pending_coords"]
+    # Always remove pending coords
+    del st.session_state["pending_coords"]
+
+    return changed
 
 
 def clear_coordinates() -> None:
