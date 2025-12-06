@@ -11,14 +11,18 @@ create_spark_session
     Initializes and returns a configured PySpark SparkSession and a SedonaContext.
 """
 
-# Add current directory to Python path for imports
 import os
+
+# Add current directory to Python path for imports
+import re
 import sys
 
 # Import spark, findspark, and sedona
 import findspark
 from dotenv import load_dotenv
-from pyspark.sql import SparkSession
+from pyspark.ml.linalg import DenseVector, SparseVector, Vectors, VectorUDT
+from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import functions as F
 from sedona.spark import SedonaContext
 
 # Utility Functions
@@ -47,6 +51,9 @@ os.environ["JAVA_HOME"] = JAVA_HOME
 
 # Update system PATH
 os.environ["PATH"] += os.pathsep + os.path.join(HADOOP_HOME, "bin")
+
+os.environ["SPARK_LOCAL_IP"] = "127.0.0.1"
+os.environ["PYSPARK_SUBMIT_ARGS"] = "--conf spark.driver.host=127.0.0.1 pyspark-shell"
 
 
 def create_spark_session(
@@ -98,3 +105,51 @@ def create_spark_session(
     sedona = SedonaContext.create(spark)
 
     return spark, sedona
+
+
+def preprocessed_data_converter(
+    df: DataFrame,
+) -> DataFrame:
+
+    def _parse_sparse(s: str) -> SparseVector | None:
+        if s is None:
+            return None
+
+        # Example: (2048,[834,1804],[1.0,1.0])
+        match = re.match(r"\((\d+),\[(.*?)\],\[(.*?)\]\)", s)
+        if not match:
+            return None
+
+        size = int(match.group(1))
+
+        # indices: convert "834,1804" → [834,1804]
+        indices = match.group(2)
+        indices = [int(x) for x in indices.split(",")] if indices else []
+
+        # values: convert "1.0,1.0" → [1.0,1.0]
+        values = match.group(3)
+        values = [float(x) for x in values.split(",")] if values else []
+
+        return Vectors.sparse(size, indices, values)
+
+    def _parse_dense(s: str) -> DenseVector | None:
+        if s is None:
+            return None
+
+        # Remove brackets → "13.67891,100.66709"
+        s = s.strip()[1:-1]
+        values = [float(x) for x in s.split(",")] if s else []
+
+        return Vectors.dense(values)
+
+    parse_sparse_udf = F.udf(_parse_sparse, VectorUDT())
+    parse_dense_udf = F.udf(_parse_dense, VectorUDT())
+
+    df_prepared = (
+        df.withColumn("address_encoded", parse_sparse_udf("address_encoded"))
+        .withColumn("organization_encoded", parse_sparse_udf("organization_encoded"))
+        .withColumn("type_encoded", parse_sparse_udf("type_encoded"))
+        .withColumn("latlong_encoded", parse_dense_udf("latlong_encoded"))
+    )
+
+    return df_prepared

@@ -15,7 +15,7 @@ TypeEncoderSpark
 
 # Import necessary modules
 from pyspark.ml import Transformer
-from pyspark.ml.feature import CountVectorizer  # noqa: F401
+from pyspark.ml.feature import CountVectorizer, CountVectorizerModel  # noqa: F401
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
@@ -48,6 +48,7 @@ class TypeEncoderSpark(Transformer):
     def __init__(
         self,
         type_column: str | None = None,
+        model_filename: str | None = None,
     ) -> None:
         """
         Initializes the PySpark Type Encoder.
@@ -60,6 +61,7 @@ class TypeEncoderSpark(Transformer):
 
         self.type = type_column or "type"
         self.type_encoded = self.type + "_encoded"
+        self.model_filename = model_filename or "type_vectorizer_model"
 
     def _transform(self, df: DataFrame) -> DataFrame:
         """
@@ -88,6 +90,8 @@ class TypeEncoderSpark(Transformer):
             df,
             input_column=self.type,
             output_column=self.type_encoded,
+            filename=self.model_filename,
+            drop_original=True,
         )
 
         return encoded_df

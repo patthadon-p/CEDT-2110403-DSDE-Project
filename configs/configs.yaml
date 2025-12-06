@@ -28,3 +28,5 @@ processed:
   # Cleansed data path configuration
   cleansed_data_path: "../data/processed/cleansed_data.csv"
   cleansed_geographic_data_path: "../data/processed/cleansed_geo.csv"
+  # Preprocessed data path configuration
+  model_training_data_path: "../data/processed/model_training_spark.csv"

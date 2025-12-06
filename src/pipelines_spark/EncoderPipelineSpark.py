@@ -15,6 +15,7 @@ EncoderPipelineSpark
 
 # Import necessary modules
 from pyspark.ml import Transformer
+from pyspark.ml.feature import CountVectorizer, CountVectorizerModel  # noqa: F401
 from pyspark.sql import DataFrame
 
 # Other Encoder
@@ -67,7 +68,9 @@ class EncoderPipelineSpark(Transformer):
         address_encoded_column: str | None = None,
         latlong_encoded_column: str | None = None,
         organization_column: str | None = None,
+        organization_model_filename: str | None = None,
         type_column: str | None = None,
+        type_model_filename: str | None = None,
     ) -> None:
         """
         Initializes the PySpark Encoder Pipeline by instantiating all specialized encoders.
@@ -96,6 +99,9 @@ class EncoderPipelineSpark(Transformer):
         self.organization_column = organization_column
         self.type_column = type_column
 
+        self.organization_model_filename = organization_model_filename
+        self.type_model_filename = type_model_filename
+
         self.address_encoder = AddressEncoderSpark(
             district_column=self.district_column,
             subdistrict_column=self.subdistrict_column,
@@ -106,11 +112,13 @@ class EncoderPipelineSpark(Transformer):
         )
 
         self.organization_encoder = OrganizationEncoderSpark(
-            organization_column=self.organization_column
+            organization_column=self.organization_column,
+            model_filename=self.organization_model_filename,
         )
 
         self.type_encoder = TypeEncoderSpark(
             type_column=self.type_column,
+            model_filename=self.type_model_filename,
         )
 
     def _transform(self, df: DataFrame) -> DataFrame:
