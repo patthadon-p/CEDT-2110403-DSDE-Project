@@ -6,16 +6,15 @@ import streamlit as st
 from components.data_loader import TraffyDataLoader
 
 
-# 2. FILTER & LOGIC CLASS (Centralized)
 class TraffyFilter:
 
-    def __init__(self, df: pd.DataFrame):
+    def __init__(self, df: pd.DataFrame) -> None:
         self.df = df
         self.type_list = TraffyDataLoader.get_unique_types(df)
         self.default_start = TraffyDataLoader.default_start
         self.default_end = TraffyDataLoader.default_end
 
-    def render_sidebar(self):
+    def render_sidebar(self) -> tuple[str, str, pd.Timestamp, pd.Timestamp]:
         st.sidebar.title("🛠️ Navigation & Filters")
 
         # --- Navigation ---
@@ -23,10 +22,12 @@ class TraffyFilter:
             "Spatial Analysis": "Map",
             "Scatter Analysis": "Scatter",
             "Line Chart": "Line",
-            "Time Predictor": "Predictor",  # <--- ADDED PAGE
+            "Time Predictor": "Predictor",
         }
         selected_page = st.sidebar.radio("Select View", list(page_options.keys()))
         st.sidebar.markdown("---")
+
+        total_option: str = "ทั้งหมด"
 
         # Filter settings are only necessary for the first three pages
         if selected_page != "Time Predictor":
@@ -35,7 +36,7 @@ class TraffyFilter:
             # --- Filter Form ---
             with st.sidebar.form("filter_form"):
                 selected_type = st.selectbox(
-                    "เลือกประเภทปัญหา", options=["ทั้งหมด"] + self.type_list
+                    "เลือกประเภทปัญหา", options=[total_option] + self.type_list
                 )
                 date_range = st.date_input(
                     "เลือกช่วงวัน",
@@ -47,8 +48,10 @@ class TraffyFilter:
                 # Normalize date range
                 if isinstance(date_range, tuple) and len(date_range) == 2:
                     start_date, end_date = date_range
-                else:
+                elif len(date_range) == 1:
                     start_date = end_date = date_range[0]
+                else:
+                    start_date = end_date = self.default_start
 
                 submit = st.form_submit_button("Apply Filter")
 
@@ -58,12 +61,12 @@ class TraffyFilter:
                 st.session_state["start_date"] = start_date
                 st.session_state["end_date"] = end_date
 
-            self.current_type = st.session_state.get("type_filter", "ทั้งหมด")
+            self.current_type = st.session_state.get("type_filter", total_option)
             self.current_start = st.session_state.get("start_date", self.default_start)
             self.current_end = st.session_state.get("end_date", self.default_end)
         else:
             # Predictor page doesn't need data filtering here
-            self.current_type = "ทั้งหมด"
+            self.current_type = total_option
             self.current_start = self.default_start
             self.current_end = self.default_end
             start_date = self.default_start
@@ -72,8 +75,8 @@ class TraffyFilter:
         return (
             page_options[selected_page],
             self.current_type,
-            self.current_start,
-            self.current_end,
+            pd.Timestamp(self.current_start),
+            pd.Timestamp(self.current_end),
         )
 
     def apply_filters(
