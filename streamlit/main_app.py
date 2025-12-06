@@ -25,12 +25,12 @@ st.markdown(
         visibility: hidden !important;
         height: 0 !important;
     }
-    
+
     /* Hides the "Deploy/Settings" (three-dot) menu button in the top right */
     #MainMenu {
         visibility: hidden !important;
     }
-    
+
     /* Hides the main "Page Selector" dropdown/navigation area in the sidebar */
     /* This targets the specific div that contains the native multi-page selector */
     div[data-testid="stSidebarNav"] {
@@ -51,14 +51,14 @@ st.markdown(
 # MAIN APP CONTROLLER
 # -----------------------------------------------------------------------------
 class TraffyApp:
-    def __init__(self):
+    def __init__(self) -> None:
         # Data Loading
         self.df_cleansed = TraffyDataLoader.load_cleansed()
         self.df_score = TraffyDataLoader.load_scores()
         self.pop_data = TraffyDataLoader.load_pop_data()
         self.filter_manager = TraffyFilter(self.df_cleansed)
 
-    def run(self):
+    def run(self) -> None:
         # Navigation and Filter Setup
         selected_page, type_filter, start_date, end_date = (
             self.filter_manager.render_sidebar()
