@@ -2,9 +2,8 @@
 import shutil
 from pathlib import Path
 
-from pyspark.ml.evaluation import RegressionEvaluator
-
 # Spark modules
+from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.tuning import CrossValidatorModel
 from pyspark.sql import DataFrame
 
@@ -17,13 +16,21 @@ def evaluate_model(
     model: CrossValidatorModel,
     test_df: DataFrame,
     evaluators: dict[str, RegressionEvaluator],
-) -> None:
+) -> dict[str, float]:
+
+    score_dict = {}
+
     print(f"\n===== {name} Results =====")
     preds = model.bestModel.transform(test_df)
     for metric, evaluator in evaluators.items():
         score = evaluator.evaluate(preds)
         print(f"{metric.upper()}: {score}")
+
+        score_dict[metric] = score
+
     print("==========================")
+
+    return score_dict
 
 
 def save_model(model: CrossValidatorModel, name: str | None = None) -> None:

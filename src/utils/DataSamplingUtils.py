@@ -7,7 +7,7 @@ from pyspark.sql.types import ArrayType, IntegerType
 
 def preprocessed_data_sampler(
     df: DataFrame,
-    samplng_fraction: float = 0.1,
+    sampling_fraction: float = 0.1,
 ) -> tuple[DataFrame, DataFrame]:
 
     def _get_indices(v: SparseVector) -> list[int]:
@@ -28,7 +28,7 @@ def preprocessed_data_sampler(
     strata_values = [
         row["strata"] for row in df_grouped.select("strata").distinct().collect()
     ]
-    fractions = dict.fromkeys(strata_values, samplng_fraction)
+    fractions = dict.fromkeys(strata_values, sampling_fraction)
 
     sampled_df = df_grouped.sampleBy("strata", fractions, seed=42)
 

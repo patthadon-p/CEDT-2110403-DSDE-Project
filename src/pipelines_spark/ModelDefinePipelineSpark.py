@@ -1,7 +1,7 @@
 # Import necessary modules
-from typing import cast
+from typing import Any, cast
 
-from pyspark.ml import Estimator, Pipeline
+from pyspark.ml import Estimator, Pipeline, PipelineModel
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.tuning import CrossValidator, CrossValidatorModel, ParamGridBuilder
@@ -91,14 +91,14 @@ class ModelDefinePipelineSpark:
 
         return self.cv_model
 
-    def evaluate(self, test_df: DataFrame) -> None:
-        evaluate_model(
-            name="CrossValidatorModel",
+    def evaluate(self, test_df: DataFrame) -> dict[str, float]:
+        score_dict = evaluate_model(
+            name=self.name,
             model=self.cv_model,
             test_df=test_df,
             evaluators=self.evaluators_dict,
         )
-        return None
+        return score_dict
 
     def set_model(self, cv_model: CrossValidatorModel) -> None:
         self.cv_model = cv_model
@@ -109,3 +109,15 @@ class ModelDefinePipelineSpark:
 
     def get_cross_validator(self) -> CrossValidator:
         return self.cv
+
+    def get_best_params(self) -> dict[str, Any]:
+        best_pipeline = cast(PipelineModel, self.cv_model.bestModel)
+        best_model = best_pipeline.stages[-1]
+
+        param_map = best_model.extractParamMap()
+
+        for p, v in param_map.items():
+            if p.name in self.param_dict:
+                print(p.name, "=", v)
+
+        return {p.name: v for p, v in param_map.items() if p.name in self.param_dict}
