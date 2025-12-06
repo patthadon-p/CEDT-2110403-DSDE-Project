@@ -1,10 +1,10 @@
 # External dependencies
 import streamlit as st
-from matplotlib import rcParams
 
 # Project modules
 from components.data_loader import TraffyDataLoader
 from components.filter_logic import TraffyFilter
+from matplotlib import rcParams
 from pages.analysis_page import render_analysis_page
 from pages.line_page import render_line_chart_page
 from pages.map_page import render_map_visualizer
@@ -48,7 +48,7 @@ st.markdown(
 
 
 # -----------------------------------------------------------------------------
-# 6. MAIN APP CONTROLLER
+# MAIN APP CONTROLLER
 # -----------------------------------------------------------------------------
 class TraffyApp:
     def __init__(self):
@@ -85,9 +85,8 @@ class TraffyApp:
             render_analysis_page(df_filtered, self.df_score, type_filter, df_time_only)
         elif selected_page == "Line":
             # Pass df_filtered (for the new daily counts chart) and type_filter
-            # Note: The Line Chart original code still uses full cleansed data
             render_line_chart_page(self.df_cleansed, df_filtered, type_filter)
-        elif selected_page == "Predictor":  # <--- NEW PAGE LOGIC
+        elif selected_page == "Predictor":
             render_prediction_page()
 
 
