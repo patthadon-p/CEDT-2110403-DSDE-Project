@@ -329,6 +329,7 @@ class PopulationScrapping:
                 PopulationScrapping.DTYPE_MAPPING.pop(f"{level}-name", None)
 
         df = df[~query_condition]
+        df = df[df["province-name"] == "กรุงเทพมหานคร"]
 
         df = df.dropna()
         df = df.reset_index(drop=True)
