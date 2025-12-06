@@ -219,7 +219,9 @@ def render_input_section(predictor: TraffyTimePredictor) -> None:
 
                 if not t.empty:
                     c = t.geometry.centroid.iloc[0]
-                    center = [c.y, c.x]
+                    # Extract coordinates properly from the geometry
+                    coords = list(c.coords)[0]  # type: ignore
+                    center = [coords[1], coords[0]]
                     target_geo = t
 
             m = folium.Map(location=center, zoom_start=zoom)
@@ -278,7 +280,7 @@ def render_input_section(predictor: TraffyTimePredictor) -> None:
             st.markdown("**📍 GPS Selection**")
             if _HAS_JS_EVAL:
                 st.info("Click below to use browser location.")
-                add_margin(t=10)
+                add_margin(top=10)
                 geo_data = get_geolocation()  # This is non-blocking
 
                 # The logic needs to handle the asynchronous nature of get_geolocation
@@ -356,7 +358,7 @@ def render_input_section(predictor: TraffyTimePredictor) -> None:
         )
         with st.spinner("Predicting..."):
             days, level = predictor.predict(features)
-        display_results(days, level, features)
+        display_results(int(days), level, features)
 
 
 def display_results(days: int, level: str, features: dict) -> None:
