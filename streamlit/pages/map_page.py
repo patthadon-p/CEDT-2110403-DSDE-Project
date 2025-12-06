@@ -23,7 +23,7 @@ def render_map_visualizer(
     type_filter: str,
     start_date: datetime.date,
     end_date: datetime.date,
-):
+) -> None:
     st.title("🗺️ Bangkok Traffy Spatial Analysis")
     st.markdown("---")
 
@@ -49,8 +49,7 @@ def render_map_visualizer(
     for year, pop_df in pop_data.items():
         df_year = df_filtered_raw[df_filtered_raw["year"] == year]
         if not df_year.empty and not pop_df.empty:
-            df_merged = pd.merge(
-                df_year,
+            df_merged = df_year.merge(
                 pop_df,
                 left_on=["district", "subdistrict"],
                 right_on=["district-name", "subdistrict-name"],
