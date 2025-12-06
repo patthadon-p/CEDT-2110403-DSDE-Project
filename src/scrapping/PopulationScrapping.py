@@ -243,6 +243,7 @@ class PopulationScrapping:
             )
 
             self.data_frame.columns = PopulationScrapping.COLUMNS
+            self.data_frame = self.data_frame[self.data_frame["province-name"] == "กรุงเทพมหานคร"]
         else:
             self.data_frame = pd.DataFrame()
 
