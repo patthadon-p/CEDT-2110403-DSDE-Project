@@ -14,6 +14,7 @@ from components.model_predictor import (
     handle_pending_updates,
 )
 from components.utils import _HAS_JS_EVAL, add_margin, get_geolocation
+from pyspark.sql import DataFrame
 from streamlit_folium import st_folium
 
 
@@ -361,7 +362,7 @@ def render_input_section(predictor: TraffyTimePredictor) -> None:
         display_results(int(days), level, features)
 
 
-def display_results(days: int, level: str, features: dict) -> None:
+def display_results(days: int, level: str, features: DataFrame) -> None:
     add_margin(top=30)
     st.markdown("---")
     st.markdown("### 📊 Analysis Report")
