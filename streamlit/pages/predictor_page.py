@@ -18,9 +18,10 @@ from streamlit_folium import st_folium
 
 
 # --- Page 4: Time Predictor (New Page) ---
-def render_prediction_page():
+def render_prediction_page() -> None:
     st.title("🔮📅 Time Predictor Model 📅🔮")
-    add_margin(b=10)
+
+    add_margin(bottom=10)
     st.subheader("Estimate Resolution Time for a New Report")
 
     # Initialize the predictor inside the page render, so it reloads on session reset (if cached)
@@ -36,8 +37,7 @@ def render_prediction_page():
     render_input_section(p)
 
 
-def render_input_section(predictor):
-    """Renders the entire input and prediction UI."""
+def render_input_section(predictor: TraffyTimePredictor) -> None:
     # Process any pending coordinates from GPS/Map *before* rendering the widgets
     handle_pending_updates()
 
@@ -70,7 +70,7 @@ def render_input_section(predictor):
         )
         st.session_state["report_date"] = report_date
 
-    add_margin(t=20)
+    add_margin(top=20)
     st.markdown("---")
 
     # --- 2. EXACT LOCATION ---
@@ -84,7 +84,7 @@ def render_input_section(predictor):
         key="input_mode_widget",
         label_visibility="collapsed",
     )
-    add_margin(t=10)
+    add_margin(top=10)
 
     col_map, col_info = st.columns([1, 1], gap="large")
 
@@ -97,7 +97,7 @@ def render_input_section(predictor):
             st.markdown("##### Identified Area")
             st.caption("Select manually or click map to auto-fill.")
 
-            d_opts = ["--- Select District ---"] + sorted(list(predictor.d_map.keys()))
+            d_opts = ["--- Select District ---"] + sorted(predictor.d_map.keys())
 
             # Get the current selected value from session state
             sb_d_val = st.session_state.get("sb_district", "--- Select District ---")
@@ -167,7 +167,7 @@ def render_input_section(predictor):
                 current_district_val = None
                 current_subdistrict_val = None
 
-            add_margin(t=10)
+            add_margin(top=10)
             st.markdown("##### Coordinates")
 
             if st.session_state["confirmed_lat"]:
@@ -206,24 +206,21 @@ def render_input_section(predictor):
                 ]
                 zoom = 15
             elif gdf is not None and current_district_val:
-                try:
-                    t = gdf[gdf["district_name"] == current_district_val]
-                    if current_subdistrict_val:
-                        sub_t = t[t["subdistrict_name"] == current_subdistrict_val]
-                        if not sub_t.empty:
-                            t = sub_t
-                            zoom = 14
-                        else:
-                            zoom = 12
+                t = gdf[gdf["district_name"] == current_district_val]
+                if current_subdistrict_val:
+                    sub_t = t[t["subdistrict_name"] == current_subdistrict_val]
+                    if not sub_t.empty:
+                        t = sub_t
+                        zoom = 14
                     else:
                         zoom = 12
+                else:
+                    zoom = 12
 
-                    if not t.empty:
-                        c = t.geometry.centroid.iloc[0]
-                        center = [c.y, c.x]
-                        target_geo = t
-                except:
-                    pass
+                if not t.empty:
+                    c = t.geometry.centroid.iloc[0]
+                    center = [c.y, c.x]
+                    target_geo = t
 
             m = folium.Map(location=center, zoom_start=zoom)
 
@@ -298,9 +295,9 @@ def render_input_section(predictor):
                     }
                     st.rerun()
 
-                if not st.session_state.get(
+                if st.session_state.get(
                     "location_source"
-                ) == "Current GPS" or not st.session_state.get("confirmed_lat"):
+                ) != "Current GPS" or not st.session_state.get("confirmed_lat"):
                     st.button(
                         "📡 Get My Location & Auto-Fill",
                         use_container_width=True,
@@ -309,14 +306,14 @@ def render_input_section(predictor):
                 else:
                     st.success("Location confirmed via GPS.")
 
-                add_margin(b=80)
+                add_margin(bottom=80)
             else:
                 st.error(
                     "GPS functionality disabled. Set `_HAS_JS_EVAL = True` or install `streamlit-js-eval`."
                 )
-                add_margin(b=80)
+                add_margin(bottom=80)
 
-    add_margin(t=20)
+    add_margin(top=20)
     st.markdown("---")
 
     # --- 3. DETAILS ---
@@ -330,7 +327,7 @@ def render_input_section(predictor):
     with c2:
         types = st.multiselect("Problem Type", predictor.p_types, key="predictor_types")
 
-    add_margin(t=30)
+    add_margin(top=30)
     if st.button("🚀 Compute Prediction", type="primary", use_container_width=True):
         if (
             not current_district_val
@@ -358,19 +355,18 @@ def render_input_section(predictor):
             st.session_state["confirmed_long"],
         )
         with st.spinner("Predicting..."):
-            d, l = predictor.predict(features)
-        display_results(d, l, features)
+            days, level = predictor.predict(features)
+        display_results(days, level, features)
 
 
-def display_results(days, level, features):
-    """Renders the prediction results."""
-    add_margin(t=30)
+def display_results(days: int, level: str, features: dict) -> None:
+    add_margin(top=30)
     st.markdown("---")
     st.markdown("### 📊 Analysis Report")
 
     col_card1, col_card2 = st.columns(2)
 
-    def card(title, value, color="#f0f2f6"):
+    def card(title: str, value: str, color: str = "#f0f2f6") -> str:
         return f"""<div style="background-color:{color};padding:20px;border-radius:10px;border:1px solid #e0e0e0;"><p style="margin:0;font-size:14px;color:#555;">{title}</p><h2 style="margin:0;font-size:28px;color:#000;">{value}</h2></div>"""
 
     level_color = (
@@ -387,8 +383,9 @@ def display_results(days, level, features):
             unsafe_allow_html=True,
         )
 
-    add_margin(t=20)
+    add_margin(top=20)
     c_chart = st.container()
+
     with c_chart:
         st.markdown("#### Time-to-Fix Gauge")
         fig = go.Figure(
@@ -427,7 +424,7 @@ def display_results(days, level, features):
         )
         fig.update_layout(
             height=450,
-            margin=dict(l=30, r=30, t=50, b=20),
+            margin={"l": 30, "r": 30, "t": 50, "b": 20},
             paper_bgcolor="rgba(0,0,0,0)",
             font={"family": "Arial"},
         )
