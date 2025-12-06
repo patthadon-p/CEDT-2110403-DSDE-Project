@@ -187,14 +187,15 @@ class LineChartVisualizer:
     def plot(self, figsize: tuple = (12, 6)) -> go.Figure:
 
         # 3. Group by Year-Month and Type
+        period = self.df["date_ts"].dt.to_period("M")  # type: ignore
+        period = period.rename("Period")
+
         monthly_counts = (
-            self.df.groupby([self.df["date_ts"].to_period("M"), "type_cleaned"])
-            .size()
-            .reset_index(name="Count")
+            self.df.groupby([period, "type_cleaned"]).size().reset_index(name="Count")
         )
 
         # Convert Period back to Timestamp for Plotly plotting
-        monthly_counts["Date"] = monthly_counts["date_ts"].to_timestamp()
+        monthly_counts["Date"] = monthly_counts["Period"].dt.to_timestamp()  # type: ignore
 
         if monthly_counts.empty:
             fig = go.Figure()
@@ -219,7 +220,7 @@ class LineChartVisualizer:
         fig.update_layout(
             legend_title_text="Problem Type",
             xaxis_title=None,
-            hovermode="x",  # Use 'x' to show combined tooltips for all series at a single date
+            hovermode="x",
             margin={"l": 20, "r": 20, "t": 50, "b": 20},
         )
 
@@ -604,7 +605,7 @@ class TraffyVisualizer:
             return
 
         daily_counts["date"] = pd.to_datetime(daily_counts[["year", "month", "day"]])
-        daily_counts["year_month"] = daily_counts["date"].to_period("M").astype(str)
+        daily_counts["year_month"] = daily_counts["date"].dt.to_period("M").astype(str)  # type: ignore
 
         fig = px.scatter(
             daily_counts,
