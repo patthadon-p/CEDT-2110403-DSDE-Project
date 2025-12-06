@@ -12,7 +12,7 @@ def render_analysis_page(
     df_score: pd.DataFrame,
     type_filter: str,
     df_time_only: pd.DataFrame,
-):
+) -> None:
     st.title("📊 Bangkok Traffy Data Analysis")
     visualizer = TraffyVisualizer()
 
