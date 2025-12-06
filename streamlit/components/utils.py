@@ -9,7 +9,9 @@ import streamlit as st
 from shapely.geometry import Point
 
 # Ensure project root is in sys.path for imports
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+current_file = os.path.abspath(__file__)
+project_root = os.path.abspath(os.path.join(current_file, "../../../"))
+
 if project_root not in sys.path:
     sys.path.append(project_root)
 

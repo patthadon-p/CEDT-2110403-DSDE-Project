@@ -30,3 +30,9 @@ processed:
   cleansed_geographic_data_path: "../data/processed/cleansed_geo.csv"
   # Preprocessed data path configuration
   model_training_data_path: "../data/processed/model_training_spark.csv"
+
+model:
+  # Model path configuration
+  best_model_path: "../data/model/gbt_cv_model_spark"
+  organization_vectorizer_path: "../data/model/organization_vectorizer_model"
+  type_vectorizer_path: "../data/model/type_vectorizer_model"

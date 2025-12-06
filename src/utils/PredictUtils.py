@@ -1,13 +1,17 @@
 import os
 
+import pandas as pd
 from pyspark.ml.pipeline import PipelineModel
 from pyspark.ml.tuning import CrossValidatorModel, TrainValidationSplitModel
 from pyspark.sql import DataFrame, SparkSession
 
 
 def predict_with_model(
-    spark: SparkSession, model_path: str, input_df: DataFrame, return_pandas: bool = False
-) -> DataFrame | list:
+    spark: SparkSession,
+    model_path: str,
+    input_df: DataFrame,
+    return_pandas: bool = False,
+) -> DataFrame | pd.DataFrame:
     """
     Load a saved Spark ML model (PipelineModel, CrossValidatorModel,
     or TrainValidationSplitModel) and run prediction.

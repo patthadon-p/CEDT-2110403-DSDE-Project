@@ -1,12 +1,58 @@
 # External dependencies
+import os
+import sys
 from datetime import date
 
-import numpy as np
 import streamlit as st
 
 # Project modules
 from components.data_loader import load_and_process_predictor_data, load_geo_data
 from components.utils import find_location_from_coords
+
+# Spark dependencies
+from pyspark.ml import Model
+from pyspark.ml.feature import CountVectorizerModel, FeatureHasher, VectorAssembler
+from pyspark.ml.linalg import VectorUDT
+from pyspark.ml.tuning import CrossValidatorModel
+from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql.types import IntegerType, StructField, StructType
+
+# Ensure project root is in sys.path for imports
+current_file = os.path.abspath(__file__)
+project_root = os.path.abspath(os.path.join(current_file, "../../../"))
+
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
+from src.utils import create_spark_session, read_config_path
+
+
+@st.cache_resource
+def load_spark_and_models() -> (
+    tuple[SparkSession, Model, dict[str, CountVectorizerModel], FeatureHasher]
+):
+    spark, _ = create_spark_session(app_name="TraffyTimePredictorPage")
+
+    model = CrossValidatorModel.load(
+        read_config_path(domain="model", key="best_model_path")
+    ).bestModel
+
+    encoding_model = {
+        "type": CountVectorizerModel.load(
+            read_config_path(domain="model", key="type_vectorizer_path")
+        ),
+        "organization": CountVectorizerModel.load(
+            read_config_path(domain="model", key="organization_vectorizer_path")
+        ),
+    }
+
+    hasher = FeatureHasher(
+        inputCols=["district", "subdistrict"],
+        outputCol="address_encoded",
+        numFeatures=2048,
+    )
+
+    return spark, model, encoding_model, hasher
 
 
 class TraffyTimePredictor:
@@ -14,9 +60,21 @@ class TraffyTimePredictor:
     def __init__(self) -> None:
         self.d_map, self.p_types, self.orgs = load_and_process_predictor_data()
 
-    def _sparse_vec(self, size: int, idx: list[int]) -> str:
-        u = sorted(set(idx))
-        return f"({size}, {u}, {[1.0]*len(u)})"
+        # Create Spark session and load models
+        self.spark, self.model, self.encoding_model, self.hasher = (
+            load_spark_and_models()
+        )
+
+        self.schema = StructType(
+            [
+                StructField("timestamp_month", IntegerType()),
+                StructField("timestamp_year", IntegerType()),
+                StructField("address_encoded", VectorUDT()),
+                StructField("latlong_encoded", VectorUDT()),
+                StructField("organization_encoded", VectorUDT()),
+                StructField("type_encoded", VectorUDT()),
+            ]
+        )
 
     def prepare_features(
         self,
@@ -27,44 +85,70 @@ class TraffyTimePredictor:
         date: date,
         lat: float,
         long: float,
-    ) -> dict:
+    ) -> DataFrame:
         tm = int(date.month)
         ty = int(date.year)
 
-        # Use pandas hash for consistency with the original code if run in the same environment
-        dh = hash(district) % 2048
-        sh = hash(subdistrict) % 2048
-        ti = [self.p_types.index(t) for t in types if t in self.p_types]
-        oi = [hash(o) % 1786 for o in orgs]
+        df_cate = self.spark.createDataFrame(
+            [(types, orgs)],
+            ["type", "organization"],
+        )
 
-        return {
-            "timestamp_month": tm,
-            "timestamp_year": ty,
-            "address_encoded": self._sparse_vec(2048, [dh, sh]),
-            "latlong_encoded": [float(lat), float(long)],
-            "organization_encoded": self._sparse_vec(1786, oi),
-            "type_encoded": self._sparse_vec(25, ti),
-        }
+        for column, model in self.encoding_model.items():
+            df_cate = model.transform(df_cate)
+            df_cate = df_cate.withColumnRenamed("features", f"{column}_encoded")
 
-    def predict(self, model_input: dict) -> tuple[float, str]:
-        base = 3.0
+        category_row = df_cate.first()
 
-        # Extract the indices from the sparse vector string
-        ts_str = model_input["type_encoded"].split("[")[1].split("]")[0]
-        if ts_str:
-            # Check if any index (before the comma, as a string) is odd-indexed.
-            indices = [
-                int(x.strip())
-                for x in ts_str.split(",")
-                if x.strip() and x.strip().isdigit()
-            ]
-            if any(i % 2 != 0 for i in indices):
-                base += 5.0
+        df_addr = self.spark.createDataFrame(
+            [(district, subdistrict)],
+            ["district", "subdistrict"],
+        )
 
-        # Add random variation to mock the prediction
-        val = max(1, base + np.random.uniform(-1, 5))
-        lvl = "Fast (เร็ว)" if val < 3 else "Normal (ปกติ)" if val < 10 else "Slow (ช้า)"
-        return round(val, 1), lvl
+        df_addr_hashed = self.hasher.transform(df_addr)
+        address_row = df_addr_hashed.first()
+
+        latlong_vec = VectorAssembler(
+            inputCols=["lat", "long"], outputCol="latlong_encoded"
+        )
+
+        latlong_df = self.spark.createDataFrame(
+            [(float(lat), float(long))],
+            ["lat", "long"],
+        )
+
+        latlong_transformed = latlong_vec.transform(latlong_df)
+        latlong_row = latlong_transformed.first()
+
+        if (category_row is None) or (address_row is None) or (latlong_row is None):
+            raise ValueError("DataFrame transformation resulted in empty dataset")
+
+        feature_df = self.spark.createDataFrame(
+            [
+                (
+                    int(tm),
+                    int(ty),
+                    address_row.address_encoded,
+                    latlong_row.latlong_encoded,
+                    category_row.organization_encoded,
+                    category_row.type_encoded,
+                )
+            ],
+            schema=self.schema,
+        )
+
+        return feature_df
+
+    def predict(self, model_input: DataFrame) -> tuple[float, str]:
+        prediction = self.model.transform(model_input)
+        pred_value = prediction.select("prediction").collect()[0][0]
+
+        lvl = (
+            "Fast (เร็ว)"
+            if pred_value < 3
+            else "Normal (ปกติ)" if pred_value < 10 else "Slow (ช้า)"
+        )
+        return round(pred_value, 1), lvl
 
 
 # --- State Management & Callbacks (Time Predictor - From Second Block) ---
