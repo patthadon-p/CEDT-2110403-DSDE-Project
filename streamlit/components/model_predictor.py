@@ -1,7 +1,8 @@
-# src/model_predictor.py
-
+# External dependencies
 import numpy as np
 import streamlit as st
+
+# Project modules
 from components.data_loader import load_and_process_predictor_data, load_geo_data
 from components.utils import find_location_from_coords
 

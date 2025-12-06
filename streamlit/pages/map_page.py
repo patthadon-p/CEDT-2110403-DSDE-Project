@@ -1,11 +1,11 @@
-# pages/map_page.py
-
+# Standard library
 import datetime
 
+# External dependencies
 import pandas as pd
 import streamlit as st
 
-# Import necessary functions/classes from src modules
+# Project modules
 from components.utils import _HAS_SKLEARN, read_config_path
 from components.visualizer import (
     plot_choroplethmap,

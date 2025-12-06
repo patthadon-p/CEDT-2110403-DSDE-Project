@@ -1,7 +1,7 @@
-# src/visualizer.py
-
+# Standard library
 import json
 
+# External dependencies
 import altair as alt
 import geopandas as gpd
 import pandas as pd
@@ -9,10 +9,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pydeck as pdk
 import streamlit as st
-
-# Import utilities and constants
-from components.utils import _HAS_SKLEARN
 from plotly.subplots import make_subplots
+
+# Project modules
+from components.utils import _HAS_SKLEARN
 from shapely import wkt
 
 # If DBSCAN is not available, we use the mock defined in utils

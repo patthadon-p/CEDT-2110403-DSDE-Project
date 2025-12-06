@@ -1,15 +1,12 @@
-# src/utils.py
-
+# Standard library
 import os
 import sys
 
+# External dependencies
 import streamlit as st
 from shapely.geometry import Point
 
-# NOTE: load_geo_data must be defined/imported in this scope or called from data_loader
-# We'll rely on importing it from data_loader later for dependency management.
-
-# Check for streamlit_js_eval existence for the second block's dependency
+# Optional dependencies
 try:
     from streamlit_js_eval import get_geolocation
 

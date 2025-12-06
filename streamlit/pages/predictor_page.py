@@ -1,18 +1,18 @@
-# pages/predictor_page.py
-
+# Standard library
 import datetime
 
+# External dependencies
 import folium
 import plotly.graph_objects as go
 import streamlit as st
-from components.data_loader import load_geo_data  # Needed for map zoom/highlight
+
+# Project modules
+from components.data_loader import load_geo_data
 from components.model_predictor import (
     TraffyTimePredictor,
     clear_coordinates,
     handle_pending_updates,
 )
-
-# Import necessary functions/classes from src modules
 from components.utils import _HAS_JS_EVAL, add_margin, get_geolocation
 from streamlit_folium import st_folium
 

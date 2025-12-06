@@ -1,8 +1,8 @@
-# src/filter_logic.py
-
-
+# External dependencies
 import pandas as pd
 import streamlit as st
+
+# Project modules
 from components.data_loader import TraffyDataLoader
 
 

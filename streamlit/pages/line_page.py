@@ -1,7 +1,8 @@
-# pages/line_page.py
-
+# External dependencies
 import pandas as pd
 import streamlit as st
+
+# Project modules
 from components.visualizer import LineChartVisualizer, TraffyVisualizer
 
 

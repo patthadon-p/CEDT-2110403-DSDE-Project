@@ -1,14 +1,8 @@
-# main_app.py
-
-# Import necessary libraries
-
+# External dependencies
 import streamlit as st
-from matplotlib import rcParams  # Import rcParams
+from matplotlib import rcParams
 
-# Configuration
-rcParams["font.family"] = "Tahoma"  # Set font family
-
-# --- Import from Modules ---
+# Project modules
 from components.data_loader import TraffyDataLoader
 from components.filter_logic import TraffyFilter
 from pages.analysis_page import render_analysis_page
@@ -16,9 +10,8 @@ from pages.line_page import render_line_chart_page
 from pages.map_page import render_map_visualizer
 from pages.predictor_page import render_prediction_page
 
-# main_app.py
-
-# ... (Imports and config remain the same)
+# Configuration
+rcParams["font.family"] = "Tahoma"
 
 # Streamlit page configuration
 st.set_page_config(layout="wide", page_title="Bangkok Traffy Unified Dashboard")
