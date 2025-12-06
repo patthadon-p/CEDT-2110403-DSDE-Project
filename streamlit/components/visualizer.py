@@ -17,7 +17,20 @@ from shapely import wkt
 
 # If DBSCAN is not available, we use the mock defined in utils
 if not _HAS_SKLEARN:
-    from components.utils import plot_dbscan_map  # Import the mock function
+    from components.utils import plot_dbscan_map as _mock_plot_dbscan_map
+
+    # Create a wrapper function with the correct signature
+    def plot_dbscan_map(
+        df: pd.DataFrame,
+        eps: float,
+        min_samples: int,
+        top_n: int = 5,
+        lon_col: str = "longitude",
+        lat_col: str = "latitude",
+        max_points: int = 100_000,
+    ) -> pdk.Deck:
+        return _mock_plot_dbscan_map()
+
 else:
     # If available, import necessary DBSCAN dependencies for the real function
     import matplotlib.pyplot as plt  # Required for colormap
@@ -33,11 +46,7 @@ else:
         lon_col: str = "longitude",
         lat_col: str = "latitude",
         max_points: int = 100_000,
-    ):
-        """
-        Performs DBSCAN clustering on spatial data using user-defined parameters
-        and visualizes all non-noise clusters using a dynamic continuous colormap.
-        """
+    ) -> pdk.Deck:
         if df.empty or len(df) < min_samples:
             st.info("Insufficient data for clustering with current filters/parameters.")
             return pdk.Deck(
@@ -63,6 +72,7 @@ else:
             "type_cleaned",
             "type_clean",
         ]
+
         optional_cols = ["day", "month", "year", "comment"]
         for col in optional_cols:
             if col in df_plot.columns and col not in cols_to_keep:
@@ -133,14 +143,14 @@ else:
             tooltip={
                 "html": "<b>Cluster:</b> {cluster}<br/><b>Location:</b> {subdistrict} {district}<br/><b>Date:</b> {day}/{month}/{year}<br/><b>Type:</b> {type_clean}",
                 "style": {"color": "white"},
-            },
+            },  # type: ignore
         )
         return deck
 
 
 # --- LINECHARTVISUALIZER CLASS (Updated with Custom Hover Data) ---
 class LineChartVisualizer:
-    def __init__(self, df):
+    def __init__(self, df: pd.DataFrame) -> None:
         self.df = df.copy()
 
         # 1. Expand data to handle multiple types per ticket
@@ -178,12 +188,13 @@ class LineChartVisualizer:
 
         # 3. Group by Year-Month and Type
         monthly_counts = (
-            self.df.groupby([self.df["date_ts"].dt.to_period("M"), "type_cleaned"])
+            self.df.groupby([self.df["date_ts"].to_period("M"), "type_cleaned"])
             .size()
             .reset_index(name="Count")
         )
+
         # Convert Period back to Timestamp for Plotly plotting
-        monthly_counts["Date"] = monthly_counts["date_ts"].dt.to_timestamp()
+        monthly_counts["Date"] = monthly_counts["date_ts"].to_timestamp()
 
         if monthly_counts.empty:
             fig = go.Figure()
@@ -204,12 +215,12 @@ class LineChartVisualizer:
         )
 
         # 5. Customize Layout
-        fig.update_traces(mode="lines", line=dict(width=2))
+        fig.update_traces(mode="lines", line={"width": 2})
         fig.update_layout(
             legend_title_text="Problem Type",
             xaxis_title=None,
             hovermode="x",  # Use 'x' to show combined tooltips for all series at a single date
-            margin=dict(l=20, r=20, t=50, b=20),
+            margin={"l": 20, "r": 20, "t": 50, "b": 20},
         )
 
         return fig
@@ -221,7 +232,7 @@ def plot_choroplethmap(
     region_path: str,
     type_filter: str | None = None,
     value_column: str = "count",
-):
+) -> pdk.Deck:
     df_points = df.copy()
     if type_filter and type_filter != "ทั้งหมด":
         # Need to use the full 'type_cleaned' tuple column to filter
@@ -235,6 +246,7 @@ def plot_choroplethmap(
         geometry=gpd.points_from_xy(df_points["longitude"], df_points["latitude"]),
         crs="EPSG:4326",
     )
+
     df_region = pd.read_csv(region_path)
     df_region["geometry"] = df_region["geometry"].map(wkt.loads)
     gdf_region = gpd.GeoDataFrame(df_region, geometry="geometry", crs="EPSG:4326")
@@ -250,7 +262,7 @@ def plot_choroplethmap(
     # --- Pydeck Specific Steps ---
 
     # 4. Compute map center
-    center_latlon = gdf_merged.to_crs(epsg=3857).geometry.unary_union.centroid
+    center_latlon = gdf_merged.to_crs(epsg=3857).geometry.union_all().centroid
     center_latlon = (
         gpd.GeoSeries([center_latlon], crs="EPSG:3857").to_crs(epsg=4326).geometry[0]
     )
@@ -282,8 +294,8 @@ def plot_choroplethmap(
 
     # 6. Define the View State
     view_state = pdk.ViewState(
-        latitude=center_latlon.y,
-        longitude=center_latlon.x,
+        latitude=center_latlon.coords[0][1],
+        longitude=center_latlon.coords[0][0],
         zoom=9,
         min_zoom=9,
         max_zoom=16,
@@ -297,7 +309,7 @@ def plot_choroplethmap(
         tooltip={
             "html": "<b>Subdistrict:</b> {subdistrict_name}<br/><b>District:</b> {district_name}<br/><b>Count:</b> {count}",
             "style": {"color": "white"},
-        },
+        },  # type: ignore
     )
 
     return r
@@ -309,7 +321,7 @@ def plot_choroplethmap_perpop(
     region_path: str,
     type_filter: str | None = None,
     value_column: str = "probperpop",
-):
+) -> pdk.Deck:
     df_region = pd.read_csv(region_path)
     df_region["geometry"] = df_region["geometry"].map(wkt.loads)
     gdf_region = gpd.GeoDataFrame(df_region, geometry="geometry", crs="EPSG:4326")
@@ -338,7 +350,7 @@ def plot_choroplethmap_perpop(
     # --- Pydeck Specific Steps ---
 
     # 1. Compute map center
-    center_latlon = gdf_merged.to_crs(epsg=3857).geometry.unary_union.centroid
+    center_latlon = gdf_merged.to_crs(epsg=3857).geometry.union_all().centroid
     center_latlon = (
         gpd.GeoSeries([center_latlon], crs="EPSG:3857").to_crs(epsg=4326).geometry[0]
     )
@@ -373,8 +385,8 @@ def plot_choroplethmap_perpop(
 
     # 3. Define the View State
     view_state = pdk.ViewState(
-        latitude=center_latlon.y,
-        longitude=center_latlon.x,
+        latitude=center_latlon.coords[0][1],
+        longitude=center_latlon.coords[0][0],
         zoom=9,
         min_zoom=9,
         max_zoom=16,
@@ -388,7 +400,7 @@ def plot_choroplethmap_perpop(
         tooltip={
             "html": "<b>Subdistrict:</b> {subdistrict_name}<br/><b>Incidents per Pop:</b> {probperpop}",
             "style": {"color": "white"},
-        },
+        },  # type: ignore
     )
 
     return r
@@ -400,7 +412,7 @@ def plot_heatmap(
     lon_col: str = "longitude",
     lat_col: str = "latitude",
     max_points: int = 100_000,
-):
+) -> pdk.Deck:
     """Creates a Pydeck HeatmapLayer visualization."""
 
     # --- 1. Sampling and Data Preparation ---
@@ -457,6 +469,7 @@ def plot_heatmap(
         initial_view_state=view_state,
         map_style="dark",
     )
+
     return deck
 
 
@@ -467,7 +480,7 @@ def plot_scatter_map(
     lon_col: str = "longitude",
     lat_col: str = "latitude",
     type_col: str = "type_clean",
-):
+) -> pdk.Deck:
     # --- 1. Sampling and Data Preparation ---
     if len(df) > max_points:
         st.warning(
@@ -514,7 +527,7 @@ def plot_scatter_map(
     }
 
     # Function to get color from the map, defaulting to 'Other' color
-    def get_color(type_value):
+    def get_color(type_value: str) -> list[int]:
         if pd.isna(type_value):
             return COLOR_MAP["Other"]
         return COLOR_MAP.get(str(type_value).strip(), COLOR_MAP["Other"])
@@ -568,8 +581,9 @@ def plot_scatter_map(
                 "<b>Comment:</b> {comment}"
             ),
             "style": {"color": "white"},
-        },
+        },  # type: ignore
     )
+
     return deck
 
 
@@ -577,7 +591,7 @@ def plot_scatter_map(
 class TraffyVisualizer:
 
     @staticmethod
-    def plot_daily_counts(df: pd.DataFrame, type_label: str):
+    def plot_daily_counts(df: pd.DataFrame, type_label: str) -> None:
         label = type_label if type_label != "ทั้งหมด" else "ทั้งหมด"
         st.subheader(f"Timeline: {label}")
 
@@ -590,7 +604,7 @@ class TraffyVisualizer:
             return
 
         daily_counts["date"] = pd.to_datetime(daily_counts[["year", "month", "day"]])
-        daily_counts["year_month"] = daily_counts["date"].dt.to_period("M").astype(str)
+        daily_counts["year_month"] = daily_counts["date"].to_period("M").astype(str)
 
         fig = px.scatter(
             daily_counts,
@@ -600,18 +614,22 @@ class TraffyVisualizer:
             labels={"date": "Date", "count": "Issues", "year_month": "Month"},
             hover_data=["date", "count"],
         )
+
         fig.add_trace(px.line(daily_counts, x="date", y="count").data[0])
-        fig.update_traces(marker=dict(size=6, opacity=0.8))
+        fig.update_traces(marker={"size": 6, "opacity": 0.8})
         fig.update_layout(
             height=380,
-            margin=dict(l=20, r=20, t=30, b=20),
+            margin={"l": 20, "r": 20, "t": 30, "b": 20},
             legend_title_text=None,
             hovermode="x unified",
         )
+
         st.plotly_chart(fig, use_container_width=True)
 
     @staticmethod
-    def plot_score_vs_complaints(df_filtered: pd.DataFrame, df_score: pd.DataFrame):
+    def plot_score_vs_complaints(
+        df_filtered: pd.DataFrame, df_score: pd.DataFrame
+    ) -> None:
         if "district" not in df_filtered.columns or df_score.empty:
             return
 
@@ -628,7 +646,7 @@ class TraffyVisualizer:
         low_score_th = merged["total_score"].quantile(0.3)
         high_complaints_th = merged["complaints"].quantile(0.7)
 
-        def get_zone(row):
+        def get_zone(row: pd.Series) -> str:
             if (
                 row["total_score"] < low_score_th
                 and row["complaints"] > high_complaints_th
@@ -667,7 +685,7 @@ class TraffyVisualizer:
             title="Total Score vs Complaints",
         )
 
-        fig.update_traces(marker=dict(size=12, opacity=0.8))
+        fig.update_traces(marker={"size": 12, "opacity": 0.8})
         fig.add_vline(
             x=float(low_score_th), line_dash="dash", line_color="gray", opacity=0.5
         )
@@ -680,26 +698,30 @@ class TraffyVisualizer:
 
         fig.update_layout(
             height=510,
-            margin=dict(l=20, r=20, t=60, b=20),
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1,
-                title=None,
-            ),
+            margin={"l": 20, "r": 20, "t": 60, "b": 20},
+            legend={
+                "title": None,
+                "orientation": "h",
+                "y": 1.02,
+                "yanchor": "bottom",
+                "x": 1,
+                "xanchor": "right",
+            },
         )
+
         st.plotly_chart(fig, use_container_width=True)
 
     @staticmethod
-    def plot_quality_dimensions(df_filtered: pd.DataFrame, df_score: pd.DataFrame):
+    def plot_quality_dimensions(
+        df_filtered: pd.DataFrame, df_score: pd.DataFrame
+    ) -> None:
         if "district" not in df_filtered.columns or df_score.empty:
             return
 
         complaints = (
             df_filtered.groupby("district").size().reset_index(name="complaints")
         )
+
         merged = df_score.merge(complaints, on="district", how="left")
         merged["complaints"] = merged["complaints"].fillna(0)
 
@@ -715,14 +737,14 @@ class TraffyVisualizer:
                     x=merged[m],
                     y=merged["complaints"],
                     mode="markers",
-                    marker=dict(
-                        size=10,
-                        opacity=1,
-                        color=merged["complaints"],
-                        colorscale="RdYlBu",
-                        reversescale=True,
-                        showscale=False,
-                    ),
+                    marker={
+                        "size": 10,
+                        "opacity": 1,
+                        "color": merged["complaints"],
+                        "colorscale": "RdYlBu",
+                        "reversescale": True,
+                        "showscale": False,
+                    },
                     text=merged["district"],
                     hovertemplate=f"<b>%{{text}}</b><br>{titles[m]}: %{{x}}<br>Complaints: %{{y}}<extra></extra>",
                 ),
@@ -737,12 +759,15 @@ class TraffyVisualizer:
             height=500,
             showlegend=False,
             title_text="Dimensions vs Complaints",
-            margin=dict(l=40, r=20, t=60, b=40),
+            margin={"l": 40, "r": 20, "t": 60, "b": 40},
         )
+
         st.plotly_chart(fig, use_container_width=True)
 
     @staticmethod
-    def plot_heatmap_metric_vs_type(df_base: pd.DataFrame, df_score: pd.DataFrame):
+    def plot_heatmap_metric_vs_type(
+        df_base: pd.DataFrame, df_score: pd.DataFrame
+    ) -> None:
         df = df_base.dropna(subset=["type_clean"]).copy()
         df = df[df["type_clean"].astype(str).str.strip() != ""]
         if df.empty or df_score.empty:
@@ -752,7 +777,7 @@ class TraffyVisualizer:
             df.groupby(["district", "type_clean"])
             .size()
             .reset_index(name="complaints")
-            .pivot(index="district", columns="type_clean", values="complaints")
+            .pivot_table(index="district", columns="type_clean", values="complaints")
             .fillna(0)
             .reset_index()
         )
@@ -790,10 +815,11 @@ class TraffyVisualizer:
             )
             .properties(height=350, title="Correlation: Metric x Type")
         )
+
         st.altair_chart(heatmap, use_container_width=True)
 
     @staticmethod
-    def plot_heatmap_type_vs_type(df_base: pd.DataFrame):
+    def plot_heatmap_type_vs_type(df_base: pd.DataFrame) -> None:
         triangle_mode = st.radio(
             "Mode:",
             ["Full", "Upper", "Lower"],
@@ -811,7 +837,7 @@ class TraffyVisualizer:
             df.groupby(["district", "type_clean"])
             .size()
             .reset_index(name="complaints")
-            .pivot(index="district", columns="type_clean", values="complaints")
+            .pivot_table(index="district", columns="type_clean", values="complaints")
             .fillna(0)
         )
         if pivot_problems.shape[1] < 2:
@@ -858,10 +884,11 @@ class TraffyVisualizer:
                 title="Correlation: Type x Type",
             )
         )
+
         st.altair_chart(heatmap, use_container_width=False)
 
     @staticmethod
-    def plot_scatter_matrix(df_time_filtered: pd.DataFrame):
+    def plot_scatter_matrix(df_time_filtered: pd.DataFrame) -> None:
         df = df_time_filtered.dropna(subset=["type_clean"]).copy()
         df = df[df["type_clean"].astype(str).str.strip() != ""]
 
@@ -901,11 +928,12 @@ class TraffyVisualizer:
             hover_data=["district"],
             title=None,
         )
-        fig.update_traces(marker=dict(size=8, opacity=0.9))
+        fig.update_traces(marker={"size": 8, "opacity": 0.9})
         fig.update_layout(
             height=600,
-            margin=dict(l=30, r=30, t=30, b=30),
+            margin={"l": 30, "r": 30, "t": 30, "b": 30},
             plot_bgcolor="#FFFFFF",
             paper_bgcolor="white",
         )
+
         st.plotly_chart(fig, use_container_width=True)
