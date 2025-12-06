@@ -9,7 +9,7 @@ from components.visualizer import LineChartVisualizer, TraffyVisualizer
 # --- Page 3: Line Chart (Line Chart Viewer) ---
 def render_line_chart_page(
     df_cleansed: pd.DataFrame, df_filtered: pd.DataFrame, type_filter: str
-):
+) -> None:
     st.title("📈 Bangkok Traffy Line Chart Viewer")
 
     # 1. Daily Counts (Timeline)
@@ -21,7 +21,7 @@ def render_line_chart_page(
     st.subheader("Monthly Problem Counts by Type (All Types)")
     try:
         # Renaming columns back is still necessary if the external class is being used
-        # The LineChartVisualizer expects 'timestamp_year' and 'timestamp_month'
+        # The LineChartVisualizer expects "timestamp_year" and "timestamp_month"
         df_for_viz = df_cleansed.copy()
 
         col_map = {
@@ -45,4 +45,3 @@ def render_line_chart_page(
 
     except Exception as e:
         st.error(f"Error rendering Line Chart: {e}.")
-        # st.info("Debugging note: The DataFrame passed has columns: " + ", ".join(df_cleansed.columns))
