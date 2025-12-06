@@ -11,7 +11,6 @@ from components.utils import read_config_path
 from shapely import wkt
 
 
-# 1. DATA LOADER CLASS (Combined and Enhanced)
 class TraffyDataLoader:
 
     default_start = datetime.date(2021, 9, 19)
@@ -33,7 +32,7 @@ class TraffyDataLoader:
             .apply(tuple)
         )
 
-        # 'type_clean' is the first type (for single type filtering)
+        # "type_clean" is the first type (for single type filtering)
         df["type_clean"] = df["type_cleaned"].apply(
             lambda x: x[0].strip() if isinstance(x, tuple) and len(x) > 0 else None
         )
@@ -95,10 +94,10 @@ class TraffyDataLoader:
 
 
 @st.cache_data(show_spinner=False)
-def load_and_process_predictor_data():
-    """Loads a minimal set of data for the Time Predictor's dropdowns."""
+def load_and_process_predictor_data() -> (
+    tuple[dict[str, list[str]], list[str], list[str]]
+):
     path = read_config_path(domain="processed", key="cleansed_data_path")
-    # Added 'timestamp_month', 'timestamp_year' to help the hash in prepare_features
     cols = [
         "district",
         "subdistrict",
@@ -112,11 +111,11 @@ def load_and_process_predictor_data():
     district_map = (
         df.dropna(subset=["district", "subdistrict"])
         .groupby("district")["subdistrict"]
-        .apply(lambda x: sorted(list(set(x))))
+        .apply(lambda x: sorted(set(x)))
         .to_dict()
     )
 
-    def clean_explode(c):
+    def clean_explode(c: str) -> list[str]:
         s = (
             df[c]
             .astype(str)
@@ -131,15 +130,15 @@ def load_and_process_predictor_data():
 
 
 @st.cache_data(show_spinner=False)
-def load_geo_data():
-    """Loads the GeoDataFrame for reverse geocoding/map highlighting."""
+def load_geo_data() -> gpd.GeoDataFrame | None:
     try:
         path = read_config_path(domain="processed", key="cleansed_geographic_data_path")
         df = pd.read_csv(path)
-        df["geometry"] = df["geometry"].apply(wkt.loads)
+        df["geometry"] = df["geometry"].map(lambda x: wkt.loads(x))
         gdf = gpd.GeoDataFrame(df, geometry="geometry")
         gdf.set_crs(epsg=4326, inplace=True)
         return gdf
+
     except Exception as e:
         st.warning(f"Failed to load geographic data for reverse geocoding: {e}")
         return None
