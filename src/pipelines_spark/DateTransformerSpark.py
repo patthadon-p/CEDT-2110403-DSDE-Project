@@ -26,10 +26,10 @@ class DateTransformerSpark(Transformer):
 
     For each specified start and end column:
     1. Converts the column to a PySpark TimestampType (`to_timestamp`).
-    2. Extracts and creates three new integer columns: `_date`, `_month`, and `_year`.
-    3. Calculates the difference in days between the end time and the start time (`date_diff`).
+    2. Extracts and creates three new **Integer** columns: `_date`, `_month`, and `_year`.
+    3. Calculates the difference in **days** between the end time and the start time (`date_diff`).
     4. Drops the original timestamp columns.
-
+    
     Parameters
     ----------
     start_time_column : str or None, optional

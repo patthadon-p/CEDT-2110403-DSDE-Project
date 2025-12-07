@@ -50,7 +50,7 @@ class IngestionPreprocessor(BaseEstimator, TransformerMixin):
         Dictionary mapping old column names to new column names.
     drop_columns : list of str or str
         The final list of columns to be dropped, or the string "DROP" if columns
-        were passed as None but config data resulted in "DROP" (based on implementation logic).
+        were not specified and the configuration resulted in "DROP".
     drop_na_columns : list of str
         The final list of columns used for filtering (dropping rows with NaNs).
     """

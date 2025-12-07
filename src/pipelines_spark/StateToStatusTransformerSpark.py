@@ -111,8 +111,9 @@ class StateToStatusTransformerSpark(Transformer):
         Returns
         -------
         pyspark.sql.DataFrame
-            The transformed DataFrame with the target column's values replaced
-            by standardized status values.
+            The transformed DataFrame. The original `old_column` is replaced by 
+            the standardized `new_column` (if the names are different) or the 
+            values are updated (if the names are the same).
         """
 
         df_joined = df.join(self.mapping_df, on=self.old_column, how="left")

@@ -93,6 +93,10 @@ class CleansingPipelineSpark(Transformer):
 
     Attributes
     ----------
+    spark : pyspark.sql.SparkSession
+        The active SparkSession instance.
+    sedona : pyspark.sql.SparkSession
+        The active Sedona (Apache Sedona/GeoSpark) enabled SparkSession instance.
     ingest_pre_processor : IngestionPreprocessorSpark
         Instantiated transformer for initial column cleanup and row filtering.
     date_transformer : DateTransformerSpark
@@ -101,6 +105,10 @@ class CleansingPipelineSpark(Transformer):
         Instantiated transformer for address cleanup and geographic enrichment.
     state_to_status_transformer : StateToStatusTransformerSpark
         Instantiated transformer for mapping state values to standard statuses.
+    start_time_column : str or None
+        The final name of the column containing the event start time.
+    end_time_column : str or None
+        The final name of the column containing the event end time/resolution time.
     """
 
     def __init__(

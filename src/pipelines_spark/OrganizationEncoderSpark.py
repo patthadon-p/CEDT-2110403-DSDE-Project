@@ -10,7 +10,7 @@ Classes
 -------
 OrganizationEncoderSpark
     A PySpark ML Transformer that processes the organization column, splits it
-    into an array of strings, and applies CountVectorizer to generate a feature vector.
+     into an array of strings, and applies CountVectorizer to generate a feature vector.
 """
 
 # Import necessary modules
@@ -34,6 +34,9 @@ class OrganizationEncoderSpark(Transformer):
     organization_column : str or None, optional
         Name of the input column containing organization names (which may be
         comma-separated). Defaults to "organization".
+    model_filename : str or None, optional
+        Name of the file used to save/load the fitted CountVectorizerModel. 
+        Defaults to "organization_vectorizer_model".
 
     Attributes
     ----------
@@ -41,6 +44,8 @@ class OrganizationEncoderSpark(Transformer):
         The final name of the input organization column.
     organization_encoded : str
         The name of the output vector column. Defaults to "<organization>_encoded".
+    model_filename : str
+        The final name of the file used to save/load the fitted CountVectorizerModel.
     """
 
     def __init__(
@@ -55,6 +60,9 @@ class OrganizationEncoderSpark(Transformer):
         ----------
         organization_column : str or None, optional
             Name of the input column containing organization names. Defaults to "organization".
+        model_filename : str or None, optional
+            Name of the file used to save/load the fitted CountVectorizerModel. 
+            Defaults to "organization_vectorizer_model".
         """
 
         self.organization = organization_column or "organization"

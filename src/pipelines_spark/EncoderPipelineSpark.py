@@ -32,7 +32,7 @@ class EncoderPipelineSpark(Transformer):
     into a single step, ensuring all necessary feature engineering is applied consistently.
 
     The sequence of encoding is:
-    1. Address Feature Hashing (`AddressEncoderSpark`).
+    1. Address Feature Hashing and Coordinate Vectorization (`AddressEncoderSpark`).
     2. Organization Encoding (`OrganizationEncoderSpark`).
     3. Problem Type Encoding (`TypeEncoderSpark`).
 
@@ -42,17 +42,27 @@ class EncoderPipelineSpark(Transformer):
         Name of the district column used for address encoding. Default is None (will use AddressEncoderSpark default).
     subdistrict_column : str or None, optional
         Name of the subdistrict column used for address encoding. Default is None (will use AddressEncoderSpark default).
-    encoded_column : str or None, optional
+    latitude_column : str or None, optional
+        Name of the latitude column used for coordinate vectorization. Default is None.
+    longitude_column : str or None, optional
+        Name of the longitude column used for coordinate vectorization. Default is None.
+    address_encoded_column : str or None, optional
         Name of the output column for the address hash vector. Default is None (will use AddressEncoderSpark default).
+    latlong_encoded_column : str or None, optional
+        Name of the output column for the coordinate vector. Default is None (will use AddressEncoderSpark default).
     organization_column : str or None, optional
         Name of the column containing organization names. Default is None (will use OrganizationEncoderSpark default).
+    organization_model_filename : str or None, optional
+        Filename to save/load the Organization CountVectorizer model. Default is None (will use OrganizationEncoderSpark default).
     type_column : str or None, optional
         Name of the column containing problem types. Default is None (will use TypeEncoderSpark default).
+    type_model_filename : str or None, optional
+        Filename to save/load the Type CountVectorizer model. Default is None (will use TypeEncoderSpark default).
 
     Attributes
     ----------
     address_encoder : AddressEncoderSpark
-        The instantiated transformer for address feature hashing.
+        The instantiated transformer for address feature hashing and coordinate vectorization.
     organization_encoder : OrganizationEncoderSpark
         The instantiated transformer for organization encoding.
     type_encoder : TypeEncoderSpark
@@ -81,14 +91,24 @@ class EncoderPipelineSpark(Transformer):
             Name of the district column used for address encoding. Default is None.
         subdistrict_column : str or None, optional
             Name of the subdistrict column used for address encoding. Default is None.
-        encoded_column : str or None, optional
+        latitude_column : str or None, optional
+            Name of the latitude column used for coordinate vectorization. Default is None.
+        longitude_column : str or None, optional
+            Name of the longitude column used for coordinate vectorization. Default is None.
+        address_encoded_column : str or None, optional
             Name of the output column for the address hash vector. Default is None.
+        latlong_encoded_column : str or None, optional
+            Name of the output column for the coordinate vector. Default is None.
         organization_column : str or None, optional
             Name of the column containing organization names. Default is None.
+        organization_model_filename : str or None, optional
+            Filename to save/load the Organization CountVectorizer model. Default is None.
         type_column : str or None, optional
             Name of the column containing problem types. Default is None.
+        type_model_filename : str or None, optional
+            Filename to save/load the Type CountVectorizer model. Default is None.
         """
-
+        
         self.district_column = district_column
         self.subdistrict_column = subdistrict_column
         self.latitude_column = latitude_column

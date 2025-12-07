@@ -8,8 +8,8 @@ and feature encoding necessary to prepare a Spark DataFrame for machine learning
 Classes
 -------
 ModelPrepPipelineSpark
-    A PySpark meta-transformer that combines filtering, feature encoding, and
-    resolution time calculation into a single pipeline ready for modeling.
+    A PySpark meta-transformer that combines filtering and feature encoding 
+    into a single pipeline ready for modeling.
 """
 
 # Import necessary modules
@@ -32,7 +32,6 @@ class ModelPrepPipelineSpark(Transformer):
     The sequence of transformation is:
     1. **Data Filter:** Filters rows by specified values and drops raw/identifier columns.
     2. **Encoder Pipeline:** Applies feature hashing and categorical encoding (Address, Organization, Type).
-    3. **Resolution Time Transformer:** Creates features related to event resolution time.
 
     Parameters
     ----------
@@ -44,26 +43,18 @@ class ModelPrepPipelineSpark(Transformer):
         District column name passed to EncoderPipelineSpark. Default is None.
     subdistrict_column : str or None, optional
         Subdistrict column name passed to EncoderPipelineSpark. Default is None.
-    encoded_column : str or None, optional
-        Output column name for address encoding. Default is None.
+    latitude_column : str or None, optional
+        Latitude column name passed to EncoderPipelineSpark. Default is None.
+    longitude_column : str or None, optional
+        Longitude column name passed to EncoderPipelineSpark. Default is None.
+    address_encoded_column : str or None, optional
+        Output column name for address hash encoding. Default is None.
+    latlong_encoded_column : str or None, optional
+        Output column name for coordinate vectorization. Default is None.
     organization_column : str or None, optional
         Organization column name for encoding. Default is None.
     type_column : str or None, optional
         Problem type column name for encoding. Default is None.
-    start_date_column : str or None, optional
-        Start date feature column (e.g., 'timestamp_date') passed to ResolutionTimeTransformerSpark. Default is None.
-    start_month_column : str or None, optional
-        Start month feature column (e.g., 'timestamp_month') passed to ResolutionTimeTransformerSpark. Default is None.
-    start_year_column : str or None, optional
-        Start year feature column (e.g., 'timestamp_year') passed to ResolutionTimeTransformerSpark. Default is None.
-    end_date_column : str or None, optional
-        End date feature column (e.g., 'last_activity_date') passed to ResolutionTimeTransformerSpark. Default is None.
-    end_month_column : str or None, optional
-        End month feature column (e.g., 'last_activity_month') passed to ResolutionTimeTransformerSpark. Default is None.
-    end_year_column : str or None, optional
-        End year feature column (e.g., 'last_activity_year') passed to ResolutionTimeTransformerSpark. Default is None.
-    resolution_time_column : str or None, optional
-        Output column name for the calculated resolution time feature. Default is None.
 
     Attributes
     ----------
@@ -71,8 +62,6 @@ class ModelPrepPipelineSpark(Transformer):
         Instantiated transformer for initial filtering and column dropping.
     encoder_pipeline : EncoderPipelineSpark
         Instantiated pipeline for handling all categorical feature encoding.
-    resol_time_transformer : ResolutionTimeTransformerSpark
-        Instantiated transformer for generating resolution time features.
     """
 
     def __init__(
@@ -101,26 +90,18 @@ class ModelPrepPipelineSpark(Transformer):
             District column name passed to EncoderPipelineSpark. Default is None.
         subdistrict_column : str or None, optional
             Subdistrict column name passed to EncoderPipelineSpark. Default is None.
-        encoded_column : str or None, optional
-            Output column name for address encoding. Default is None.
+        latitude_column : str or None, optional
+            Latitude column name passed to EncoderPipelineSpark. Default is None.
+        longitude_column : str or None, optional
+            Longitude column name passed to EncoderPipelineSpark. Default is None.
+        address_encoded_column : str or None, optional
+            Output column name for address hash encoding. Default is None.
+        latlong_encoded_column : str or None, optional
+            Output column name for coordinate vectorization. Default is None.
         organization_column : str or None, optional
             Organization column name for encoding. Default is None.
         type_column : str or None, optional
             Problem type column name for encoding. Default is None.
-        start_date_column : str or None, optional
-            Start date feature column (e.g., 'timestamp_date') passed to ResolutionTimeTransformerSpark. Default is None.
-        start_month_column : str or None, optional
-            Start month feature column (e.g., 'timestamp_month') passed to ResolutionTimeTransformerSpark. Default is None.
-        start_year_column : str or None, optional
-            Start year feature column (e.g., 'timestamp_year') passed to ResolutionTimeTransformerSpark. Default is None.
-        end_date_column : str or None, optional
-            End date feature column (e.g., 'last_activity_date') passed to ResolutionTimeTransformerSpark. Default is None.
-        end_month_column : str or None, optional
-            End month feature column (e.g., 'last_activity_month') passed to ResolutionTimeTransformerSpark. Default is None.
-        end_year_column : str or None, optional
-            End year feature column (e.g., 'last_activity_year') passed to ResolutionTimeTransformerSpark. Default is None.
-        resolution_time_column : str or None, optional
-            Output column name for the calculated resolution time feature. Default is None.
         """
 
         self.filter_columns = filter_columns
@@ -153,7 +134,7 @@ class ModelPrepPipelineSpark(Transformer):
 
     def _transform(self, df: DataFrame) -> DataFrame:
         """
-        Sequentially applies filtering, encoding, and resolution time feature engineering to the input DataFrame.
+        Sequentially applies filtering and encoding to the input DataFrame.
 
         Parameters
         ----------

@@ -31,21 +31,21 @@ class PopulationScrapping:
     Handles scraping, loading, and cleaning of population data from the
     Department of Provincial Administration (DOPA) website.
 
-        This class initializes configuration based on a JSON file, constructs the
-        target URL for a specific administrative level and year (Buddhist calendar),
-        fetches the data file, and performs data cleaning and transformation
-        before returning the final DataFrame.
+    This class initializes configuration based on a JSON file, constructs the
+    target URL for a specific administrative level and year (Buddhist calendar),
+    fetches the data file, and performs data cleaning and transformation
+    before returning the final DataFrame.
 
-        Parameters
-        ----------
-        url : str, optional
-            Base URL for the DOPA population data. Defaults to the value in the config file.
-        year : int or str or None, optional
-            The year of the data to fetch (in Buddhist calendar). Defaults to the
-            current Buddhist year.
-        level : str, optional
-            The administrative level of the data (e.g., 'province', 'district').
-            Defaults to the value in the config file.
+    Parameters
+    ----------
+    url : str, optional
+        Base URL for the DOPA population data. Defaults to the value in the config file.
+    year : int or str or None, optional
+        The year of the data to fetch (in Buddhist calendar). Defaults to the
+        current Buddhist year.
+    level : str, optional
+        The administrative level of the data (e.g., 'province', 'district').
+        Defaults to the value in the config file.
 
     Attributes
     ----------
@@ -224,7 +224,7 @@ class PopulationScrapping:
         Coordinates the fetching and initial loading of the data.
 
         It attempts to fetch the file and, if successful, loads it into
-        `self.data_frame` and assigns column names.
+        `self.data_frame` and **assigns the configured column names (`PopulationScrapping.COLUMNS`)**.
 
         Returns
         -------
@@ -261,7 +261,7 @@ class PopulationScrapping:
         save_path : str, optional
             The full path (including directory and file name) where the file
             should be saved. If not provided, a default path relative to the
-            script location is used.
+            script location is used (defaults to `get_data_dir() / "scrapped"`).
         file_name : str, optional
             The name of the CSV file. If not provided, it defaults to
             "population_{level}_{year}.csv".
@@ -285,10 +285,15 @@ class PopulationScrapping:
         Fetches the data, performs cleaning, normalization, and optional saving.
 
         The cleaning steps include:
-        1. Dropping specified columns and filtering out blank administrative name rows.
-        2. Removing specified prefixes (e.g., 'จังหวัด', 'อำเภอ') from administrative names.
-        3. Dropping administrative name columns that are at a lower priority than the target level.
-        4. **Casting remaining numeric columns to integer type (removing thousands separators).**
+        1. Dropping columns specified in `PopulationScrapping.TO_DROP_COLUMNS`.
+        2. **Removing prefixes (e.g., 'จังหวัด', 'อำเภอ') from administrative names** at the 
+           target level and higher priority levels.
+        3. **Dropping administrative name columns that are at a lower priority than the target level.**
+        4. **Filtering out rows where administrative names are blank or null at the target 
+           level or higher priority levels.**
+        5. **Filtering the entire dataset to include only records where 'province-name' is 'กรุงเทพมหานคร'.**
+        6. **Casting remaining numeric columns to integer type (removing thousands separators).**
+        7. Dropping all remaining NaT/NaN rows and resetting the index.
 
         Parameters
         ----------

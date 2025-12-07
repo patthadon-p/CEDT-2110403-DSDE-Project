@@ -45,7 +45,7 @@ class BangkokIndexScrapping:
     Attributes
     ----------
     config_path : str
-        Path to the configuration JSON file.
+        Path to the configuration JSON file, resolved using the 'scrapping' domain.
     config : dict
         The full configuration dictionary loaded from the JSON file.
     url : str
@@ -72,8 +72,9 @@ class BangkokIndexScrapping:
         """
         Initializes the scraper by loading all necessary configuration parameters.
 
-        This involves reading the configuration file to set up column names,
-        indices for dropping/renaming, target URLs, and lists of numeric columns.
+        This involves reading the configuration file (resolved via domain='scrapping') 
+        to set up column names, indices for dropping/renaming, target URLs, and 
+        lists of numeric columns.
 
         Parameters
         ----------
@@ -204,17 +205,19 @@ class BangkokIndexScrapping:
         1. Dropping initial header rows (keeping rows from index 2 onwards).
         2. Aligning and assigning column names based on configuration.
         3. Removing configured prefixes (e.g., 'เขต') from the district name column.
-        4. Dropping columns and rows based on configuration and calculated criteria.
-        5. Converting specified columns to numeric types.
-        6. Performing final renaming to simplify column headers (removing '/คะแนน').
+        4. Dropping columns specified in `COLUMNS_TO_DROP_BY_NAME`.
+        5. Converting specified columns in `NUMERIC_COLUMNS` to numeric types.
+        6. **Dropping all ranking columns (e.g., 'Overall_Rank' and those containing '/อันดับ').**
+        7. Performing final renaming (removing '/คะแนน') and applying custom renames.
+        8. Dropping rows with any remaining NaN values after numeric conversion.
 
         Parameters
         ----------
         save_to_csv : bool, optional
             If True, the cleaned DataFrame is saved to a CSV file. Defaults to False.
         save_path : str, optional
-            The base directory path to save the CSV file. If empty, the path is
-            derived from `get_data_dir()`. Default is "".
+            The base directory path to save the CSV file. If empty, the path defaults to 
+            `get_data_dir() / "scrapped"`. Default is "".
         file_name : str, optional
             The name of the CSV file. If empty, defaults to "bangkok_index_district_final.csv".
 

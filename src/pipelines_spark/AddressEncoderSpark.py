@@ -1,17 +1,17 @@
 """
-PySpark Transformer for Address Feature Hashing.
+PySpark Transformer for Address Feature Hashing and Coordinate Vectorization.
 
 This module provides the AddressEncoderSpark class, a PySpark ML Transformer
 that uses **Feature Hashing** to convert categorical address columns (district
-and subdistrict) into a single, high-dimensional numerical feature vector.
-This is suitable for feeding categorical data into machine learning models
-when the cardinality is high.
+and subdistrict) into one feature vector, and uses **VectorAssembler** to
+combine continuous coordinate columns (latitude and longitude) into a second
+feature vector. The final output is two sparse/dense feature columns.
 
 Classes
 -------
 AddressEncoderSpark
     A PySpark ML Transformer that encodes standardized district and subdistrict
-    names into a sparse feature vector using FeatureHasher.
+    names using FeatureHasher, and vectorizes latitude/longitude using VectorAssembler.
 """
 
 # Import necessary libraries
@@ -23,9 +23,11 @@ from pyspark.sql import DataFrame
 class AddressEncoderSpark(Transformer):
     """
     Encodes standardized address columns (district and subdistrict) into a
-    single feature vector using PySpark's FeatureHasher.
+    hash feature vector, and combines latitude/longitude into a separate
+    coordinate vector.
 
-    The original district and subdistrict columns are dropped after encoding.
+    The original address (district, subdistrict) and coordinate (latitude, longitude) 
+    columns are dropped after encoding.
 
     Parameters
     ----------
@@ -33,8 +35,14 @@ class AddressEncoderSpark(Transformer):
         Name of the input column containing standardized district names. Defaults to "district".
     subdistrict_column : str or None, optional
         Name of the input column containing standardized subdistrict names. Defaults to "subdistrict".
-    encoded_column : str or None, optional
-        Name of the output column for the hash vector. Defaults to "address_encoded".
+    latitude_column : str or None, optional
+        Name of the input column containing latitude values. Defaults to "latitude".
+    longitude_column : str or None, optional
+        Name of the input column containing longitude values. Defaults to "longitude".
+    address_encoded_column : str or None, optional
+        Name of the output column for the hash vector (from district/subdistrict). Defaults to "address_encoded".
+    latlong_encoded_column : str or None, optional
+        Name of the output column for the coordinate vector (from latitude/longitude). Defaults to "latlong_encoded".
 
     Attributes
     ----------
@@ -42,8 +50,14 @@ class AddressEncoderSpark(Transformer):
         The final name of the input district column.
     subdistrict_column : str
         The final name of the input subdistrict column.
-    encoded_column : str
-        The final name of the output encoded column.
+    latitude_column : str
+        The final name of the input latitude column.
+    longitude_column : str
+        The final name of the input longitude column.
+    address_encoded_column : str
+        The final name of the output hash vector column.
+    latlong_encoded_column : str
+        The final name of the output coordinate vector column.
     num_features : int
         The size of the hash table (feature vector dimension). Defaults to 2048.
     """
@@ -58,7 +72,8 @@ class AddressEncoderSpark(Transformer):
         latlong_encoded_column: str | None = None,
     ) -> None:
         """
-        Initializes the PySpark Address Encoder.
+        Initializes the PySpark Address Encoder, configuring column names and
+        the FeatureHasher size.
 
         Parameters
         ----------
@@ -66,8 +81,14 @@ class AddressEncoderSpark(Transformer):
             Name of the input column containing standardized district names. Defaults to "district".
         subdistrict_column : str or None, optional
             Name of the input column containing standardized subdistrict names. Defaults to "subdistrict".
-        encoded_column : str or None, optional
-            Name of the output column for the hash vector. Defaults to "address_encoded".
+        latitude_column : str or None, optional
+            Name of the input column containing latitude values. Defaults to "latitude".
+        longitude_column : str or None, optional
+            Name of the input column containing longitude values. Defaults to "longitude".
+        address_encoded_column : str or None, optional
+            Name of the output column for the hash vector (from district/subdistrict). Defaults to "address_encoded".
+        latlong_encoded_column : str or None, optional
+            Name of the output column for the coordinate vector (from latitude/longitude). Defaults to "latlong_encoded".
         """
 
         self.district_column = district_column or "district"
@@ -80,18 +101,20 @@ class AddressEncoderSpark(Transformer):
 
     def _transform(self, df: DataFrame) -> DataFrame:
         """
-        Applies the FeatureHasher to the specified address columns and drops the original columns.
+        Applies FeatureHasher and VectorAssembler to the address and coordinate 
+        columns, respectively, and drops the original input columns.
 
         Parameters
         ----------
         df : pyspark.sql.DataFrame
-            The input DataFrame containing the address columns.
+            The input DataFrame containing the address and coordinate columns.
 
         Returns
         -------
         pyspark.sql.DataFrame
-            The transformed DataFrame with the address columns replaced by the
-            new hash-encoded feature vector column (`encoded_column`).
+            The transformed DataFrame with the two new feature vector columns 
+            (`address_encoded_column` and `latlong_encoded_column`), and 
+            the four original input columns dropped.
         """
 
         hasher = FeatureHasher(

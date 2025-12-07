@@ -36,6 +36,9 @@ class TypeEncoderSpark(Transformer):
     type_column : str or None, optional
         Name of the input column containing problem type strings (which may be
         in a list/array format like '["type1", "type2"]'). Defaults to "type".
+    model_filename : str or None, optional
+        Name of the file used to save/load the fitted CountVectorizerModel. 
+        Defaults to "type_vectorizer_model".
 
     Attributes
     ----------
@@ -43,6 +46,8 @@ class TypeEncoderSpark(Transformer):
         The final name of the input type column.
     type_encoded : str
         The name of the output vector column. Defaults to "<type>_encoded".
+    model_filename : str
+        The final name of the file used to save/load the fitted CountVectorizerModel.
     """
 
     def __init__(

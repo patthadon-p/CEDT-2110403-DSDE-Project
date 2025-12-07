@@ -32,13 +32,12 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
 
     This transformer performs the following steps on the target column:
     1. **Cleaning:** Removes common prefixes like "จังหวัด" (Province) and "จ." (Abbreviated Province).
-    2. **Normalization & Fuzzy Match:** Applies text normalization and attempts to find a match
-       in the whitelist keys using fuzzy matching.
-    3. **Mapping:** Maps the resulting cleaned name using the loaded whitelist dictionary
-       to get the official standard name.
+    2. **Normalization & Fuzzy Match:** Applies text normalization and attempts to find the best match
+       in the **keys of the whitelist dictionary** using a high-confidence fuzzy match (score > 90).
+    3. **Mapping:** Maps the resulting fuzzy-matched key to its official standard name using the whitelist dictionary.
     4. **Filtering:** Collects and stores any original values that could not
        be mapped (i.e., not found in the whitelist) for manual inspection.
-
+       
     Parameters
     ----------
     path : str, optional
@@ -72,7 +71,7 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
 
         The internal cache (`_cache_province`) is initialized to store fuzzy
         matching results for efficiency.
-
+        
         Parameters
         ----------
         path : str, optional
@@ -118,8 +117,9 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
         to standard names, and collecting unmapped variants.
 
         The fuzzy matching step utilizes a fixed high cutoff score of **90**
-        to ensure high confidence in the match before proceeding with the mapping.
-
+        to ensure high confidence in the match against the **whitelist keys**
+        before proceeding with the final value mapping.
+        
         Parameters
         ----------
         X : pandas.DataFrame

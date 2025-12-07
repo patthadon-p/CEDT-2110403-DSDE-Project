@@ -50,7 +50,8 @@ class IngestionPreprocessorSpark(Transformer):
     filepath : str
         The resolved absolute path to the configuration file.
     drop_columns : list of str
-        The final list of columns to be dropped. Defaults to ["DROP"] if not explicitly set and not found in config.
+        The final list of columns to be dropped. This list may contain the string 
+        **"DROP"** if no explicit columns were provided and the configuration defaulted to it.
     drop_na_columns : list of str
         The final list of columns used for filtering (dropping rows with NaNs).
     rename_dict : dict of {str: str}

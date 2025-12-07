@@ -71,6 +71,10 @@ class AddressTransformerSpark(Transformer):
 
     Attributes
     ----------
+    spark : pyspark.sql.SparkSession
+        The active SparkSession instance.
+    sedona : pyspark.sql.SparkSession
+        The active Sedona (Apache Sedona/GeoSpark) enabled SparkSession instance.
     province_transformer : ProvinceTransformerSpark
         The instantiated transformer for standardizing province names.
     districtsubdistrict_transformer : DistrictSubdistrictTransformerSpark

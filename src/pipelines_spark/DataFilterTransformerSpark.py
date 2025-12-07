@@ -30,9 +30,10 @@ class DataFilterTransformerSpark(Transformer):
     ----------
     filter_columns : dict of {str: str} or None, optional
         A dictionary mapping column names to the single value that rows must contain
-        (e.g., `{'province': 'กรุงเทพมหานคร'}`). Defaults to filtering 'province' and 'status'.
+        (e.g., `{'province': 'กรุงเทพมหานคร'}`). **These columns are dropped after filtering.**
+        Defaults to filtering 'province' and 'status'.
     drop_columns : list or None, optional
-        A list of column names to be permanently dropped from the DataFrame.
+        A list of column names to be permanently dropped from the DataFrame **after filtering**.
         Defaults to removing raw/identifier columns like 'ticket_id', 'comment', 'coords', etc.
 
     Attributes
@@ -81,8 +82,9 @@ class DataFilterTransformerSpark(Transformer):
         """
         Applies row filtering and column dropping to the input DataFrame.
 
-        Rows are filtered based on the values in `filter_columns`. Filtered columns
-        are subsequently dropped from the DataFrame.
+        Rows are filtered based on the values in `filter_columns`. **Each column 
+        used for filtering is immediately dropped.** Finally, columns specified 
+        in `drop_columns` are removed.
 
         Parameters
         ----------
@@ -94,7 +96,7 @@ class DataFilterTransformerSpark(Transformer):
         pyspark.sql.DataFrame
             The transformed DataFrame with filtered rows and dropped columns.
         """
-
+        
         for column, value in self.filter_columns.items():
             if column in df.columns:
                 df = df.filter(col(column).isin([value])).drop(column)
