@@ -10,7 +10,7 @@ of regression models in a Spark environment.
 Classes
 -------
 ModelDefinePipelineSpark
-    A utility class to wrap a PySpark ML model and its required preprocessing 
+    A utility class to wrap a PySpark ML model and its required preprocessing
     steps (VectorAssembler) within a CrossValidator for hyperparameter tuning.
 """
 
@@ -85,7 +85,7 @@ class ModelDefinePipelineSpark:
     cv_model : pyspark.ml.tuning.CrossValidatorModel or None
         The fitted model (best model from cross-validation). Populated after calling `fit()`.
     """
-    
+
     def __init__(
         self,
         name: str,
@@ -97,7 +97,7 @@ class ModelDefinePipelineSpark:
         num_folds: int = 3,
     ) -> None:
         """
-        Initializes the model definition pipeline, assembling all components 
+        Initializes the model definition pipeline, assembling all components
         (assembler, evaluator, parameter grid, and cross-validator).
 
         Parameters
@@ -156,7 +156,7 @@ class ModelDefinePipelineSpark:
 
     def create_evaluator_dict(self) -> dict[str, RegressionEvaluator]:
         """
-        Creates a dictionary of PySpark RegressionEvaluator instances based on 
+        Creates a dictionary of PySpark RegressionEvaluator instances based on
         the requested metrics (rmse, mse, r2, mae, var).
 
         Returns
@@ -164,7 +164,7 @@ class ModelDefinePipelineSpark:
         dict of {str: pyspark.ml.evaluation.RegressionEvaluator}
             A dictionary mapping metric names to their corresponding configured evaluators.
         """
-        
+
         allowed_metrics = ["rmse", "mse", "r2", "mae", "var"]
 
         evaluator_dict: dict[str, RegressionEvaluator] = {}
@@ -188,7 +188,7 @@ class ModelDefinePipelineSpark:
         save_name: str | None = None,
     ) -> CrossValidatorModel:
         """
-        Fits the CrossValidator to the input data and optionally saves the resulting 
+        Fits the CrossValidator to the input data and optionally saves the resulting
         best model (CrossValidatorModel).
 
         Parameters
@@ -196,7 +196,7 @@ class ModelDefinePipelineSpark:
         X : pyspark.sql.DataFrame
             The input training DataFrame.
         save_name : str or None, optional
-            The name under which to save the fitted CrossValidatorModel using the 
+            The name under which to save the fitted CrossValidatorModel using the
             `save_model` utility function. If None, the model is not saved. Default is None.
 
         Returns
@@ -215,7 +215,7 @@ class ModelDefinePipelineSpark:
 
     def evaluate(self, test_df: DataFrame) -> dict[str, float]:
         """
-        Evaluates the fitted CrossValidatorModel (best model) on the test DataFrame 
+        Evaluates the fitted CrossValidatorModel (best model) on the test DataFrame
         using all configured evaluators.
 
         The evaluation utilizes the external `evaluate_model` utility.
@@ -230,7 +230,7 @@ class ModelDefinePipelineSpark:
         dict of {str: float}
             A dictionary mapping each metric name to its calculated score.
         """
-        
+
         score_dict = evaluate_model(
             name=self.name,
             model=self.cv_model,
@@ -243,7 +243,7 @@ class ModelDefinePipelineSpark:
         """
         Manually sets the fitted CrossValidatorModel instance.
 
-        This is typically used to load a previously saved model for evaluation 
+        This is typically used to load a previously saved model for evaluation
         or prediction without re-running the `fit` method.
 
         Parameters
@@ -251,7 +251,7 @@ class ModelDefinePipelineSpark:
         cv_model : pyspark.ml.tuning.CrossValidatorModel
             The pre-fitted CrossValidatorModel to be set.
         """
-        
+
         self.cv_model = cv_model
         return None
 
@@ -264,7 +264,7 @@ class ModelDefinePipelineSpark:
         pyspark.ml.Pipeline
             The defined pipeline (VectorAssembler -> Model).
         """
-        
+
         return self.pipeline
 
     def get_cross_validator(self) -> CrossValidator:
@@ -276,7 +276,7 @@ class ModelDefinePipelineSpark:
         pyspark.ml.tuning.CrossValidator
             The defined cross-validator setup.
         """
-        
+
         return self.cv
 
     def get_best_params(self) -> dict[str, Any]:
@@ -293,7 +293,7 @@ class ModelDefinePipelineSpark:
         AttributeError
             If the `fit()` method has not been called and `self.cv_model` is None.
         """
-        
+
         best_pipeline = cast(PipelineModel, self.cv_model.bestModel)
         best_model = best_pipeline.stages[-1]
 

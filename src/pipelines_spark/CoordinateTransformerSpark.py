@@ -179,7 +179,7 @@ class CoordinateTransformerSpark(Transformer):
         pyspark.sql.DataFrame
             The transformed DataFrame containing only the data points that
             are geometrically and textually consistent with the geographic
-            boundary data. **The original combined coordinate column is dropped, 
+            boundary data. **The original combined coordinate column is dropped,
             and new `longitude` and `latitude` columns are retained.**
         """
 

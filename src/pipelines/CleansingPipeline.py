@@ -295,7 +295,7 @@ class CleansingPipeline(BaseEstimator, TransformerMixin):
         -------
         pandas.DataFrame
             The transformed DataFrame with standardized dates, enriched addresses,
-            and mapped status columns. **Final rows containing NaT/NaN are dropped, 
+            and mapped status columns. **Final rows containing NaT/NaN are dropped,
             and the DataFrame index is reset.**
         """
 

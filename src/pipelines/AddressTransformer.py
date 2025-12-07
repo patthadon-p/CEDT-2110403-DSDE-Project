@@ -135,7 +135,7 @@ class AddressTransformer(BaseEstimator, TransformerMixin):
         prefix_bonus_coordinate : bool or None, optional
             Whether to apply prefix matching bonus in CoordinateTransformer. Default is None.
         """
-        
+
         self.province_path = province_path
         self.bangkok_area_path = bangkok_area_path
         self.geographic_data_path = geographic_data_path

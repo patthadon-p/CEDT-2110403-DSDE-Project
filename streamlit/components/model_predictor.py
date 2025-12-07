@@ -142,11 +142,12 @@ class TraffyTimePredictor:
     def predict(self, model_input: DataFrame) -> tuple[float, str]:
         prediction = self.model.transform(model_input)
         pred_value = prediction.select("prediction").collect()[0][0]
+        pred_value = abs(pred_value)
 
         lvl = (
             "Fast (เร็ว)"
-            if pred_value < 3
-            else "Normal (ปกติ)" if pred_value < 10 else "Slow (ช้า)"
+            if pred_value < 7
+            else "Normal (ปกติ)" if pred_value < 21 else "Slow (ช้า)"
         )
         return round(pred_value, 1), lvl
 

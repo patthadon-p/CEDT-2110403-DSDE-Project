@@ -3,7 +3,7 @@ Utilities for initializing and configuring PySpark and Apache Sedona sessions.
 
 This module handles setting up the necessary environment variables (HADOOP_HOME, SPARK_HOME),
 configuring the Python path for PySpark executors, and creating a combined SparkSession
-and SedonaContext tailored for geospatial processing. It also provides a utility 
+and SedonaContext tailored for geospatial processing. It also provides a utility
 to convert string representations of PySpark Vectors back into the proper VectorType (VectorUDT).
 
 Functions
@@ -11,7 +11,7 @@ Functions
 create_spark_session
     Initializes and returns a configured PySpark SparkSession and a SedonaContext.
 preprocessed_data_converter
-    Converts string-format columns (representing PySpark Sparse/Dense Vectors) 
+    Converts string-format columns (representing PySpark Sparse/Dense Vectors)
     back into the native VectorUDT required for PySpark MLlib.
 """
 
@@ -117,14 +117,14 @@ def preprocessed_data_converter(
     """
     Converts string representations of PySpark ML vectors back into native VectorUDT columns.
 
-    This utility is essential when reading data that contains PySpark Vectors (e.g., 
-    "address_encoded") saved as strings (e.g., from CSV/Parquet), as PySpark MLlib 
+    This utility is essential when reading data that contains PySpark Vectors (e.g.,
+    "address_encoded") saved as strings (e.g., from CSV/Parquet), as PySpark MLlib
     requires the native VectorUDT for prediction and training.
 
     The function applies UDFs to convert:
     - Sparse Vector strings (e.g., "(2048,[834],[1.0])") to SparseVector.
     - Dense Vector strings (e.g., "[13.6,100.6]") to DenseVector.
-    
+
     Parameters
     ----------
     df : pyspark.sql.DataFrame
@@ -133,7 +133,7 @@ def preprocessed_data_converter(
     Returns
     -------
     pyspark.sql.DataFrame
-        The transformed DataFrame with the specified vector columns cast back 
+        The transformed DataFrame with the specified vector columns cast back
         to the native PySpark VectorUDT.
     """
 

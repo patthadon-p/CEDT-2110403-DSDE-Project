@@ -40,17 +40,17 @@ def predict_with_model(
     input_df : DataFrame
         Spark DataFrame to predict on.
     return_pandas : bool, optional
-        If True, returns the prediction results collected as a Pandas DataFrame. 
-        Otherwise, returns the prediction results as a Spark DataFrame. 
+        If True, returns the prediction results collected as a Pandas DataFrame.
+        Otherwise, returns the prediction results as a Spark DataFrame.
         Default is False.
 
     Returns
     -------
     pyspark.sql.DataFrame or pandas.DataFrame
-        The prediction DataFrame, containing the input columns plus the prediction 
-        columns (e.g., 'prediction', 'rawPrediction', 'probability'). The return type 
+        The prediction DataFrame, containing the input columns plus the prediction
+        columns (e.g., 'prediction', 'rawPrediction', 'probability'). The return type
         depends on the `return_pandas` parameter.
-        
+
     Raises
     ------
     TypeError

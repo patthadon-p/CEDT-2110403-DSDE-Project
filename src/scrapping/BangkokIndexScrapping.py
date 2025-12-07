@@ -72,8 +72,8 @@ class BangkokIndexScrapping:
         """
         Initializes the scraper by loading all necessary configuration parameters.
 
-        This involves reading the configuration file (resolved via domain='scrapping') 
-        to set up column names, indices for dropping/renaming, target URLs, and 
+        This involves reading the configuration file (resolved via domain='scrapping')
+        to set up column names, indices for dropping/renaming, target URLs, and
         lists of numeric columns.
 
         Parameters
@@ -216,7 +216,7 @@ class BangkokIndexScrapping:
         save_to_csv : bool, optional
             If True, the cleaned DataFrame is saved to a CSV file. Defaults to False.
         save_path : str, optional
-            The base directory path to save the CSV file. If empty, the path defaults to 
+            The base directory path to save the CSV file. If empty, the path defaults to
             `get_data_dir() / "scrapped"`. Default is "".
         file_name : str, optional
             The name of the CSV file. If empty, defaults to "bangkok_index_district_final.csv".

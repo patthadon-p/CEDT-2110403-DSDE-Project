@@ -134,7 +134,7 @@ def fuzzy_match(
         If the best match score is below this value, the original `text` is returned.
         Default is 60.
     prefix_bonus : bool, optional
-        If True, uses the `scorer_with_prefix_bonus` custom scorer which grants 
+        If True, uses the `scorer_with_prefix_bonus` custom scorer which grants
         a bonus score for prefix matches. If False, uses the standard `fuzz.ratio` scorer.
         Default is False.
 
@@ -146,7 +146,7 @@ def fuzzy_match(
 
     Notes
     -----
-    When `prefix_bonus` is True, the custom `scorer_with_prefix_bonus` is used instead 
+    When `prefix_bonus` is True, the custom `scorer_with_prefix_bonus` is used instead
     of the default `fuzz.ratio`.
     """
 

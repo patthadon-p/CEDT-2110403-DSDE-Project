@@ -8,7 +8,7 @@ and feature encoding necessary to prepare a Spark DataFrame for machine learning
 Classes
 -------
 ModelPrepPipelineSpark
-    A PySpark meta-transformer that combines filtering and feature encoding 
+    A PySpark meta-transformer that combines filtering and feature encoding
     into a single pipeline ready for modeling.
 """
 

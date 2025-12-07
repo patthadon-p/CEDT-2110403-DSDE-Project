@@ -80,7 +80,7 @@ def save_geographic_data(
     # ... (omitted other parameters) ...
     save_name : str, optional
         **The filename/path segment for the output CSV.** If provided, this value overrides
-        the path specified in the config file under 'geographic_cleansed_data_path'. 
+        the path specified in the config file under 'geographic_cleansed_data_path'.
         Defaults to the value in the config file.
     drop_columns : list of str or None, optional
         A list of columns to be dropped from the DataFrame. The underlying

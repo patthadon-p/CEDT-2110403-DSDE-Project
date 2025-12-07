@@ -29,7 +29,7 @@ class DateTransformerSpark(Transformer):
     2. Extracts and creates three new **Integer** columns: `_date`, `_month`, and `_year`.
     3. Calculates the difference in **days** between the end time and the start time (`date_diff`).
     4. Drops the original timestamp columns.
-    
+
     Parameters
     ----------
     start_time_column : str or None, optional

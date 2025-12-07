@@ -26,7 +26,7 @@ class AddressEncoderSpark(Transformer):
     hash feature vector, and combines latitude/longitude into a separate
     coordinate vector.
 
-    The original address (district, subdistrict) and coordinate (latitude, longitude) 
+    The original address (district, subdistrict) and coordinate (latitude, longitude)
     columns are dropped after encoding.
 
     Parameters
@@ -101,7 +101,7 @@ class AddressEncoderSpark(Transformer):
 
     def _transform(self, df: DataFrame) -> DataFrame:
         """
-        Applies FeatureHasher and VectorAssembler to the address and coordinate 
+        Applies FeatureHasher and VectorAssembler to the address and coordinate
         columns, respectively, and drops the original input columns.
 
         Parameters
@@ -112,8 +112,8 @@ class AddressEncoderSpark(Transformer):
         Returns
         -------
         pyspark.sql.DataFrame
-            The transformed DataFrame with the two new feature vector columns 
-            (`address_encoded_column` and `latlong_encoded_column`), and 
+            The transformed DataFrame with the two new feature vector columns
+            (`address_encoded_column` and `latlong_encoded_column`), and
             the four original input columns dropped.
         """
 

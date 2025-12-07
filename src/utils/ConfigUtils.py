@@ -66,7 +66,7 @@ def get_data_dir() -> Path:
 
 
 def get_dot_env_path() -> str:
-    """"
+    """ "
     Determines the absolute path to the project's environment file.
 
     It assumes the structure is: `project_root/configs/.env`,

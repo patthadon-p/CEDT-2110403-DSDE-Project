@@ -111,8 +111,8 @@ class StateToStatusTransformerSpark(Transformer):
         Returns
         -------
         pyspark.sql.DataFrame
-            The transformed DataFrame. The original `old_column` is replaced by 
-            the standardized `new_column` (if the names are different) or the 
+            The transformed DataFrame. The original `old_column` is replaced by
+            the standardized `new_column` (if the names are different) or the
             values are updated (if the names are the same).
         """
 

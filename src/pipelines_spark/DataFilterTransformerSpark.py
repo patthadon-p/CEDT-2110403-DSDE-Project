@@ -82,8 +82,8 @@ class DataFilterTransformerSpark(Transformer):
         """
         Applies row filtering and column dropping to the input DataFrame.
 
-        Rows are filtered based on the values in `filter_columns`. **Each column 
-        used for filtering is immediately dropped.** Finally, columns specified 
+        Rows are filtered based on the values in `filter_columns`. **Each column
+        used for filtering is immediately dropped.** Finally, columns specified
         in `drop_columns` are removed.
 
         Parameters
@@ -96,7 +96,7 @@ class DataFilterTransformerSpark(Transformer):
         pyspark.sql.DataFrame
             The transformed DataFrame with filtered rows and dropped columns.
         """
-        
+
         for column, value in self.filter_columns.items():
             if column in df.columns:
                 df = df.filter(col(column).isin([value])).drop(column)

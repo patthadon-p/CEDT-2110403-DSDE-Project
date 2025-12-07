@@ -37,7 +37,7 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
     3. **Mapping:** Maps the resulting fuzzy-matched key to its official standard name using the whitelist dictionary.
     4. **Filtering:** Collects and stores any original values that could not
        be mapped (i.e., not found in the whitelist) for manual inspection.
-       
+
     Parameters
     ----------
     path : str, optional
@@ -71,7 +71,7 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
 
         The internal cache (`_cache_province`) is initialized to store fuzzy
         matching results for efficiency.
-        
+
         Parameters
         ----------
         path : str, optional
@@ -119,7 +119,7 @@ class ProvinceTransformer(BaseEstimator, TransformerMixin):
         The fuzzy matching step utilizes a fixed high cutoff score of **90**
         to ensure high confidence in the match against the **whitelist keys**
         before proceeding with the final value mapping.
-        
+
         Parameters
         ----------
         X : pandas.DataFrame

@@ -108,7 +108,7 @@ class EncoderPipelineSpark(Transformer):
         type_model_filename : str or None, optional
             Filename to save/load the Type CountVectorizer model. Default is None.
         """
-        
+
         self.district_column = district_column
         self.subdistrict_column = subdistrict_column
         self.latitude_column = latitude_column

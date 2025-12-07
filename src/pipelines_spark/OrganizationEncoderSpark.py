@@ -35,7 +35,7 @@ class OrganizationEncoderSpark(Transformer):
         Name of the input column containing organization names (which may be
         comma-separated). Defaults to "organization".
     model_filename : str or None, optional
-        Name of the file used to save/load the fitted CountVectorizerModel. 
+        Name of the file used to save/load the fitted CountVectorizerModel.
         Defaults to "organization_vectorizer_model".
 
     Attributes
@@ -61,7 +61,7 @@ class OrganizationEncoderSpark(Transformer):
         organization_column : str or None, optional
             Name of the input column containing organization names. Defaults to "organization".
         model_filename : str or None, optional
-            Name of the file used to save/load the fitted CountVectorizerModel. 
+            Name of the file used to save/load the fitted CountVectorizerModel.
             Defaults to "organization_vectorizer_model".
         """
 

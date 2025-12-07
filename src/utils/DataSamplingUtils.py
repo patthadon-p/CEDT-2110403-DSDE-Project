@@ -9,7 +9,7 @@ a representative distribution of key categorical combinations.
 Functions
 ---------
 preprocessed_data_sampler
-    Performs stratified sampling based on the indices of the "address_encoded" 
+    Performs stratified sampling based on the indices of the "address_encoded"
     and "type_encoded" columns, and then splits the result into training and testing sets.
 """
 
@@ -27,14 +27,14 @@ def preprocessed_data_sampler(
     """
     Performs stratified sampling and splits the resulting sample into training and testing sets.
 
-    The stratification is based on combining the indices from the sparse vectors 
-    in the `address_encoded` and `type_encoded` columns. This grouping (strata) 
+    The stratification is based on combining the indices from the sparse vectors
+    in the `address_encoded` and `type_encoded` columns. This grouping (strata)
     is then used to draw a balanced sample.
 
     Parameters
     ----------
     df : pyspark.sql.DataFrame
-        The input PySpark DataFrame, expected to contain "address_encoded" 
+        The input PySpark DataFrame, expected to contain "address_encoded"
         and "type_encoded" columns (pyspark.ml.linalg.SparseVector).
     sampling_fraction : float, optional
         The fraction of the data to sample from each stratum. Default is 0.1.
@@ -42,15 +42,15 @@ def preprocessed_data_sampler(
     Returns
     -------
     tuple of (pyspark.sql.DataFrame, pyspark.sql.DataFrame)
-        A tuple containing the training DataFrame (80%) and the testing DataFrame (20%) 
+        A tuple containing the training DataFrame (80%) and the testing DataFrame (20%)
         from the stratified sample.
 
     Notes
     -----
-    The indices of SparseVectors are used as strata keys because they represent 
+    The indices of SparseVectors are used as strata keys because they represent
     the actual unique categories assigned during feature encoding (Feature Hashing/CountVectorizer).
     """
-    
+
     def _get_indices(v: SparseVector) -> list[int]:
         if v is None:
             return []

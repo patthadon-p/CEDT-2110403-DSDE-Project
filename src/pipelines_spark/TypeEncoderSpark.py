@@ -37,7 +37,7 @@ class TypeEncoderSpark(Transformer):
         Name of the input column containing problem type strings (which may be
         in a list/array format like '["type1", "type2"]'). Defaults to "type".
     model_filename : str or None, optional
-        Name of the file used to save/load the fitted CountVectorizerModel. 
+        Name of the file used to save/load the fitted CountVectorizerModel.
         Defaults to "type_vectorizer_model".
 
     Attributes

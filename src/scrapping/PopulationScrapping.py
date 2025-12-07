@@ -286,10 +286,10 @@ class PopulationScrapping:
 
         The cleaning steps include:
         1. Dropping columns specified in `PopulationScrapping.TO_DROP_COLUMNS`.
-        2. **Removing prefixes (e.g., 'จังหวัด', 'อำเภอ') from administrative names** at the 
+        2. **Removing prefixes (e.g., 'จังหวัด', 'อำเภอ') from administrative names** at the
            target level and higher priority levels.
         3. **Dropping administrative name columns that are at a lower priority than the target level.**
-        4. **Filtering out rows where administrative names are blank or null at the target 
+        4. **Filtering out rows where administrative names are blank or null at the target
            level or higher priority levels.**
         5. **Filtering the entire dataset to include only records where 'province-name' is 'กรุงเทพมหานคร'.**
         6. **Casting remaining numeric columns to integer type (removing thousands separators).**
