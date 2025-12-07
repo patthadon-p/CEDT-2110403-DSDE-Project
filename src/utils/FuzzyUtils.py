@@ -133,6 +133,10 @@ def fuzzy_match(
         The minimum score (out of 100) required for a match to be accepted.
         If the best match score is below this value, the original `text` is returned.
         Default is 60.
+    prefix_bonus : bool, optional
+        If True, uses the `scorer_with_prefix_bonus` custom scorer which grants 
+        a bonus score for prefix matches. If False, uses the standard `fuzz.ratio` scorer.
+        Default is False.
 
     Returns
     -------
@@ -142,8 +146,8 @@ def fuzzy_match(
 
     Notes
     -----
-    The matching uses the default process.extractOne ratio (simple ratio)
-    from `rapidfuzz`.
+    When `prefix_bonus` is True, the custom `scorer_with_prefix_bonus` is used instead 
+    of the default `fuzz.ratio`.
     """
 
     if text in cache:

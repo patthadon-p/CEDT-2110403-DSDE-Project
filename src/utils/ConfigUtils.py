@@ -66,10 +66,10 @@ def get_data_dir() -> Path:
 
 
 def get_dot_env_path() -> str:
-    """
+    """"
     Determines the absolute path to the project's environment file.
 
-    It assumes the structure is: `project_root/.env`,
+    It assumes the structure is: `project_root/configs/.env`,
     where the utility file is located two directory levels deep
     from the project root (e.g., in `project_root/src/utils/`).
 

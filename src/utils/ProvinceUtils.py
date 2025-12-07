@@ -40,8 +40,8 @@ def load_province_whitelist(filepath: str = "") -> dict:
     Returns
     -------
     dict of {str: str}
-        A dictionary where each variant province name (key) maps to its
-        official standard name (value).
+        A dictionary where each **variant province name (key)** maps to its
+        **official standard name (value)**.
 
     Raises
     ------

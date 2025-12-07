@@ -73,24 +73,14 @@ def save_geographic_data(
     """
     Standardizes, cleans, and saves the provided GeoDataFrame or DataFrame as a CSV file.
 
-    The function performs the following steps:
-    1. Loads a column renaming map from a configured JSON file.
-    2. Renames columns in the input DataFrame.
-    3. Drops specified columns (defaults to dropping "DROP" if no list is provided).
-    4. Adds a 'province_name' column with the value 'กรุงเทพมหานคร'.
-    5. Saves the final DataFrame to the project's 'data/processed' directory.
+    # ... (omitted description) ...
 
     Parameters
     ----------
-    df : geopandas.GeoDataFrame or pandas.DataFrame
-        The DataFrame or GeoDataFrame to be processed and saved.
-    filepath : str, optional
-        Path to the JSON file containing the column renaming dictionary.
-        If provided, overrides the config path 'geographic_columns_path'.
-        Default is "".
+    # ... (omitted other parameters) ...
     save_name : str, optional
-        **The filename/path for the output CSV.** If provided, this value overrides
-        the path specified in the config file under 'geographic_cleansed_data_path'.
+        **The filename/path segment for the output CSV.** If provided, this value overrides
+        the path specified in the config file under 'geographic_cleansed_data_path'. 
         Defaults to the value in the config file.
     drop_columns : list of str or None, optional
         A list of columns to be dropped from the DataFrame. The underlying
@@ -109,8 +99,8 @@ def save_geographic_data(
     Notes
     -----
     The output file is saved to: project_root/data/processed/{save_name}.
-    **The file is saved with 'utf-8-sig' encoding and uses a backslash ('\\')
-    as an escape character, which is essential for saving embedded WKT geometry.**
+    The file is saved with 'utf-8-sig' encoding and uses a **backslash ('\\')
+    as an escape character**, which is essential for saving embedded WKT geometry.
     """
 
     filepath = read_config_path(key="geographic_columns_path", filepath=filepath)

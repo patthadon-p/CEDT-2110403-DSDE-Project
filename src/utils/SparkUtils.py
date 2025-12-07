@@ -3,12 +3,16 @@ Utilities for initializing and configuring PySpark and Apache Sedona sessions.
 
 This module handles setting up the necessary environment variables (HADOOP_HOME, SPARK_HOME),
 configuring the Python path for PySpark executors, and creating a combined SparkSession
-and SedonaContext tailored for geospatial processing.
+and SedonaContext tailored for geospatial processing. It also provides a utility 
+to convert string representations of PySpark Vectors back into the proper VectorType (VectorUDT).
 
 Functions
 ---------
 create_spark_session
     Initializes and returns a configured PySpark SparkSession and a SedonaContext.
+preprocessed_data_converter
+    Converts string-format columns (representing PySpark Sparse/Dense Vectors) 
+    back into the native VectorUDT required for PySpark MLlib.
 """
 
 import os
@@ -110,6 +114,28 @@ def create_spark_session(
 def preprocessed_data_converter(
     df: DataFrame,
 ) -> DataFrame:
+    """
+    Converts string representations of PySpark ML vectors back into native VectorUDT columns.
+
+    This utility is essential when reading data that contains PySpark Vectors (e.g., 
+    "address_encoded") saved as strings (e.g., from CSV/Parquet), as PySpark MLlib 
+    requires the native VectorUDT for prediction and training.
+
+    The function applies UDFs to convert:
+    - Sparse Vector strings (e.g., "(2048,[834],[1.0])") to SparseVector.
+    - Dense Vector strings (e.g., "[13.6,100.6]") to DenseVector.
+    
+    Parameters
+    ----------
+    df : pyspark.sql.DataFrame
+        The input DataFrame containing vector columns stored as strings.
+
+    Returns
+    -------
+    pyspark.sql.DataFrame
+        The transformed DataFrame with the specified vector columns cast back 
+        to the native PySpark VectorUDT.
+    """
 
     def _parse_sparse(s: str) -> SparseVector | None:
         if s is None:

@@ -1,3 +1,16 @@
+"""
+PySpark Model Prediction Utility.
+
+This module provides a utility function to load a saved PySpark ML model
+and run predictions on a new DataFrame.
+
+Functions
+---------
+predict_with_model
+    Loads a saved PipelineModel, CrossValidatorModel, or TrainValidationSplitModel
+    and applies it to an input DataFrame, optionally returning the result as a Pandas DataFrame.
+"""
+
 import os
 
 import pandas as pd
@@ -21,16 +34,31 @@ def predict_with_model(
     spark : SparkSession
         Active Spark session.
     model_path : str
-        Directory with the saved model.
+        Directory with the saved model. The function attempts to load the model
+        sequentially as CrossValidatorModel, TrainValidationSplitModel, and
+        finally as a bare PipelineModel.
     input_df : DataFrame
         Spark DataFrame to predict on.
-    return_pandas : bool
-        If True, return Pandas DataFrame of predictions. Otherwise return Spark DataFrame.
+    return_pandas : bool, optional
+        If True, returns the prediction results collected as a Pandas DataFrame. 
+        Otherwise, returns the prediction results as a Spark DataFrame. 
+        Default is False.
 
     Returns
     -------
-    DataFrame or list
-        Prediction DataFrame or list of predictions.
+    pyspark.sql.DataFrame or pandas.DataFrame
+        The prediction DataFrame, containing the input columns plus the prediction 
+        columns (e.g., 'prediction', 'rawPrediction', 'probability'). The return type 
+        depends on the `return_pandas` parameter.
+        
+    Raises
+    ------
+    TypeError
+        If input types are incorrect.
+    ValueError
+        If the model path does not exist.
+    RuntimeError
+        If the model cannot be loaded from the specified path.
     """
 
     # -----------------------------
